@@ -6,7 +6,14 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+/**
+ * Sin bin for utils dealing with jinterface.
+ */
 public class OtpUtil {
+	
+	/**
+	 * Take an {@link OtpErlangList} of erlang key value tuples and converts it to a map.
+	 */
 	public static HashMap<Object, Object> propsToMap(OtpErlangList pinfo) {
 		HashMap<Object, Object> map = new HashMap<>();
 		for (OtpErlangObject otpErlangObject : pinfo) {
@@ -17,4 +24,5 @@ public class OtpUtil {
 		}
 		return map;
 	}
+	
 }

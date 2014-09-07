@@ -7,6 +7,7 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.TableView;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangLong;
@@ -15,13 +16,15 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 /**
  * Domain object for an erlang process. 
  */
-public class ProcInfo {
+public class ProcInfo implements Comparable<ProcInfo> {
 
 	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
 
 	private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
 
 	private StringProperty processName;
+
+	private LongProperty reductions;
 
 	public void setProcessName(String value) {
 		processNameProperty().set(value);
@@ -36,8 +39,6 @@ public class ProcInfo {
 			processName = new SimpleStringProperty(this, "processName");
 		return processName;
 	}
-
-	private LongProperty reductions;
 
 	public void setReductions(long value) {
 		reductionsProperty().set(value);
@@ -75,5 +76,18 @@ public class ProcInfo {
 			return ((OtpErlangLong) object).longValue();
 		}
 		return 0;
+	}
+
+	/**
+	 * We shouldn't need to implement this but sometimes {@link TableView}
+	 * attempts to sort the {@link ProcInfo} objects itself and tries to cast
+	 * {@link ProcInfo} to {@link Comparable}.
+	 * <p>
+	 * To avoid this exception we're just implementing comparable even if it
+	 * gives the wrong sort to what the user expected.
+	 */
+	@Override
+	public int compareTo(ProcInfo o) {
+		return getProcessName().compareTo(o.getProcessName());
 	}
 }

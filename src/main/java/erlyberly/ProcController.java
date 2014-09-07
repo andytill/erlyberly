@@ -10,7 +10,6 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.SortType;
 
 import com.ericsson.otp.erlang.OtpConnection;
@@ -19,15 +18,18 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
 
+/**
+ * Logic and processing for the entop control. 
+ */
 public class ProcController {
+	
+	private final SimpleObjectProperty<ProcSort> procSortProperty;
 
 	private OtpSelf self;
 	
 	private OtpConnection connection;
 	
 	private ProcPollerThread procPollerThread;
-	
-	private final SimpleObjectProperty<ProcSort> procSortProperty;
 	
 	public ProcController() {
 		procSortProperty = new SimpleObjectProperty<>();
@@ -47,10 +49,14 @@ public class ProcController {
 		}
 	}
 
-	public ObservableList<ProcInfo> getProces() {
+	public ObservableList<ProcInfo> getProcs() {
 		return procPollerThread.processes2;
 	}
 	
+	public SimpleObjectProperty<ProcSort> procSortProperty() {
+		return procSortProperty;
+	}
+
 	private final class ProcPollerThread extends Thread {
 		public ObservableList<ProcInfo> processes2 = FXCollections.observableArrayList();
 
