@@ -1,3 +1,5 @@
+package erlyberly;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -5,8 +7,6 @@ import java.util.HashMap;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,7 +23,6 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
-
 
 public class ErlyBerly extends Application {
 	private final class ProcPollerThread extends Thread {
@@ -136,7 +135,7 @@ public class ErlyBerly extends Application {
         processView.setItems(procPollerThread.processes2);
         
         TableColumn<ProcInfo, String> processNameColumn = new TableColumn<>("Name");
-        processNameColumn.setMinWidth(100);
+        processNameColumn.setMinWidth(150);
         processNameColumn.setId("proc");
         processNameColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, String>("processName"));
         
@@ -147,7 +146,7 @@ public class ErlyBerly extends Application {
  
         addColumns(processNameColumn, reductionsColumn);
         
-        primaryStage.setScene(new Scene(processView, 300, 250));
+        primaryStage.setScene(new Scene(processView, 500, 250));
         primaryStage.setTitle("erlyberly");
         primaryStage.show();
     }

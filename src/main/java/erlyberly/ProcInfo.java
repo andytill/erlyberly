@@ -1,3 +1,5 @@
+package erlyberly;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,11 +14,9 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class ProcInfo {
 
-	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom(
-			"registered_name");
+	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
 
-	private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom(
-			"reductions");
+	private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
 
 	private StringProperty processName;
 
@@ -63,11 +63,11 @@ public class ProcInfo {
 		ProcInfo processInfo;
 		processInfo = new ProcInfo();
 		processInfo.setProcessName(Objects.toString(processName, ""));
-		processInfo.setReductions(toInt(propList.get(REDUCTIONS_ATOM)));
+		processInfo.setReductions(toLong(propList.get(REDUCTIONS_ATOM)));
 		return processInfo;
 	}
 
-	private static long toInt(Object object) {
+	private static long toLong(Object object) {
 		if (object instanceof OtpErlangLong) {
 			return ((OtpErlangLong) object).longValue();
 		}
