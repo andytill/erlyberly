@@ -48,10 +48,10 @@ public class ProcController {
 	}
 	
 	public void connect() {
+		String nodeName = remoteNodeNameProperty.get();
+
 		try {
 			self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
-			
-			String nodeName = remoteNodeNameProperty.get();
 			
 			// if the node name does not contain a host then assume it is on the
 			// same machine
@@ -67,7 +67,7 @@ public class ProcController {
 			
 			connectedProperty.set(true);
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException("Error connecting to remote node " + nodeName, e);
 		}
 	}
 

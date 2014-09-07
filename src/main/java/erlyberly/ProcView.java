@@ -5,11 +5,9 @@ import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.SortEvent;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -81,11 +79,6 @@ public class ProcView implements Initializable {
 		}
 		
 		processView.getSortOrder().addListener(invalidationListener);
-		processView.setOnSort(new EventHandler<SortEvent<TableView<ProcInfo>>>() {
-			@Override
-			public void handle(SortEvent<TableView<ProcInfo>> e) {
-				
-			}});
 	}
 	
 	private final class ProcSortUpdater implements InvalidationListener {
