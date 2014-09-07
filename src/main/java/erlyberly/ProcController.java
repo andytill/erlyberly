@@ -6,8 +6,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn.SortType;
@@ -24,6 +26,10 @@ import com.ericsson.otp.erlang.OtpSelf;
 public class ProcController {
 	
 	private final SimpleObjectProperty<ProcSort> procSortProperty;
+	
+	private final SimpleStringProperty remoteNodeNameProperty;
+	
+	private final SimpleBooleanProperty connectedProperty;
 
 	private OtpSelf self;
 	
@@ -32,18 +38,34 @@ public class ProcController {
 	private ProcPollerThread procPollerThread;
 	
 	public ProcController() {
-		procSortProperty = new SimpleObjectProperty<>();
+		procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", SortType.DESCENDING));
+		
+		remoteNodeNameProperty = new SimpleStringProperty();
+		
+		connectedProperty = new SimpleBooleanProperty();
+		
+		procPollerThread = new ProcPollerThread();
 	}
 	
 	public void connect() {
 		try {
 			self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
 			
-			connection = self.connect(new OtpPeer("andye@CPADMIN-F4R0H8I"));
+			String nodeName = remoteNodeNameProperty.get();
 			
-			procPollerThread = new ProcPollerThread();
-			procPollerThread.start();
+			// if the node name does not contain a host then assume it is on the
+			// same machine
+			if(nodeName.contains("@")) {
+				String[] split = self.toString().split("\\@");
 				
+				nodeName += "@" + split[1];
+			}
+			
+			connection = self.connect(new OtpPeer(nodeName));
+			
+			procPollerThread.start();
+			
+			connectedProperty.set(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,10 +79,23 @@ public class ProcController {
 		return procSortProperty;
 	}
 
+	public SimpleStringProperty remoteNodeNameProperty() {
+		return remoteNodeNameProperty;
+	}
+
+	public SimpleBooleanProperty connectedProperty() {
+		return connectedProperty;
+	}
+
 	private final class ProcPollerThread extends Thread {
 		public ObservableList<ProcInfo> processes2 = FXCollections.observableArrayList();
 
 		public SimpleLongProperty updateCounter = new SimpleLongProperty();
+		
+		public ProcPollerThread() {
+			// make sure we don't hang the VM on close because of this thread
+			setDaemon(true);
+		}
 		
 		@Override
 		public void run() {
