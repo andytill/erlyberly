@@ -1,7 +1,9 @@
 
 # erlyberly
 
-erlyberly is a clone of the console program entop, rewritten in java/javafx.  
+erlyberly is a clone of the console program [entop](https://github.com/mazenharake/entop), rewritten in java/javafx.  
+
+![erlyberly](doc/erlyberly.png)
 
 ## Current State
 
