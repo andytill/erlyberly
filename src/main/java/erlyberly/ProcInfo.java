@@ -12,6 +12,9 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
+/**
+ * Domain object for an erlang process. 
+ */
 public class ProcInfo {
 
 	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
