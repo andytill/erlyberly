@@ -3,15 +3,17 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>andytill</groupId>
-  <artifactId>merlyberly</artifactId>
+  <artifactId>erlyberly</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>merlyberly</name>
+  <name>erlyberly</name>
   <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -22,9 +24,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    <groupId>org.erlang.otp</groupId>
-    <artifactId>jinterface</artifactId>
-    <version>1.5.6</version>
-</dependency>
+      <groupId>org.erlang.otp</groupId>
+      <artifactId>jinterface</artifactId>
+      <version>1.5.6</version>
+    </dependency>
   </dependencies>
+
 </project>

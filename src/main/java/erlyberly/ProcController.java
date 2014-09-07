@@ -63,6 +63,11 @@ public class ProcController {
 			
 			connection = self.connect(new OtpPeer(nodeName));
 			
+			try {
+				OtpUtil.loadRemoteErlyberly(connection);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			procPollerThread.start();
 			
 			connectedProperty.set(true);
@@ -153,17 +158,13 @@ public class ProcController {
 		}
 
 		private void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
-			connection.sendRPC("erlang", "processes", new OtpErlangList());
+			connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
 			OtpErlangList received = (OtpErlangList) connection.receiveRPC(); 
 			
-			for (OtpErlangObject pid : received) {
-				connection.sendRPC("erlang", "process_info", new OtpErlangList(pid));
-				OtpErlangObject recv = connection.receiveRPC();
-				
+			for (OtpErlangObject recv : received) {
 				if(recv instanceof OtpErlangList) {
 					OtpErlangList pinfo = (OtpErlangList) recv; 
 					HashMap<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
-					propsToMap.put("pid", pid);
 					processes.add(ProcInfo.toProcessInfo(propsToMap));
 				}
 			}

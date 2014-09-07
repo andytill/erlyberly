@@ -10,8 +10,10 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.TableView;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangPid;
+import com.ericsson.otp.erlang.OtpErlangString;
 
 /**
  * Domain object for an erlang process. 
@@ -19,6 +21,8 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 public class ProcInfo implements Comparable<ProcInfo> {
 
 	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
+	
+	private static final OtpErlangAtom PID_ATOM = new OtpErlangAtom("pid");
 
 	private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
 
@@ -56,18 +60,27 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
 	public static ProcInfo toProcessInfo(Map<Object, Object> propList) {
 		Object processName = propList.get(REGISTERED_NAME_ATOM);
-
-		if (processName == null) {
-			OtpErlangPid pid = (OtpErlangPid) propList.get("pid");
+		
+		if (processName == null || processName.equals(new OtpErlangList())) {
+			Object pidObject = propList.get(PID_ATOM);
 			
-			// the target node is always zero to itself, I think!
-			processName = "<0." + pid.id() + "." + pid.serial() + ">";
+			if(pidObject instanceof OtpErlangPid) {
+				OtpErlangPid pid = (OtpErlangPid) pidObject;
+				
+				// the target node is always zero to itself, I think!
+				processName = "<0." + pid.id() + "." + pid.serial() + ">";
+			}
+			else if(pidObject instanceof OtpErlangString) {
+				processName = ((OtpErlangString) pidObject).stringValue();
+			}
 		}
 
 		ProcInfo processInfo;
+		
 		processInfo = new ProcInfo();
 		processInfo.setProcessName(Objects.toString(processName, ""));
 		processInfo.setReductions(toLong(propList.get(REDUCTIONS_ATOM)));
+		
 		return processInfo;
 	}
 
