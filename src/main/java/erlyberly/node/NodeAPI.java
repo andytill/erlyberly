@@ -1,4 +1,4 @@
-package erlyberly;
+package erlyberly.node;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +18,8 @@ import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
 
+import erlyberly.ProcInfo;
+
 public class NodeAPI {
 	
 	private static final String ERLYBERLY_BEAM_PATH = "/erlyberly/beam/erlyberly.beam";
@@ -34,7 +36,7 @@ public class NodeAPI {
 		connectedProperty = new SimpleBooleanProperty();
 	}
 	
-	public void connect(String remoteNodeName) {
+	public synchronized void connect(String remoteNodeName) {
 		String nodeName = remoteNodeName;
 
 		try {
@@ -84,7 +86,7 @@ public class NodeAPI {
 		return b;
 	}
 
-	public void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
+	public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
 		connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
 		OtpErlangList received = (OtpErlangList) connection.receiveRPC(); 
 		
@@ -99,5 +101,10 @@ public class NodeAPI {
 
 	public SimpleBooleanProperty connectedProperty() {
 		return connectedProperty;
+	}
+
+	public synchronized OtpErlangList requestFunctions() throws Exception {
+		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
+		return (OtpErlangList) connection.receiveRPC(); 
 	}
 }

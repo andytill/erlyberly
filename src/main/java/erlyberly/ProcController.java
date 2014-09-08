@@ -24,7 +24,6 @@ public class ProcController {
 	
 	private final SimpleStringProperty remoteNodeNameProperty;
 	
-	private final NodeAPI nodeAPI;
 	
 	private ProcPollerThread procPollerThread;
 	
@@ -35,18 +34,17 @@ public class ProcController {
 		
 		procPollerThread = new ProcPollerThread();
 		
-		nodeAPI = new NodeAPI();
-		nodeAPI.connectedProperty().addListener(new InvalidationListener() {
+		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable o) {
-				if(nodeAPI.connectedProperty().get()) {
+				if(ErlyBerly.nodeAPI().connectedProperty().get()) {
 					procPollerThread.start();
 				}
 			}});
 	}
 	
 	public void connect() {
-		nodeAPI.connect(remoteNodeNameProperty.get());
+		ErlyBerly.nodeAPI().connect(remoteNodeNameProperty.get());
 	}
 
 	public ObservableList<ProcInfo> getProcs() {
@@ -62,7 +60,7 @@ public class ProcController {
 	}
 
 	public SimpleBooleanProperty connectedProperty() {
-		return nodeAPI.connectedProperty();
+		return ErlyBerly.nodeAPI().connectedProperty();
 	}
 
 	private final class ProcPollerThread extends Thread {
@@ -87,7 +85,7 @@ public class ProcController {
 		    	final ArrayList<ProcInfo> processes = new ArrayList<>();
 		    	
 				try {
-					nodeAPI.retrieveProcessInfo(processes);
+					ErlyBerly.nodeAPI().retrieveProcessInfo(processes);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

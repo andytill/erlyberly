@@ -3,6 +3,8 @@ package erlyberly;
 import java.io.IOException;
 import java.net.URL;
 
+import erlyberly.node.NodeAPI;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -11,6 +13,8 @@ import javafx.scene.control.SplitPane;
 import javafx.stage.Stage;
 
 public class ErlyBerly extends Application {
+
+	private static final NodeAPI nodeAPI = new NodeAPI();
 
 	public static void main(String[] args) throws Exception {
 		launch(args);
@@ -41,5 +45,9 @@ public class ErlyBerly extends Application {
 			throw new RuntimeException("Cannot load FXML");
 		}
 		return node;
+	}
+
+	public static NodeAPI nodeAPI() {
+		return nodeAPI;
 	}
 }

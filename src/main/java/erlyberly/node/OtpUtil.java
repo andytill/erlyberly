@@ -1,4 +1,4 @@
-package erlyberly;
+package erlyberly.node;
 
 import java.util.HashMap;
 
