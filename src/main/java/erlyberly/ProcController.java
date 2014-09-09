@@ -75,13 +75,7 @@ public class ProcController {
 		
 		@Override
 		public void run() {
-			while(true) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-				
+			while(true) {				
 		    	final ArrayList<ProcInfo> processes = new ArrayList<>();
 		    	
 				try {
@@ -119,12 +113,18 @@ public class ProcController {
 								Collections.sort(processes, comparator);
 							}
 						}
-						
 						processes2.clear();
 						processes2.addAll(processes);
 						
 						updateCounter.add(1);
 					}});
+
+
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
 			}
 		}
 	}
