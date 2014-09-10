@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
 
-<TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView" />
+<SplitPane dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
+   <items>
+      <VBox>
+         <children>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label fx:id="traceTargetLabel" maxWidth="1.7976931348623157E308" text="No Trace" HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" text="Go!" />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+         </children>
+      </VBox>
+      <ListView fx:id="traceLogsListView" prefHeight="200.0" prefWidth="200.0" />
+   </items>
+</SplitPane>

@@ -6,22 +6,28 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-public class ModFunc {
+public class ModFunc implements Comparable<ModFunc> {
+
+	private final String moduleName;
 	
-	private final String name;
+	private final String funcName;
 	
 	private final int arity;
 	
 	private final boolean exported;
+	
+	private final boolean synthetic;
 
-	public ModFunc(String name, int arity, boolean exported) {
-		this.name = name;
+	public ModFunc(String moduleName, String funcName, int arity, boolean exported, boolean synthetic) {
+		this.moduleName = moduleName;
+		this.funcName = funcName;
 		this.arity = arity;
 		this.exported = exported;
+		this.synthetic = synthetic;
 	}
 
 	public String getName() {
-		return name;
+		return funcName;
 	}
 
 	public int getArity() {
@@ -32,15 +38,53 @@ public class ModFunc {
 		return exported;
 	}
 
+	public boolean isSynthetic() {
+		return synthetic;
+	}
+
 	@Override
 	public String toString() {
-		return name + "/" + arity;
+		if(funcName == null) {
+			return moduleName;
+		}
+		return funcName + "/" + arity;
 	}
-	
-	public static ModFunc toModFunc(OtpErlangObject e, boolean exported) throws OtpErlangRangeException {
-		OtpErlangAtom funcName = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);
+
+	public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported) throws OtpErlangRangeException {
+		OtpErlangAtom funcNameAtom = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);
 		OtpErlangLong arity = (OtpErlangLong) ((OtpErlangTuple) e).elementAt(1);
 		
-		return new ModFunc(funcName.atomValue(), arity.intValue(), exported);
+		String funcName = funcNameAtom.atomValue();
+		
+		return new ModFunc(
+			moduleName.atomValue(), 
+			funcName, 
+			arity.intValue(), 
+			exported,
+			funcName.startsWith("-")
+		);
+	}
+
+	public static ModFunc toModule(OtpErlangAtom moduleName) {
+		return new ModFunc(
+			moduleName.atomValue(), 
+			null, 
+			0, 
+			false,
+			false
+		);
+	}
+
+	@Override
+	public int compareTo(ModFunc o) {
+		if(funcName == null) {
+			return moduleName.compareTo(o.moduleName);
+		}
+		
+		int comp = funcName.compareTo(o.funcName);
+		if(comp == 0) {
+			Integer.compare(arity, o.arity);
+		}
+		return comp;
 	}
 }
