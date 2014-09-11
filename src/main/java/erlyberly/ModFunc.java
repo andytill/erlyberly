@@ -26,7 +26,11 @@ public class ModFunc implements Comparable<ModFunc> {
 		this.synthetic = synthetic;
 	}
 
-	public String getName() {
+	public String getModuleName() {
+		return moduleName;
+	}
+
+	public String getFuncName() {
 		return funcName;
 	}
 
@@ -83,7 +87,7 @@ public class ModFunc implements Comparable<ModFunc> {
 		
 		int comp = funcName.compareTo(o.funcName);
 		if(comp == 0) {
-			Integer.compare(arity, o.arity);
+			comp =  Integer.compare(arity, o.arity);
 		}
 		return comp;
 	}

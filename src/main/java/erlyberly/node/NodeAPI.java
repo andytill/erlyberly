@@ -12,12 +12,14 @@ import com.ericsson.otp.erlang.OtpConnection;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
 
+import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
 
 public class NodeAPI {
@@ -99,12 +101,38 @@ public class NodeAPI {
 		}
 	}
 
+	public synchronized OtpErlangList requestFunctions() throws Exception {
+		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
+		return (OtpErlangList) connection.receiveRPC(); 
+	}
+
+	public synchronized void startTrace(ModFunc value) throws Exception {
+		assert value.getFuncName() != null : "function name cannot be null";
+		
+		OtpErlangObject[] args = new OtpErlangObject[] {
+			new OtpErlangAtom(value.getModuleName()),
+			new OtpErlangAtom(value.getFuncName()),
+			new OtpErlangInt(value.getArity()),
+			new OtpErlangAtom(value.isExported())
+		};
+
+		connection.sendRPC("erlyberly", "start_trace", args);
+		connection.receiveRPC();
+	}
+
 	public SimpleBooleanProperty connectedProperty() {
 		return connectedProperty;
 	}
 
-	public synchronized OtpErlangList requestFunctions() throws Exception {
-		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
-		return (OtpErlangList) connection.receiveRPC(); 
+	public ArrayList<OtpErlangObject> collectTraceLogs() throws Exception {
+		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
+		
+		OtpErlangList traceLogs = (OtpErlangList) connection.receiveRPC();
+		
+		ArrayList<OtpErlangObject> arrayList = new ArrayList<OtpErlangObject>();
+		for (OtpErlangObject otpErlangObject : traceLogs) {
+			arrayList.add(otpErlangObject);
+		}
+		return arrayList;
 	}
 }

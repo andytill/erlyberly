@@ -10,6 +10,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TreeItem;
@@ -26,15 +27,13 @@ public class DbgView implements Initializable {
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
-	private ListView<String> traceLogsListView;
+	private ListView<Object> traceLogsListView;
 	@FXML
 	private Label traceTargetLabel;
-
-	//private final DbgController dbgController;
+	@FXML
+	private Button goButton;
 	
-	public DbgView() {
-		//dbgController = new DbgController();
-	}
+	private final DbgController dbgController = new DbgController();
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -43,6 +42,24 @@ public class DbgView implements Initializable {
 			public void invalidated(Observable o) {
 				onConnected();
 			}});
+		traceLogsListView.setItems(dbgController.getTraces());
+		
+		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
+		
+		dbgController.initialize(url, r);
+	}
+	
+	@FXML
+	private void onGo() throws Exception {
+		ModFunc value = modulesTree.getSelectionModel().getSelectedItem().getValue();
+		
+		if(value == null || value.getFuncName() == null) {
+			return;
+		}
+		
+		ErlyBerly.nodeAPI().startTrace(value);
+		
+		dbgController.setCollectingTraces(true);
 	}
 
 	private void onConnected() {
