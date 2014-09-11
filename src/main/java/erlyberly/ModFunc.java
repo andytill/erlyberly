@@ -53,6 +53,13 @@ public class ModFunc implements Comparable<ModFunc> {
 		}
 		return funcName + "/" + arity;
 	}
+	
+	public String toFullString() {
+		if(funcName == null) {
+			return moduleName;
+		}
+		return moduleName + ":" + funcName + "/" + arity;
+	}
 
 	public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported) throws OtpErlangRangeException {
 		OtpErlangAtom funcNameAtom = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);

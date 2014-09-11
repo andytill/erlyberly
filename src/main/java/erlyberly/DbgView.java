@@ -46,6 +46,24 @@ public class DbgView implements Initializable {
 		
 		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
 		
+		modulesTree.getSelectionModel().selectedItemProperty().addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable o) {
+				TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+				
+				if(selectedItem == null)
+					return;
+				
+				ModFunc modFunc = selectedItem.getValue();
+				
+				if(modFunc.getFuncName() == null) {
+					traceTargetLabel.setText("Choose a function");
+				}
+				else {
+					traceTargetLabel.setText("Trace " + modFunc.toFullString());
+				}
+			}});
+		
 		dbgController.initialize(url, r);
 	}
 	
