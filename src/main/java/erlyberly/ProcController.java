@@ -10,7 +10,6 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn.SortType;
@@ -20,17 +19,12 @@ import javafx.scene.control.TableColumn.SortType;
  */
 public class ProcController {
 	
-	private final SimpleObjectProperty<ProcSort> procSortProperty;
-	
-	private final SimpleStringProperty remoteNodeNameProperty;
-	
+	private final SimpleObjectProperty<ProcSort> procSortProperty;	
 	
 	private ProcPollerThread procPollerThread;
 	
 	public ProcController() {
 		procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", SortType.DESCENDING));
-		
-		remoteNodeNameProperty = new SimpleStringProperty();
 		
 		procPollerThread = new ProcPollerThread();
 		
@@ -42,10 +36,6 @@ public class ProcController {
 				}
 			}});
 	}
-	
-	public void connect() {
-		ErlyBerly.nodeAPI().connect(remoteNodeNameProperty.get());
-	}
 
 	public ObservableList<ProcInfo> getProcs() {
 		return procPollerThread.processes2;
@@ -53,10 +43,6 @@ public class ProcController {
 	
 	public SimpleObjectProperty<ProcSort> procSortProperty() {
 		return procSortProperty;
-	}
-
-	public SimpleStringProperty remoteNodeNameProperty() {
-		return remoteNodeNameProperty;
 	}
 
 	public SimpleBooleanProperty connectedProperty() {

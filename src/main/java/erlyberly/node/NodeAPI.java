@@ -38,11 +38,15 @@ public class NodeAPI {
 		connectedProperty = new SimpleBooleanProperty();
 	}
 	
-	public synchronized void connect(String remoteNodeName) {
+	public synchronized void connect(String remoteNodeName, String cookie) {
 		String nodeName = remoteNodeName;
 
 		try {
 			self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
+			
+			if(!cookie.isEmpty()) {
+				self.setCookie(cookie);
+			}
 			
 			// if the node name does not contain a host then assume it is on the
 			// same machine

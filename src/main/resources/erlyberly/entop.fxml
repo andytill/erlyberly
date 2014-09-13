@@ -8,16 +8,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ProcView">
-<children>
-      <HBox alignment="CENTER_LEFT" spacing="5.0">
-         <children>
-            <TextField fx:id="nodeNameField" onKeyPressed="#onNodeNameKeyPressed" HBox.hgrow="SOMETIMES" />
-            <Button fx:id="connectButton" mnemonicParsing="false" onAction="#onConnect" text="Connect" />
-         </children>
-         <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-         </padding>
-      </HBox><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
+<children><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
   <columns>
     <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name" />
     <TableColumn fx:id="reduc" prefWidth="110.0" text="Reductions" />
