@@ -50,8 +50,8 @@ start_trace(Mod, Func, Arity, IsExported) ->
     dbg:tracer(process, {TraceFn, ok}),
 
     case IsExported of
-        true  -> dbg:tp(Mod, Func, Arity, []);
-        false -> dbg:tpl(Mod, Func, Arity, [])
+        true  -> dbg:tp(Mod, Func, Arity, cx);
+        false -> dbg:tpl(Mod, Func, Arity, cx)
     end,
     dbg:p(all, c).
 
