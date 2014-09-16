@@ -5,7 +5,6 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-
 <SplitPane dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
    <items>
       <VBox>
@@ -22,6 +21,14 @@
             <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
-      <ListView fx:id="traceLogsListView" prefHeight="200.0" prefWidth="200.0" />
+      <AnchorPane>
+         <children>
+            <ScrollPane prefHeight="235.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <content>
+                  <VBox fx:id="tracesBox" />
+               </content>
+            </ScrollPane>
+         </children>
+      </AnchorPane>
    </items>
 </SplitPane>

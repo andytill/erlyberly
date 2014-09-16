@@ -59,17 +59,39 @@ start_trace(Mod, Func, Arity, IsExported) ->
 store_trace(Trace) ->
     erlyberly_tcollector ! Trace.
 
-erlyberly_tcollector() ->
-    erlyberly_tcollector2([]).
+-record(tcollector, { call, logs = [] }).
 
-erlyberly_tcollector2(Acc) ->
+erlyberly_tcollector() ->
+    erlyberly_tcollector2(#tcollector{}).
+
+erlyberly_tcollector2(#tcollector{ logs = Logs } = TC) ->
     receive
         {take_logs, Pid} ->
-            Pid ! {trace_logs, lists:reverse(Acc)},
-            erlyberly_tcollector2([]);
+            Pid ! {trace_logs, lists:reverse(Logs)},
+            erlyberly_tcollector2(TC#tcollector{ logs = []});
         Log ->
-            erlyberly_tcollector2([Log | Acc])
+            TC1 = collect_log(Log, TC),
+            erlyberly_tcollector2(TC1)
     end.
+
+collect_log({trace, Pid, call, Args, CallingMFA}, #tcollector{ call = undefined } = TC) ->
+    TC#tcollector{ call = {Pid, Args, CallingMFA} };
+collect_log({trace, Pid, return_from, _Func, Result}, #tcollector{ call = {Pid, Args, CallingMFA}, logs = Logs } = TC) ->
+    
+    Reg_name = case erlang:process_info(Pid, registered_name) of
+                   [{_, Name}] -> Name;
+                   {_, Name} -> Name;
+                   _ -> undefined
+               end,
+    Log = [ {pid, pid_to_list(Pid)},
+            {reg_name, Reg_name},
+            {calling_fn, CallingMFA},
+            {fn, Args},
+            {result, Result} ],
+    TC#tcollector{ call = undefined, logs = [Log | Logs]};
+collect_log(_, TC) ->
+    TC.
+
 
 collect_trace_logs() ->
     erlyberly_tcollector ! {take_logs, self()},
