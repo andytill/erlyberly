@@ -189,7 +189,7 @@ public class DbgView implements Initializable {
 		trace += " ";
 		trace += fnToFunctionString((OtpErlangTuple)map.get(new OtpErlangAtom("fn")));
 		trace += " => ";
-		trace += map.get(new OtpErlangAtom("result")).toString();
+		trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(new OtpErlangAtom("result")));
 		
 		return trace;
 	}

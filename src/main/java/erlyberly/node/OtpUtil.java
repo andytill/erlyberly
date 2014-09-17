@@ -2,6 +2,7 @@ package erlyberly.node;
 
 import java.util.HashMap;
 
+import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -23,5 +24,55 @@ public class OtpUtil {
 			}
 		}
 		return map;
+	}
+	
+	public static String otpObjectToString(OtpErlangObject obj) {
+		if(obj instanceof OtpErlangBinary)
+			return binaryToString((OtpErlangBinary) obj);
+		else
+			return obj.toString();
+	}
+	
+	public static String binaryToString(OtpErlangBinary bin) {
+		StringBuilder s = new StringBuilder("<<");
+		
+		boolean inString = false;
+		
+		for (int b : bin.binaryValue()) {
+			if(b > 31 && b < 127) {
+				if(!inString) {
+					if(s.length() > 2) {
+						s.append(", ");
+					}
+					
+					s.append("\"");
+				}
+				inString = true;
+				s.append((char)b);
+			}
+			else {
+				if(inString) {
+					s.append("\"");
+					inString = false;
+				}
+				
+				if(s.length() > 2) {
+					s.append(", ");
+				}
+
+				if(b < 0) {
+					b = 256 + b;
+				}
+				s.append(Integer.toString(b));
+			}
+		}
+		
+		if(inString) {
+			s.append("\"");
+		}
+		
+		s.append(">>");
+		
+		return s.toString();
 	}
 }
