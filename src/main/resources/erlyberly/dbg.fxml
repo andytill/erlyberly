@@ -18,6 +18,11 @@
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </VBox.margin>
             </HBox>
+            <TextField fx:id="searchField">
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" />
+               </VBox.margin>
+            </TextField>
             <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>

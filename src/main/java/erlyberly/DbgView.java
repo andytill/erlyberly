@@ -9,11 +9,16 @@ import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.VBox;
@@ -32,6 +37,11 @@ public class DbgView implements Initializable {
 	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
 	private static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
+	
+	private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
+	
+	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(treeModules);
+	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
@@ -40,11 +50,19 @@ public class DbgView implements Initializable {
 	private Button goButton;
 	@FXML
 	private VBox tracesBox;
+	@FXML
+	private TextField searchField;
 	
 	private final DbgController dbgController = new DbgController();
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		searchField.textProperty().addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable o) {
+				filteredTreeModules.setPredicate(DbgView.this::modulePredicate);
+			}});
+		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable o) {
@@ -90,6 +108,12 @@ public class DbgView implements Initializable {
 		
 		dbgController.initialize(url, r);
 	}
+
+	public boolean modulePredicate(TreeItem<ModFunc> t) {
+		if(searchField.getText().isEmpty())
+			return true;
+		return t.getValue().toString().contains(searchField.getText());
+	}
 	
 	@FXML
 	private void onGo() throws Exception {
@@ -122,7 +146,6 @@ public class DbgView implements Initializable {
 		
 		root = new TreeItem<ModFunc>();
 		root.setExpanded(true);
-		
 		OtpErlangList requestFunctions = ErlyBerly.nodeAPI().requestFunctions();
 
 		boolean isExported;
@@ -146,13 +169,15 @@ public class DbgView implements Initializable {
 			modFuncs = toModFuncs(moduleNameAtom, localFuncs, isExported);
 			addTreeItems(modFuncs, moduleItem);
 			
-			root.getChildren().add(moduleItem);
+			treeModules.add(moduleItem);
+			
 			Collections.sort(root.getChildren(), new Comparator<TreeItem<ModFunc>>() {
 				@Override
 				public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
 					return o1.getValue().compareTo(o2.getValue());
 				}});
 		}
+		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
 		return root;
 	}
 
