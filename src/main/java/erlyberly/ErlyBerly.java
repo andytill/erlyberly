@@ -25,6 +25,12 @@ public class ErlyBerly extends Application {
 	
     @Override
     public void start(Stage primaryStage) {
+        try {
+			PrefBind.setup();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
 		SplitPane splitPane;
 		
 		splitPane = new SplitPane();

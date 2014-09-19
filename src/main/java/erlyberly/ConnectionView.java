@@ -19,14 +19,12 @@ public class ConnectionView implements Initializable {
 	private TextField cookieField;
 	@FXML
 	private Button connectButton;
-	
-	@FXML
-	public void onConnect() {
-		ErlyBerly.nodeAPI().connect(nodeNameField.getText(), cookieField.getText());
-	}
 
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		PrefBind.bind("targetNodeName", nodeNameField.textProperty());
+		PrefBind.bind("cookieName", cookieField.textProperty());
+		
 		// close this window when we're connected
 		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
 			@Override
@@ -41,5 +39,10 @@ public class ConnectionView implements Initializable {
 				stage = (Stage) connectButton.getScene().getWindow();
 				stage.close();
 			}});
+	}
+	
+	@FXML
+	public void onConnect() {
+		ErlyBerly.nodeAPI().connect(nodeNameField.getText(), cookieField.getText());
 	}
 }
