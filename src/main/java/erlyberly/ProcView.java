@@ -17,6 +17,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -106,14 +107,16 @@ public class ProcView implements Initializable {
 		totalHeapSizeColumn.setId("totalheapsize");
 		
 		processView.setItems(procController.getProcs());
+		processView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
 		initialiseProcessSorting();
 	}
 	
 	@FXML
 	private void onHeapPie() {
+		
 		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : procController.getProcs()) {
+		for (ProcInfo proc : chartableProcs()) {
 			String pid = procDescription(proc);
 			data.add(new Data(pid, proc.getHeapSize()));
 		}
@@ -124,7 +127,7 @@ public class ProcView implements Initializable {
 	@FXML
 	private void onStackPie() {
 		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : procController.getProcs()) {
+		for (ProcInfo proc : chartableProcs()) {
 			data.add(new Data(procDescription(proc), proc.getStackSize()));
 		}
 		
@@ -134,11 +137,20 @@ public class ProcView implements Initializable {
 	@FXML
 	private void onTotalHeapPie() {
 		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : procController.getProcs()) {
+		for (ProcInfo proc : chartableProcs()) {
 			data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
 		}
 		
 		shoePieChart(data);
+	}
+
+	private ObservableList<ProcInfo> chartableProcs() {
+		ObservableList<ProcInfo> procs = processView.getSelectionModel().getSelectedItems();
+		
+		if(procs.isEmpty()) {
+			procs = procController.getProcs();
+		}
+		return procs;
 	}
 
 	private void shoePieChart(ObservableList<PieChart.Data> data) {
