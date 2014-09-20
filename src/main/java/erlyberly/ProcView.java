@@ -8,13 +8,21 @@ import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}. 
@@ -33,6 +41,12 @@ public class ProcView implements Initializable {
 	private Button refreshButton;
 	@FXML
 	private Button pollButton;
+	@FXML
+	private Button heapPieButton;
+	@FXML
+	private Button stackPieButton;
+	@FXML
+	private Button totalHeapPieButton;
 	
 	public ProcView() {
 		procController = new ProcController();
@@ -45,8 +59,20 @@ public class ProcView implements Initializable {
 	public void initialize(URL url, ResourceBundle r) {
 		procController.getProcs().addListener(this::onProcessCountChange);
 		
-		refreshButton.disableProperty().bind(procController.pollingProperty());
+		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+		heapPieButton.setStyle("-fx-background-color: transparent");
+		heapPieButton.setText("");
 		
+		stackPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+		stackPieButton.setStyle("-fx-background-color: transparent");
+		stackPieButton.setText("");
+		
+		totalHeapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+		totalHeapPieButton.setStyle("-fx-background-color: transparent");
+		totalHeapPieButton.setText("");
+		
+		refreshButton.disableProperty().bind(procController.pollingProperty());
+
 		procController.pollingProperty().addListener(this::onPollingChange);
 		onPollingChange(null);
 		
@@ -82,6 +108,55 @@ public class ProcView implements Initializable {
 		processView.setItems(procController.getProcs());
 		
 		initialiseProcessSorting();
+	}
+	
+	@FXML
+	private void onHeapPie() {
+		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
+		for (ProcInfo proc : procController.getProcs()) {
+			String pid = procDescription(proc);
+			data.add(new Data(pid, proc.getHeapSize()));
+		}
+		
+		shoePieChart(data);
+	}
+
+	@FXML
+	private void onStackPie() {
+		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
+		for (ProcInfo proc : procController.getProcs()) {
+			data.add(new Data(procDescription(proc), proc.getStackSize()));
+		}
+		
+		shoePieChart(data);
+	}
+
+	@FXML
+	private void onTotalHeapPie() {
+		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
+		for (ProcInfo proc : procController.getProcs()) {
+			data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
+		}
+		
+		shoePieChart(data);
+	}
+
+	private void shoePieChart(ObservableList<PieChart.Data> data) {
+		Stage pieStage;
+    
+		pieStage = new Stage();
+        pieStage.setScene(new Scene(new PieChart(data)));
+        pieStage.setWidth(400);
+
+        pieStage.show();
+	}
+
+	private String procDescription(ProcInfo proc) {
+		String pid = proc.getProcessName();
+		if(pid == null || "".equals(pid)) {
+			pid = proc.getPid();
+		}
+		return pid;
 	}
 
 	private void onPollingChange(Observable o) {

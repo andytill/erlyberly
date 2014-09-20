@@ -109,7 +109,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
 		pidProperty().set(value);
 	}
 
-	public String gePid() {
+	public String getPid() {
 		return pidProperty().get();
 	}
 

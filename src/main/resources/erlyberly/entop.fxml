@@ -36,9 +36,18 @@
     <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name" />
     <TableColumn fx:id="reduc" prefWidth="110.0" text="Reductions" />
             <TableColumn fx:id="mqueue" prefWidth="90.0" text="M. Queue" />
-            <TableColumn fx:id="heapsize" prefWidth="75.0" text="Heap Size" />
-            <TableColumn fx:id="stacksize" prefWidth="75.0" text="Stack Size" />
-            <TableColumn fx:id="totalheapsize" prefWidth="110.0" text="Total Heap Size" />
+            <TableColumn fx:id="heapsize" prefWidth="125.0" text="Heap Size">
+               <graphic>
+                  <Button fx:id="heapPieButton" mnemonicParsing="false" onAction="#onHeapPie" text="Pie" />
+               </graphic></TableColumn>
+            <TableColumn fx:id="stacksize" prefWidth="125.0" text="Stack Size">
+               <graphic>
+                  <Button fx:id="stackPieButton" mnemonicParsing="false" onAction="#onStackPie" text="Pie" />
+               </graphic></TableColumn>
+            <TableColumn fx:id="totalheapsize" prefWidth="110.0" text="Total Heap Size">
+               <graphic>
+                  <Button fx:id="totalHeapPieButton" mnemonicParsing="false" onAction="#onTotalHeapPie" text="Pie" />
+               </graphic></TableColumn>
   </columns>
 </TableView>
 </children></VBox>
