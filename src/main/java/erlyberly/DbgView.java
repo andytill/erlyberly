@@ -45,8 +45,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
-	private Label traceTargetLabel;
-	@FXML
 	private Button goButton;
 	@FXML
 	private VBox tracesBox;
@@ -99,10 +97,10 @@ public class DbgView implements Initializable {
 				ModFunc modFunc = selectedItem.getValue();
 				
 				if(modFunc.getFuncName() == null) {
-					traceTargetLabel.setText("Choose a function");
+					goButton.setText("Select a function");
 				}
 				else {
-					traceTargetLabel.setText("Trace " + modFunc.toFullString());
+					goButton.setText("Trace " + modFunc.toFullString());
 				}
 			}});
 		

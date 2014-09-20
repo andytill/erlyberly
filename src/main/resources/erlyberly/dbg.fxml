@@ -7,22 +7,18 @@
 
 <SplitPane dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
    <items>
-      <VBox>
+      <VBox spacing="5.0">
          <children>
-            <HBox alignment="CENTER_LEFT">
-               <children>
-                  <Label fx:id="traceTargetLabel" maxWidth="1.7976931348623157E308" text="No Trace" HBox.hgrow="ALWAYS" />
-                  <Button fx:id="goButton" mnemonicParsing="false" onAction="#onGo" text="Go!" />
-               </children>
-               <VBox.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </VBox.margin>
-            </HBox>
             <TextField fx:id="searchField">
                <VBox.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" />
+                  <Insets left="5.0" right="5.0" top="5.0" />
                </VBox.margin>
             </TextField>
+            <Button fx:id="goButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onGo" text="Select a function">
+               <VBox.margin>
+                  <Insets left="5.0" right="5.0" />
+               </VBox.margin>
+            </Button>
             <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
