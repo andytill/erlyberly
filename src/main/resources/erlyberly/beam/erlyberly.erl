@@ -12,12 +12,17 @@ process_info() ->
     [[{pid, pid_to_list(P)} | process_info_items(P)] || P <- erlang:processes()].
 
 process_info_items(P) ->
-    erlang:process_info(P, [registered_name,
-                            reductions,
-                            message_queue_len,
-                            heap_size,
-                            stack_size,
-                            total_heap_size]).
+    [size_to_bytes(KV) || KV <- erlang:process_info(P, [registered_name,
+                                                        reductions,
+                                                        message_queue_len,
+                                                        heap_size,
+                                                        stack_size,
+                                                        total_heap_size])].
+
+size_to_bytes({heap_size = K, Size})       -> {K, Size * erlang:system_info(wordsize)};
+size_to_bytes({stack_size = K, Size})      -> {K, Size * erlang:system_info(wordsize)};
+size_to_bytes({total_heap_size = K, Size}) -> {K, Size * erlang:system_info(wordsize)};
+size_to_bytes(KV)                          -> KV.
 
 module_functions() ->
     [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()].

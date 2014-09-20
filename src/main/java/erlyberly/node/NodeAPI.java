@@ -75,9 +75,7 @@ public class NodeAPI {
 		
 		connection.sendRPC("code", "load_binary", new OtpErlangList(elems));
 		
-		OtpErlangObject receiveRPC = connection.receiveRPC();
-		
-		System.out.println(receiveRPC);
+		connection.receiveRPC();
 	}
 
 	private static byte[] loadBeamFile() throws IOException {
@@ -93,15 +91,22 @@ public class NodeAPI {
 	}
 
 	public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
-		connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
-		OtpErlangList received = (OtpErlangList) connection.receiveRPC(); 
+		OtpErlangObject receiveRPC = null;
 		
-		for (OtpErlangObject recv : received) {
-			if(recv instanceof OtpErlangList) {
-				OtpErlangList pinfo = (OtpErlangList) recv; 
-				HashMap<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
-				processes.add(ProcInfo.toProcessInfo(propsToMap));
+		try {
+			connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
+			receiveRPC = connection.receiveRPC();
+			OtpErlangList received = (OtpErlangList) receiveRPC; 
+			
+			for (OtpErlangObject recv : received) {
+				if(recv instanceof OtpErlangList) {
+					OtpErlangList pinfo = (OtpErlangList) recv; 
+					HashMap<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
+					processes.add(ProcInfo.toProcessInfo(propsToMap));
+				}
 			}
+		} catch (ClassCastException e) {
+			throw new RuntimeException("unexpected result: " + receiveRPC, e);
 		}
 	}
 

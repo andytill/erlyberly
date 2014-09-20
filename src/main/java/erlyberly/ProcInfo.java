@@ -12,7 +12,6 @@ import javafx.scene.control.TableView;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
 
 /**
@@ -20,16 +19,106 @@ import com.ericsson.otp.erlang.OtpErlangString;
  */
 public class ProcInfo implements Comparable<ProcInfo> {
 
+	private static final OtpErlangAtom TOTAL_HEAP_SIZE_ATOM = new OtpErlangAtom("total_heap_size");
+
+	private static final OtpErlangAtom STACK_SIZE_ATOM = new OtpErlangAtom("stack_size");
+
+	private static final OtpErlangAtom HEAP_SIZE_ATOM = new OtpErlangAtom("heap_size");
+
+	private static final OtpErlangAtom MSG_QUEUE_LEN_ATOM = new OtpErlangAtom("msg_queue_len");
+
+	private static final OtpErlangList EMPTY_LIST = new OtpErlangList();
+
 	private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
 	
 	private static final OtpErlangAtom PID_ATOM = new OtpErlangAtom("pid");
 
 	private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
 
+	private StringProperty pid;
+	
 	private StringProperty processName;
 
 	private LongProperty reductions;
 
+	private LongProperty msgQueueLen;
+
+	private LongProperty heapSize;
+
+	private LongProperty stackSize;
+
+	private LongProperty totalHeapSize;
+	
+	public void setTotalHeapSize(long value) {
+		totalHeapSizeProperty().set(value);
+	}
+
+	public long getTotalHeapSize() {
+		return totalHeapSizeProperty().get();
+	}
+
+	public LongProperty totalHeapSizeProperty() {
+		if (totalHeapSize == null)
+			totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
+		return totalHeapSize;
+	}
+	
+	public void setStackSize(long value) {
+		stackSizeProperty().set(value);
+	}
+
+	public long getStackSize() {
+		return stackSizeProperty().get();
+	}
+
+	public LongProperty stackSizeProperty() {
+		if (stackSize == null)
+			stackSize = new SimpleLongProperty(this, "stackSize");
+		return stackSize;
+	}
+	
+	public void setHeapSize(long value) {
+		heapSizeProperty().set(value);
+	}
+
+	public long getHeapSize() {
+		return heapSizeProperty().get();
+	}
+
+	public LongProperty heapSizeProperty() {
+		if (heapSize == null)
+			heapSize = new SimpleLongProperty(this, "msgQueueLen");
+		return heapSize;
+	}
+	
+	public void setMsgQueueLen(long value) {
+		msgQueueLenProperty().set(value);
+	}
+
+	public long getMsgQueueLen() {
+		return msgQueueLenProperty().get();
+	}
+
+	public LongProperty msgQueueLenProperty() {
+		if (msgQueueLen == null)
+			msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
+		return msgQueueLen;
+	}
+	
+	public void setPid(String value) {
+		pidProperty().set(value);
+	}
+
+	public String gePid() {
+		return pidProperty().get();
+	}
+
+	public StringProperty pidProperty() {
+		if (pid == null)
+			pid = new SimpleStringProperty(this, "pid");
+		return pid;
+	}
+	
 	public void setProcessName(String value) {
 		processNameProperty().set(value);
 	}
@@ -60,26 +149,22 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
 	public static ProcInfo toProcessInfo(Map<Object, Object> propList) {
 		Object processName = propList.get(REGISTERED_NAME_ATOM);
+		Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
 		
-		if (processName == null || processName.equals(new OtpErlangList())) {
-			Object pidObject = propList.get(PID_ATOM);
-			
-			if(pidObject instanceof OtpErlangPid) {
-				OtpErlangPid pid = (OtpErlangPid) pidObject;
-				
-				// the target node is always zero to itself, I think!
-				processName = "<0." + pid.id() + "." + pid.serial() + ">";
-			}
-			else if(pidObject instanceof OtpErlangString) {
-				processName = ((OtpErlangString) pidObject).stringValue();
-			}
+		if(EMPTY_LIST.equals(processName)) {
+			processName = "";
 		}
-
+		
 		ProcInfo processInfo;
 		
 		processInfo = new ProcInfo();
 		processInfo.setProcessName(Objects.toString(processName, ""));
+		processInfo.setPid(Objects.toString(pid, ""));
 		processInfo.setReductions(toLong(propList.get(REDUCTIONS_ATOM)));
+		processInfo.setMsgQueueLen(toLong(propList.get(MSG_QUEUE_LEN_ATOM)));
+		processInfo.setHeapSize(toLong(propList.get(HEAP_SIZE_ATOM)));
+		processInfo.setStackSize(toLong(propList.get(STACK_SIZE_ATOM)));
+		processInfo.setTotalHeapSize(toLong(propList.get(TOTAL_HEAP_SIZE_ATOM)));
 		
 		return processInfo;
 	}

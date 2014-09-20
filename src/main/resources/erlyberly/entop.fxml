@@ -10,8 +10,13 @@
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ProcView">
 <children><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
   <columns>
+            <TableColumn fx:id="pid" prefWidth="75.0" text="Pid" />
     <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name" />
     <TableColumn fx:id="reduc" prefWidth="110.0" text="Reductions" />
+            <TableColumn fx:id="mqueue" prefWidth="90.0" text="M. Queue" />
+            <TableColumn fx:id="heapsize" prefWidth="75.0" text="Heap Size" />
+            <TableColumn fx:id="stacksize" prefWidth="75.0" text="Stack Size" />
+            <TableColumn fx:id="totalheapsize" prefWidth="110.0" text="Total Heap Size" />
   </columns>
 </TableView>
 </children></VBox>

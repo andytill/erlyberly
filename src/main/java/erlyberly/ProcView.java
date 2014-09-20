@@ -28,14 +28,34 @@ public class ProcView implements Initializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
-		TableColumn<ProcInfo, String> procColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(0);
-		TableColumn<ProcInfo, String> reducColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(1);
+		TableColumn<ProcInfo, String> pidColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(0);
+		TableColumn<ProcInfo, String> procColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(1);
+		TableColumn<ProcInfo, Long> reducColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(2);
+		TableColumn<ProcInfo, Long> mQueueLenColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(3);
+		TableColumn<ProcInfo, Long> heapSizeColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(4);
+		TableColumn<ProcInfo, Long> stackSizeColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(5);
+		TableColumn<ProcInfo, Long> totalHeapSizeColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(6);
+		
+		pidColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, String>("pid"));
+		pidColumn.setId("pid");
 
 		procColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, String>("processName"));
 		procColumn.setId("proc");
 		
-		reducColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, String>("reductions"));
+		reducColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, Long>("reductions"));
 		reducColumn.setId("reduc");
+		
+		mQueueLenColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, Long>("msgQueueLen"));
+		mQueueLenColumn.setId("mqueue");
+		
+		heapSizeColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, Long>("heapSize"));
+		heapSizeColumn.setId("heapsize");
+		
+		stackSizeColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, Long>("stackSize"));
+		stackSizeColumn.setId("stacksize");
+		
+		totalHeapSizeColumn.setCellValueFactory(new PropertyValueFactory<ProcInfo, Long>("totalHeapSize"));
+		totalHeapSizeColumn.setId("totalheapsize");
 		
 		processView.setItems(procController.getProcs());
 		
