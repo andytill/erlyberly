@@ -1,12 +1,17 @@
 package erlyberly;
 
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -17,17 +22,34 @@ import javafx.scene.control.cell.PropertyValueFactory;
 public class ProcView implements Initializable {
 
 	private final ProcController procController;
+
+	private final DateFormat timeFormat;
 	
 	@FXML
 	private TableView<ProcInfo> processView;
-
+	@FXML
+	private Label procCountLabel;
+	@FXML
+	private Button refreshButton;
+	@FXML
+	private Button pollButton;
+	
 	public ProcView() {
 		procController = new ProcController();
+	
+		timeFormat = new SimpleDateFormat("h:mm:ssaa");
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
+		procController.getProcs().addListener(this::onProcessCountChange);
+		
+		refreshButton.disableProperty().bind(procController.pollingProperty());
+		
+		procController.pollingProperty().addListener(this::onPollingChange);
+		onPollingChange(null);
+		
 		TableColumn<ProcInfo, String> pidColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(0);
 		TableColumn<ProcInfo, String> procColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(1);
 		TableColumn<ProcInfo, Long> reducColumn = (TableColumn<ProcInfo, Long>) processView.getColumns().get(2);
@@ -62,6 +84,27 @@ public class ProcView implements Initializable {
 		initialiseProcessSorting();
 	}
 
+	private void onPollingChange(Observable o) {
+		if(procController.pollingProperty().get())
+			pollButton.setText("Stop Polling");
+		else
+			pollButton.setText("Start Polling");
+	}
+	
+	@FXML
+	private void onRefresh() {
+		procController.refreshOnce();
+	}
+
+	@FXML
+	private void onTogglePolling() {
+		procController.togglePolling();
+	}
+	
+	private void onProcessCountChange(Observable o) {
+		procCountLabel.setText(procController.getProcs().size() + " processes at " + timeFormat.format(new Date()).toLowerCase());
+	}
+	
 	private void initialiseProcessSorting() {
 		InvalidationListener invalidationListener = new ProcSortUpdater();
 		

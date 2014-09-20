@@ -8,7 +8,29 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ProcView">
-<children><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
+<children>
+      <HBox alignment="CENTER_RIGHT" spacing="5.0">
+         <children>
+            <Label fx:id="procCountLabel" maxWidth="1.7976931348623157E308" text="No Processes" HBox.hgrow="SOMETIMES">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Label>
+            <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#onRefresh" text="Refresh">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="pollButton" mnemonicParsing="false" onAction="#onTogglePolling" text="Start Polling">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </VBox.margin>
+      </HBox><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
   <columns>
             <TableColumn fx:id="pid" prefWidth="75.0" text="Pid" />
     <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name" />

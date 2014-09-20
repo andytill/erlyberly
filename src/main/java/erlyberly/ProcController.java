@@ -8,7 +8,6 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,14 +18,24 @@ import javafx.scene.control.TableColumn.SortType;
  */
 public class ProcController {
 	
+	private final SimpleBooleanProperty polling;
+	
 	private final SimpleObjectProperty<ProcSort> procSortProperty;	
 	
 	private ProcPollerThread procPollerThread;
+
+	private final Object waiter;
+
+	private int timeout = -1;
 	
 	public ProcController() {
+		polling = new SimpleBooleanProperty();
+		
 		procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", SortType.DESCENDING));
 		
 		procPollerThread = new ProcPollerThread();
+		
+		waiter = new Object();
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
 			@Override
@@ -36,9 +45,32 @@ public class ProcController {
 				}
 			}});
 	}
+	
+	
+	public void refreshOnce() {
+		synchronized (waiter) {
+			waiter.notify();
+		}
+	}
+
+	public void togglePolling() {
+		if(timeout == -1) {
+			timeout = 1000;
+			
+			refreshOnce();
+		}
+		else {
+			timeout = -1;
+		}
+		polling.set(timeout > 0);
+	}
 
 	public ObservableList<ProcInfo> getProcs() {
 		return procPollerThread.processes2;
+	}
+	
+	public SimpleBooleanProperty pollingProperty() {
+		return polling;
 	}
 	
 	public SimpleObjectProperty<ProcSort> procSortProperty() {
@@ -50,17 +82,19 @@ public class ProcController {
 	}
 
 	private final class ProcPollerThread extends Thread {
-		public ObservableList<ProcInfo> processes2 = FXCollections.observableArrayList();
-
-		public SimpleLongProperty updateCounter = new SimpleLongProperty();
+		public final ObservableList<ProcInfo> processes2;
 		
 		public ProcPollerThread() {
+			processes2 = FXCollections.observableArrayList();
+			
 			// make sure we don't hang the VM on close because of this thread
 			setDaemon(true);
+			setName("Process Info Poller");
 		}
 		
 		@Override
 		public void run() {
+			
 			while(true) {				
 		    	final ArrayList<ProcInfo> processes = new ArrayList<>();
 		    	
@@ -101,13 +135,15 @@ public class ProcController {
 						}
 						processes2.clear();
 						processes2.addAll(processes);
-						
-						updateCounter.add(1);
 					}});
 
-
 				try {
-					Thread.sleep(1000);
+					synchronized (waiter) {
+						if(timeout > 0)
+							waiter.wait(timeout);
+						else
+							waiter.wait();
+					}
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
