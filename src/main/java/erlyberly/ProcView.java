@@ -61,15 +61,15 @@ public class ProcView implements Initializable {
 		procController.getProcs().addListener(this::onProcessCountChange);
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
-		heapPieButton.setStyle("-fx-background-color: transparent");
+		heapPieButton.setStyle("-fx-background-color: transparent;");
 		heapPieButton.setText("");
 		
 		stackPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
-		stackPieButton.setStyle("-fx-background-color: transparent");
+		stackPieButton.setStyle("-fx-background-color: transparent;");
 		stackPieButton.setText("");
 		
 		totalHeapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
-		totalHeapPieButton.setStyle("-fx-background-color: transparent");
+		totalHeapPieButton.setStyle("-fx-background-color: transparent;");
 		totalHeapPieButton.setText("");
 		
 		refreshButton.disableProperty().bind(procController.pollingProperty());
@@ -114,14 +114,13 @@ public class ProcView implements Initializable {
 	
 	@FXML
 	private void onHeapPie() {
-		
 		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
 		for (ProcInfo proc : chartableProcs()) {
 			String pid = procDescription(proc);
 			data.add(new Data(pid, proc.getHeapSize()));
 		}
 		
-		shoePieChart(data);
+		showPieChart("Process Heap", data);
 	}
 
 	@FXML
@@ -131,7 +130,7 @@ public class ProcView implements Initializable {
 			data.add(new Data(procDescription(proc), proc.getStackSize()));
 		}
 		
-		shoePieChart(data);
+		showPieChart("Process Stack", data);
 	}
 
 	@FXML
@@ -141,7 +140,7 @@ public class ProcView implements Initializable {
 			data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
 		}
 		
-		shoePieChart(data);
+		showPieChart("Total Heap", data);
 	}
 
 	private ObservableList<ProcInfo> chartableProcs() {
@@ -153,12 +152,18 @@ public class ProcView implements Initializable {
 		return procs;
 	}
 
-	private void shoePieChart(ObservableList<PieChart.Data> data) {
+	private void showPieChart(String title, ObservableList<PieChart.Data> data) {
+        PieChart pieChart;
+        
+		pieChart = new PieChart(data);
+        pieChart.setTitle(title);
+        
 		Stage pieStage;
     
 		pieStage = new Stage();
-        pieStage.setScene(new Scene(new PieChart(data)));
-        pieStage.setWidth(400);
+		pieStage.setScene(new Scene(pieChart));
+        pieStage.setWidth(800);
+        pieStage.setHeight(600);
 
         pieStage.show();
 	}

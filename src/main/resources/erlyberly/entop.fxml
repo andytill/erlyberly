@@ -44,7 +44,7 @@
                <graphic>
                   <Button fx:id="stackPieButton" mnemonicParsing="false" onAction="#onStackPie" text="Pie" />
                </graphic></TableColumn>
-            <TableColumn fx:id="totalheapsize" prefWidth="110.0" text="Total Heap Size">
+            <TableColumn fx:id="totalheapsize" prefWidth="150.0" text="Total Heap Size">
                <graphic>
                   <Button fx:id="totalHeapPieButton" mnemonicParsing="false" onAction="#onTotalHeapPie" text="Pie" />
                </graphic></TableColumn>
