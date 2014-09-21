@@ -18,6 +18,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -50,11 +51,15 @@ public class DbgView implements Initializable {
 	private VBox tracesBox;
 	@FXML
 	private TextField searchField;
+	@FXML
+	private VBox modulesBox;
 	
 	private final DbgController dbgController = new DbgController();
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
+		
 		searchField.textProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable o) {

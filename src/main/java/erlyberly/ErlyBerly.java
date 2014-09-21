@@ -34,15 +34,24 @@ public class ErlyBerly extends Application {
 		SplitPane splitPane;
 		
 		splitPane = new SplitPane();
-		splitPane.getItems().add(loadFxml("/erlyberly/entop.fxml"));
+		
+		splitPane.getItems().add(loadEntopPane());
 		splitPane.getItems().add(loadFxml("/erlyberly/dbg.fxml"));
 		
-        primaryStage.setScene(new Scene(splitPane, 500, 250));
+        primaryStage.setScene(new Scene(splitPane));
         primaryStage.setTitle("erlyberly");
+        primaryStage.sizeToScene();
         primaryStage.show();
         
         displayConnectionPopup(primaryStage);
     }
+
+	private Parent loadEntopPane() {
+		Parent entopPane = loadFxml("/erlyberly/entop.fxml");
+        SplitPane.setResizableWithParent(entopPane, Boolean.FALSE);
+        
+		return entopPane;
+	}
 
 	private void displayConnectionPopup(Stage primaryStage) {
 		Stage connectStage;
