@@ -16,13 +16,17 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -33,8 +37,10 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
 
+
 public class DbgView implements Initializable {
 	
+	private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
 	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
 	private static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
@@ -83,7 +89,14 @@ public class DbgView implements Initializable {
 						
 						label = new Label(tracePropsToString);
 						label.setStyle("-fx-font-smoothing-type:lcd; ");
-						
+						label.setOnMouseClicked((me) -> { 
+							if(me.getButton().equals(MouseButton.PRIMARY)){
+					            if(me.getClickCount() == 2){
+					            	showTraceTermView(argsFromTraceMap(map), (OtpErlangObject) map.get(RESULT_ATOM)); 
+				            	}
+				            }
+				        });
+							                              
 						tracesBox.getChildren().add(0, label);
 					}
 				}
@@ -110,6 +123,38 @@ public class DbgView implements Initializable {
 			}});
 		
 		dbgController.initialize(url, r);
+	}
+
+
+	private void showTraceTermView(OtpErlangObject args, OtpErlangObject result) {
+		TermTreeView resultTermsTreeView, argTermsTreeView;
+		
+		resultTermsTreeView = new TermTreeView();
+		resultTermsTreeView.populateFromTerm(result);
+		
+		argTermsTreeView = new TermTreeView();
+		argTermsTreeView.populateFromTerm(args);
+		
+		SplitPane splitPane;
+		
+		splitPane = new SplitPane();
+		splitPane.getItems().addAll(
+			labelledTreeView("Function arguments", argTermsTreeView), 
+			labelledTreeView("Result", resultTermsTreeView)
+		);
+		
+		Stage termsStage;
+    
+		termsStage = new Stage();
+		termsStage.setScene(new Scene(splitPane));
+        termsStage.setWidth(800);
+        termsStage.setHeight(600);
+
+        termsStage.show();
+	}
+	
+	private Node labelledTreeView(String label, TermTreeView node) {		
+		return new VBox(new Label(label), node);
 	}
 
 	public boolean modulePredicate(TreeItem<ModFunc> t) {
@@ -217,7 +262,7 @@ public class DbgView implements Initializable {
 		trace += " ";
 		trace += fnToFunctionString((OtpErlangTuple)map.get(new OtpErlangAtom("fn")));
 		trace += " => ";
-		trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(new OtpErlangAtom("result")));
+		trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM));
 		
 		return trace;
 	}
@@ -236,5 +281,12 @@ public class DbgView implements Initializable {
 		String fn = mod.atomValue() + ":" + func.atomValue() + "(" + join + ")";
 		
 		return fn;
+	}
+
+
+	private OtpErlangObject argsFromTraceMap(HashMap<Object, Object> map) {
+		OtpErlangTuple tuple = (OtpErlangTuple) map.get(new OtpErlangAtom("fn"));
+		OtpErlangList args = (OtpErlangList) tuple.elementAt(2);
+		return args;
 	}
 }

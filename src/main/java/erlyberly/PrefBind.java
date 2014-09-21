@@ -23,7 +23,7 @@ import javafx.beans.value.ObservableValue;
  */
 public class PrefBind {
 	
-	private static Timer timer = new Timer();
+	private static Timer timer = new Timer(true);
 	
 	private static Properties props;
 	
