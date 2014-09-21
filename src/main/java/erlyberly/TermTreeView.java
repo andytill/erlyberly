@@ -52,15 +52,15 @@ public class TermTreeView extends TreeView {
 			parent.getChildren().add(new TreeItem("}"));
 		}
 		else if(obj instanceof OtpErlangList) {
-			TreeItem tupleItem;
+			TreeItem listItem;
 			
-			tupleItem = new TreeItem("[");
-			tupleItem.setExpanded(true);
+			listItem = new TreeItem("[");
+			listItem.setExpanded(true);
 			
-			parent.getChildren().add(tupleItem);
+			parent.getChildren().add(listItem);
 			
 			for (OtpErlangObject e : ((OtpErlangList) obj).elements()) {
-				addToTreeItem(tupleItem, e);
+				addToTreeItem(listItem, e);
 			}
 			
 			parent.getChildren().add(new TreeItem("]"));
