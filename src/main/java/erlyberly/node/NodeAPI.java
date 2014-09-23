@@ -16,6 +16,7 @@ import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
+import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
 
@@ -24,6 +25,8 @@ import erlyberly.ProcInfo;
 
 public class NodeAPI {
 	
+	private static final OtpErlangAtom MODULE_ATOM = new OtpErlangAtom("module");
+
 	private static final String ERLYBERLY_BEAM_PATH = "/erlyberly/beam/erlyberly.beam";
 	
 	private static final int BEAM_SIZE_LIMIT = 1024 * 20;
@@ -75,7 +78,18 @@ public class NodeAPI {
 		
 		connection.sendRPC("code", "load_binary", new OtpErlangList(elems));
 		
-		connection.receiveRPC();
+		OtpErlangObject result = connection.receiveRPC();
+		
+		if(result instanceof OtpErlangTuple) {
+			OtpErlangObject e0 = ((OtpErlangTuple) result).elementAt(0);
+			
+			if(!MODULE_ATOM.equals(e0)) {
+				throw new RuntimeException("error loading the erlyberly module, result was " + result);
+			}
+		}
+		else {
+			throw new RuntimeException("error loading the erlyberly module, result was " + result);
+		}
 	}
 
 	private static byte[] loadBeamFile() throws IOException {

@@ -14,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -35,11 +36,14 @@ import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
 import erlyberly.node.OtpUtil;
 
 
 public class DbgView implements Initializable {
 	
+	private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
 	private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
 	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
@@ -47,7 +51,9 @@ public class DbgView implements Initializable {
 	
 	private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
 	
-	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(treeModules);
+	private final SortedList<TreeItem<ModFunc>> sortedTreeModules = new SortedList<TreeItem<ModFunc>>(treeModules);
+	
+	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
 	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
@@ -64,6 +70,12 @@ public class DbgView implements Initializable {
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		sortedTreeModules.setComparator(new Comparator<TreeItem<ModFunc>>() {
+			@Override
+			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}});
+		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
 		searchField.textProperty().addListener(new InvalidationListener() {
@@ -205,8 +217,11 @@ public class DbgView implements Initializable {
 			OtpErlangList exportedFuncs = (OtpErlangList) tuple.elementAt(1);
 			OtpErlangList localFuncs = (OtpErlangList) tuple.elementAt(2);
 			
-			TreeItem<ModFunc> moduleItem = new TreeItem<ModFunc>(ModFunc.toModule(moduleNameAtom));
-
+			TreeItem<ModFunc> moduleItem;
+			
+			moduleItem = new TreeItem<ModFunc>(ModFunc.toModule(moduleNameAtom));
+			moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
+			
 			ArrayList<ModFunc> modFuncs;
 
 			isExported = true;			
@@ -218,23 +233,41 @@ public class DbgView implements Initializable {
 			addTreeItems(modFuncs, moduleItem);
 			
 			treeModules.add(moduleItem);
-			
-			Collections.sort(root.getChildren(), new Comparator<TreeItem<ModFunc>>() {
-				@Override
-				public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
-					return o1.getValue().compareTo(o2.getValue());
-				}});
 		}
 		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
+		
+/*		Collections.sort(root.getChildren(), new Comparator<TreeItem<ModFunc>>() {
+			@Override
+			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}});*/
+		
 		return root;
 	}
 
 	private void addTreeItems(ArrayList<ModFunc> modFuncs, TreeItem<ModFunc> moduleItem) {
 		for (ModFunc modFunc : modFuncs) {
 			if(!modFunc.isSynthetic()) {
-				moduleItem.getChildren().add(new TreeItem<ModFunc>(modFunc));
+				TreeItem<ModFunc> item = new TreeItem<ModFunc>(modFunc);
+
+				Icon icon;
+				
+				if(modFunc.isExported()) {
+					icon = treeIcon(AwesomeIcon.SQUARE);
+				}
+				else {
+					icon = treeIcon(AwesomeIcon.SQUARE_ALT);
+				}
+				item.setGraphic(icon
+						);
+				moduleItem.getChildren().add(item);
 			}
 		}
+	}
+
+
+	private Icon treeIcon(AwesomeIcon treeIcon) {
+		return Icon.create().icon(treeIcon).style(ICON_STYLE);
 	}
 
 	private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) throws OtpErlangRangeException {

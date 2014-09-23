@@ -58,6 +58,7 @@ public class ProcView implements Initializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
+		
 		procController.getProcs().addListener(this::onProcessCountChange);
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
@@ -71,8 +72,13 @@ public class ProcView implements Initializable {
 		totalHeapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		totalHeapPieButton.setStyle("-fx-background-color: transparent;");
 		totalHeapPieButton.setText("");
-		
+
+		refreshButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
+		refreshButton.setGraphicTextGap(8d);
 		refreshButton.disableProperty().bind(procController.pollingProperty());
+		
+		pollButton.setGraphic(Icon.create().icon(AwesomeIcon.REFRESH));
+		pollButton.setGraphicTextGap(9d);
 
 		procController.pollingProperty().addListener(this::onPollingChange);
 		onPollingChange(null);
