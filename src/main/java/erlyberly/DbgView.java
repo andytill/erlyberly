@@ -2,14 +2,15 @@ package erlyberly;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -55,6 +56,14 @@ public class DbgView implements Initializable {
 	
 	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
 	
+	private final SimpleBooleanProperty expandFunctions = new SimpleBooleanProperty(false);
+	
+	/**
+	 * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
+	 * the predicate property does not seem to work.
+	 */
+	private final ObservableList<FilteredList<TreeItem<ModFunc>>> functionLists = FXCollections.observableArrayList();
+	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
@@ -70,18 +79,32 @@ public class DbgView implements Initializable {
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
-		sortedTreeModules.setComparator(new Comparator<TreeItem<ModFunc>>() {
-			@Override
-			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
-				return o1.getValue().compareTo(o2.getValue());
-			}});
+		sortedTreeModules.setComparator(treeItemModFuncComparator());
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
 		searchField.textProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable o) {
-				filteredTreeModules.setPredicate(DbgView.this::modulePredicate);
+				
+				String[] split = searchField.getText().split(":");
+				
+				if(split.length == 0)
+					return;
+				
+				final String moduleName = split[0];
+				final String funcName = (split.length > 1) ? split[1] : ""; 
+				
+				if(!funcName.isEmpty()) {
+					expandFunctions.set(true);
+				}
+				
+				filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
+				
+				
+			    for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+					funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
+				}
 			}});
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
@@ -138,6 +161,15 @@ public class DbgView implements Initializable {
 	}
 
 
+	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
+		return new Comparator<TreeItem<ModFunc>>() {
+			@Override
+			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}};
+	}
+
+
 	private void showTraceTermView(OtpErlangObject args, OtpErlangObject result) {
 		TermTreeView resultTermsTreeView, argTermsTreeView;
 		
@@ -170,9 +202,15 @@ public class DbgView implements Initializable {
 	}
 
 	public boolean modulePredicate(TreeItem<ModFunc> t) {
-		if(searchField.getText().isEmpty())
+		String searchText = searchField.getText();
+		return isMatchingModFunc(searchText, t);
+	}
+
+
+	private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
+		if(searchText.isEmpty())
 			return true;
-		return t.getValue().toString().contains(searchField.getText());
+		return t.getValue().toString().contains(searchText);
 	}
 	
 	@FXML
@@ -222,18 +260,23 @@ public class DbgView implements Initializable {
 			moduleItem = new TreeItem<ModFunc>(ModFunc.toModule(moduleNameAtom));
 			moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
 			
-			ArrayList<ModFunc> modFuncs = new ArrayList<ModFunc>();
+			ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
+			
+			SortedList<TreeItem<ModFunc>> sortedFuncs = new SortedList<TreeItem<ModFunc>>(modFuncs);
+			
+			FilteredList<TreeItem<ModFunc>> filteredFuncs = new FilteredList<TreeItem<ModFunc>>(sortedFuncs);
 
+			sortedFuncs.setComparator(treeItemModFuncComparator());
+			
 			isExported = true;			
-			modFuncs.addAll(toModFuncs(moduleNameAtom, exportedFuncs, isExported));
+			addTreeItems(toModFuncs(moduleNameAtom, exportedFuncs, isExported), modFuncs);
 
 			isExported = false;
-			modFuncs.addAll(toModFuncs(moduleNameAtom, localFuncs, isExported));
-
-			Collections.sort(modFuncs);
+			addTreeItems(toModFuncs(moduleNameAtom, localFuncs, isExported), modFuncs);
+			functionLists.add(filteredFuncs);
 			
-			addTreeItems(modFuncs, moduleItem);
-			
+			Bindings.bindContentBidirectional(moduleItem.getChildren(), filteredFuncs);
+			moduleItem.expandedProperty().bindBidirectional(expandFunctions);
 			treeModules.add(moduleItem);
 		}
 		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
@@ -241,24 +284,29 @@ public class DbgView implements Initializable {
 		return root;
 	}
 
-	private void addTreeItems(ArrayList<ModFunc> modFuncs, TreeItem<ModFunc> moduleItem) {
+	private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
 		for (ModFunc modFunc : modFuncs) {
 			if(!modFunc.isSynthetic()) {
-				TreeItem<ModFunc> item = new TreeItem<ModFunc>(modFunc);
-
-				Icon icon;
+				TreeItem<ModFunc> item = newFuncTreeItem(modFunc);
 				
-				if(modFunc.isExported()) {
-					icon = treeIcon(AwesomeIcon.SQUARE);
-				}
-				else {
-					icon = treeIcon(AwesomeIcon.SQUARE_ALT);
-				}
-				item.setGraphic(icon);
-				
-				moduleItem.getChildren().add(item);
+				modFuncTreeItems.add(item);
 			}
 		}
+	}
+
+	private TreeItem<ModFunc> newFuncTreeItem(ModFunc modFunc) {
+		TreeItem<ModFunc> item = new TreeItem<ModFunc>(modFunc);
+
+		Icon icon;
+		
+		if(modFunc.isExported()) {
+			icon = treeIcon(AwesomeIcon.SQUARE);
+		}
+		else {
+			icon = treeIcon(AwesomeIcon.SQUARE_ALT);
+		}
+		item.setGraphic(icon);
+		return item;
 	}
 
 
