@@ -78,7 +78,7 @@ public class NodeAPI {
 		
 		connection.sendRPC("code", "load_binary", new OtpErlangList(elems));
 		
-		OtpErlangObject result = connection.receiveRPC();
+		OtpErlangObject result = receiveRPC();
 		
 		if(result instanceof OtpErlangTuple) {
 			OtpErlangObject e0 = ((OtpErlangTuple) result).elementAt(0);
@@ -90,6 +90,19 @@ public class NodeAPI {
 		else {
 			throw new RuntimeException("error loading the erlyberly module, result was " + result);
 		}
+	}
+
+	private OtpErlangObject receiveRPC() throws IOException, OtpErlangExit, OtpAuthException {
+		OtpErlangObject result = connection.receiveRPC();
+		
+		// hack to support certain projects, don't ask...
+		if(result instanceof OtpErlangTuple) {
+			if(new OtpErlangAtom("add_locator").equals(((OtpErlangTuple) result).elementAt(0))) {
+				result = receiveRPC();
+			}
+		}
+		
+		return result;
 	}
 
 	private static byte[] loadBeamFile() throws IOException {
@@ -109,7 +122,7 @@ public class NodeAPI {
 		
 		try {
 			connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
-			receiveRPC = connection.receiveRPC();
+			receiveRPC = receiveRPC();
 			OtpErlangList received = (OtpErlangList) receiveRPC; 
 			
 			for (OtpErlangObject recv : received) {
@@ -126,7 +139,7 @@ public class NodeAPI {
 
 	public synchronized OtpErlangList requestFunctions() throws Exception {
 		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
-		return (OtpErlangList) connection.receiveRPC(); 
+		return (OtpErlangList) receiveRPC(); 
 	}
 
 	public synchronized void startTrace(ModFunc value) throws Exception {
@@ -140,7 +153,7 @@ public class NodeAPI {
 		};
 
 		connection.sendRPC("erlyberly", "start_trace", args);
-		connection.receiveRPC();
+		receiveRPC();
 	}
 
 	public SimpleBooleanProperty connectedProperty() {
@@ -150,7 +163,7 @@ public class NodeAPI {
 	public ArrayList<OtpErlangObject> collectTraceLogs() throws Exception {
 		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
-		OtpErlangList traceLogs = (OtpErlangList) connection.receiveRPC();
+		OtpErlangList traceLogs = (OtpErlangList) receiveRPC();
 		
 		ArrayList<OtpErlangObject> arrayList = new ArrayList<OtpErlangObject>();
 		for (OtpErlangObject otpErlangObject : traceLogs) {
