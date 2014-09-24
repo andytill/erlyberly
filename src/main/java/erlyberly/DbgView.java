@@ -222,25 +222,21 @@ public class DbgView implements Initializable {
 			moduleItem = new TreeItem<ModFunc>(ModFunc.toModule(moduleNameAtom));
 			moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
 			
-			ArrayList<ModFunc> modFuncs;
+			ArrayList<ModFunc> modFuncs = new ArrayList<ModFunc>();
 
 			isExported = true;			
-			modFuncs = toModFuncs(moduleNameAtom, exportedFuncs, isExported);
-			addTreeItems(modFuncs, moduleItem);
+			modFuncs.addAll(toModFuncs(moduleNameAtom, exportedFuncs, isExported));
 
 			isExported = false;
-			modFuncs = toModFuncs(moduleNameAtom, localFuncs, isExported);
+			modFuncs.addAll(toModFuncs(moduleNameAtom, localFuncs, isExported));
+
+			Collections.sort(modFuncs);
+			
 			addTreeItems(modFuncs, moduleItem);
 			
 			treeModules.add(moduleItem);
 		}
 		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
-		
-/*		Collections.sort(root.getChildren(), new Comparator<TreeItem<ModFunc>>() {
-			@Override
-			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
-				return o1.getValue().compareTo(o2.getValue());
-			}});*/
 		
 		return root;
 	}
@@ -258,8 +254,8 @@ public class DbgView implements Initializable {
 				else {
 					icon = treeIcon(AwesomeIcon.SQUARE_ALT);
 				}
-				item.setGraphic(icon
-						);
+				item.setGraphic(icon);
+				
 				moduleItem.getChildren().add(item);
 			}
 		}
@@ -276,7 +272,6 @@ public class DbgView implements Initializable {
 			ModFunc modFunc = ModFunc.toFunc(moduleNameAtom, exported, isExported);
 			mfs.add(modFunc);
 		}
-		Collections.sort(mfs);
 		return mfs;
 	}
 	
