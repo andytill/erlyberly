@@ -7,22 +7,44 @@
           process_info/0,
           start_trace/4 ]).
 
-%% code liberally stolen from entop
-process_info() ->
-    [[{pid, pid_to_list(P)} | process_info_items(P)] || P <- erlang:processes()].
+%% ============================================================================
+%% process info
+%% ============================================================================
 
-process_info_items(P) ->
-    [size_to_bytes(KV) || KV <- erlang:process_info(P, [registered_name,
-                                                        reductions,
-                                                        message_queue_len,
-                                                        heap_size,
-                                                        stack_size,
-                                                        total_heap_size])].
+process_info() ->
+    process_info2(erlang:processes(), []).
+
+process_info2([], Acc) ->
+    Acc;
+process_info2([undefined | Tail], Acc) ->
+    process_info2(Tail, Acc);
+process_info2([Proc | Tail], Acc) ->
+    Props = erlang:process_info(Proc, [registered_name,
+                                       reductions,
+                                       message_queue_len,
+                                       heap_size,
+                                       stack_size,
+                                       total_heap_size]),
+    Acc1 = case Props of
+               undefined -> 
+                   Acc;
+               _ -> 
+                   Props1 = [{pid, pid_to_list(Proc)} | size_props_to_bytes(Props)],
+                   [Props1 | Acc]
+           end,
+    process_info2(Tail, Acc1).
+
+size_props_to_bytes(Props) ->
+    [size_to_bytes(KV) || KV <- Props].
 
 size_to_bytes({heap_size = K, Size})       -> {K, Size * erlang:system_info(wordsize)};
 size_to_bytes({stack_size = K, Size})      -> {K, Size * erlang:system_info(wordsize)};
 size_to_bytes({total_heap_size = K, Size}) -> {K, Size * erlang:system_info(wordsize)};
 size_to_bytes(KV)                          -> KV.
+
+%% ============================================================================
+%% module function tree
+%% ============================================================================
 
 module_functions() ->
     [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()].
@@ -31,6 +53,11 @@ module_functions2(Mod) when is_atom(Mod) ->
     Exports = Mod:module_info(exports),
     Unexported = [F || F <- Mod:module_info(functions), not lists:member(F, Exports)],
     {Mod, Exports, Unexported}.
+
+
+%% ============================================================================
+%% tracing
+%% ============================================================================
 
 start_trace(Mod, Func, Arity, IsExported) ->
     % start the process that will collect the traces
