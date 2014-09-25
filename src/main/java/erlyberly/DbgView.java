@@ -10,7 +10,6 @@ import java.util.ResourceBundle;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -56,8 +55,6 @@ public class DbgView implements Initializable {
 	
 	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
 	
-	private final SimpleBooleanProperty expandFunctions = new SimpleBooleanProperty(false);
-	
 	/**
 	 * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
 	 * the predicate property does not seem to work.
@@ -87,7 +84,9 @@ public class DbgView implements Initializable {
 			@Override
 			public void invalidated(Observable o) {
 				
-				String[] split = searchField.getText().split(":");
+				String search = searchField.getText();
+				
+				String[] split = search.split(":");
 				
 				if(split.length == 0)
 					return;
@@ -95,8 +94,10 @@ public class DbgView implements Initializable {
 				final String moduleName = split[0];
 				final String funcName = (split.length > 1) ? split[1] : ""; 
 				
-				if(!funcName.isEmpty()) {
-					expandFunctions.set(true);
+				if(search.contains(":")) {
+					for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
+						treeItem.setExpanded(true);
+					}
 				}
 				
 				filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
@@ -276,7 +277,7 @@ public class DbgView implements Initializable {
 			functionLists.add(filteredFuncs);
 			
 			Bindings.bindContentBidirectional(moduleItem.getChildren(), filteredFuncs);
-			moduleItem.expandedProperty().bindBidirectional(expandFunctions);
+			
 			treeModules.add(moduleItem);
 		}
 		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
