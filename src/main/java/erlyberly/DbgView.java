@@ -21,11 +21,13 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -33,7 +35,6 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
-import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -44,10 +45,6 @@ import erlyberly.node.OtpUtil;
 public class DbgView implements Initializable {
 	
 	private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
-	private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
-	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
-	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
-	private static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
 	
 	private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
 	
@@ -66,11 +63,13 @@ public class DbgView implements Initializable {
 	@FXML
 	private Button goButton;
 	@FXML
-	private VBox tracesBox;
+	private ListView<TraceLog> tracesBox;
 	@FXML
 	private TextField searchField;
 	@FXML
 	private VBox modulesBox;
+	@FXML
+	private TextField traceSearchField;
 	
 	private final DbgController dbgController = new DbgController();
 	
@@ -102,7 +101,6 @@ public class DbgView implements Initializable {
 				
 				filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
 				
-				
 			    for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
 					funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
 				}
@@ -113,31 +111,21 @@ public class DbgView implements Initializable {
 			public void invalidated(Observable o) {
 				onConnected();
 			}});
+		
 		dbgController.getTraces().addListener(new ListChangeListener<Object>() {
 			@Override
 			public void onChanged(ListChangeListener.Change<? extends Object> e) {
 				while(e.next()) {
 					for (Object obj : e.getAddedSubList()) {
 						HashMap<Object, Object> map = OtpUtil.propsToMap((OtpErlangList) obj);
-						String tracePropsToString = tracePropsToString(map);
-						
-						Label label;
-						
-						label = new Label(tracePropsToString);
-						label.setStyle("-fx-font-smoothing-type:lcd; ");
-						label.setOnMouseClicked((me) -> { 
-							if(me.getButton().equals(MouseButton.PRIMARY)){
-					            if(me.getClickCount() == 2){
-					            	showTraceTermView(argsFromTraceMap(map), (OtpErlangObject) map.get(RESULT_ATOM)); 
-				            	}
-				            }
-				        });
 							                              
-						tracesBox.getChildren().add(0, label);
+						TraceLog trace = new TraceLog(map);
+						
+						tracesBox.getItems().add(0, trace);
 					}
 				}
 			}});
-		
+		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
 		
 		modulesTree.getSelectionModel().selectedItemProperty().addListener(new InvalidationListener() {
@@ -161,6 +149,17 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 	}
 
+	private void onTraceClicked(MouseEvent me) {
+		if(me.getButton().equals(MouseButton.PRIMARY)){
+            if(me.getClickCount() == 2) {
+            	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
+            	
+            	if(selectedItem != null) {
+                	showTraceTermView(selectedItem.getArgs(), selectedItem.getResult()); 
+            	}
+        	}
+        }
+	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
@@ -322,48 +321,5 @@ public class DbgView implements Initializable {
 			mfs.add(modFunc);
 		}
 		return mfs;
-	}
-	
-	private String tracePropsToString(HashMap<Object, Object> map) {
-		String trace = "";
-		
-		OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
-		
-		if(!ATOM_UNDEFINED.equals(regName)) {
-			trace += regName.atomValue();
-		}
-		else {
-			OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-			trace += pidString.stringValue();
-		}
-		trace += " ";
-		trace += fnToFunctionString((OtpErlangTuple)map.get(new OtpErlangAtom("fn")));
-		trace += " => ";
-		trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM));
-		
-		return trace;
-	}
-	
-	private String fnToFunctionString(OtpErlangTuple tuple) {
-		OtpErlangAtom mod = (OtpErlangAtom) tuple.elementAt(0);
-		OtpErlangAtom func = (OtpErlangAtom) tuple.elementAt(1);
-		OtpErlangList args = (OtpErlangList) tuple.elementAt(2);
-		ArrayList<String> sargs = new ArrayList<String>();
-		for (OtpErlangObject otpErlangObject : args) {
-			sargs.add(otpErlangObject.toString());
-		}
-		
-		String join = String.join(", ", sargs);
-		
-		String fn = mod.atomValue() + ":" + func.atomValue() + "(" + join + ")";
-		
-		return fn;
-	}
-
-
-	private OtpErlangObject argsFromTraceMap(HashMap<Object, Object> map) {
-		OtpErlangTuple tuple = (OtpErlangTuple) map.get(new OtpErlangAtom("fn"));
-		OtpErlangList args = (OtpErlangList) tuple.elementAt(2);
-		return args;
 	}
 }
