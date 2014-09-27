@@ -41,32 +41,27 @@ public class NodeAPI {
 		connectedProperty = new SimpleBooleanProperty();
 	}
 	
-	public synchronized void connect(String remoteNodeName, String cookie) {
+	public synchronized void connect(String remoteNodeName, String cookie) throws IOException, OtpAuthException, OtpErlangExit {
 		String nodeName = remoteNodeName;
-
-		try {
-			self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
-			
-			if(!cookie.isEmpty()) {
-				self.setCookie(cookie);
-			}
-			
-			// if the node name does not contain a host then assume it is on the
-			// same machine
-			if(!nodeName.contains("@")) {
-				String[] split = self.toString().split("\\@");
-				
-				nodeName += "@" + split[1];
-			}
-			
-			connection = self.connect(new OtpPeer(nodeName));
-			
-			loadRemoteErlyberly();
-			
-			connectedProperty.set(true);
-		} catch (Exception e) {
-			throw new RuntimeException("Error connecting to remote node " + nodeName, e);
+		self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
+		
+		if(!cookie.isEmpty()) {
+			self.setCookie(cookie);
 		}
+		
+		// if the node name does not contain a host then assume it is on the
+		// same machine
+		if(!nodeName.contains("@")) {
+			String[] split = self.toString().split("\\@");
+			
+			nodeName += "@" + split[1];
+		}
+		
+		connection = self.connect(new OtpPeer(nodeName));
+		
+		loadRemoteErlyberly();
+		
+		connectedProperty.set(true);
 	}
 	
 	private void loadRemoteErlyberly() throws IOException, OtpErlangExit, OtpAuthException {
