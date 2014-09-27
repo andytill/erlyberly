@@ -139,6 +139,12 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 	}
 	
+	@FXML
+	private void onTraceLogClear() {
+		traces.clear();
+		tracesBox.getItems().clear();
+	}
+	
 	private void onTraceFilterChange() {
 		filteredTraces.setPredicate((t) -> {
 			String filterText = filterTracesField.getText();
