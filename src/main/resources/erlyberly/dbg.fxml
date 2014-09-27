@@ -24,9 +24,10 @@
       </VBox>
       <VBox spacing="5.0">
          <children>
-            <HBox>
+            <HBox spacing="5.0">
                <children>
-                  <TextField fx:id="traceSearchField" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="traceSearchField" maxWidth="1.7976931348623157E308" promptText="Only traces containing..." HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="filterTracesField" promptText="Filter out traces containing..." HBox.hgrow="ALWAYS" />
                </children>
                <padding>
                   <Insets left="5.0" right="5.0" top="5.0" />

@@ -10,7 +10,6 @@ import java.util.ResourceBundle;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -77,6 +76,8 @@ public class DbgView implements Initializable {
 	private VBox modulesBox;
 	@FXML
 	private TextField traceSearchField;
+	@FXML
+	private TextField filterTracesField;
 	
 	private final DbgController dbgController = new DbgController();
 	
@@ -86,8 +87,8 @@ public class DbgView implements Initializable {
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
-		traceSearchField.setPromptText("Search for traces containing text");
-		traceSearchField.textProperty().addListener(this::onTraceFilterChange);
+		traceSearchField.textProperty().addListener((o) -> { onTraceFilterChange(); });
+		filterTracesField.textProperty().addListener((o) -> { onTraceFilterChange(); });
 		
 		searchField.setPromptText("Search for functions i.e. gen_s:call");
 		searchField.textProperty().addListener(this::onFunctionSearchChange);
@@ -138,8 +139,14 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 	}
 	
-	private void onTraceFilterChange(ObservableValue<? extends String> o, String oldValue, String newValue) {
-		filteredTraces.setPredicate((t) -> { return t.toString().contains(newValue); });
+	private void onTraceFilterChange() {
+		filteredTraces.setPredicate((t) -> {
+			String filterText = filterTracesField.getText();
+			String logText = t.toString();
+			if(!filterText.isEmpty() && logText.contains(filterTracesField.getText())) {
+				return false;
+			}
+			return logText.contains(traceSearchField.getText()); });
 	}
 	
 	public void onFunctionSearchChange(Observable o) {
