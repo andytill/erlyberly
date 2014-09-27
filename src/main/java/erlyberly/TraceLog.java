@@ -2,6 +2,7 @@ package erlyberly;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -11,26 +12,33 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
 
-public class TraceLog {
+public class TraceLog implements Comparable<TraceLog> {
 	
 	private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
 	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
 	private static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
+	
+	private static final AtomicLong instanceCounter = new AtomicLong();
 
-	private HashMap<Object, Object> map;
+	private final HashMap<Object, Object> map;
+	
+	private final long instanceNum;
+	
+	private String toString;
 
 	public TraceLog(HashMap<Object, Object> map) {
 		this.map = map;
-		// TODO Auto-generated constructor stub
+		instanceNum = instanceCounter.incrementAndGet();
 	}
 	
 	@Override
 	public String toString() {
-		return tracePropsToString();
+		if(toString == null) {
+			toString = tracePropsToString();
+		}
+		return toString;
 	}
-	
-
 	
 	private String tracePropsToString() {
 		String trace = "";
@@ -76,5 +84,10 @@ public class TraceLog {
 
 	public OtpErlangObject getResult() {
 		return (OtpErlangObject) map.get(RESULT_ATOM);
+	}
+
+	@Override
+	public int compareTo(TraceLog o) {
+		return Long.compare(instanceNum, o.instanceNum);
 	}
 }

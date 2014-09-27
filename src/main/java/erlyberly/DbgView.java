@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -52,6 +53,12 @@ public class DbgView implements Initializable {
 	
 	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
 	
+	private final ObservableList<TraceLog> traces = FXCollections.observableArrayList();
+	
+	private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traces);
+	
+	private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
+	
 	/**
 	 * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
 	 * the predicate property does not seem to work.
@@ -79,32 +86,11 @@ public class DbgView implements Initializable {
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
-		searchField.textProperty().addListener(new InvalidationListener() {
-			@Override
-			public void invalidated(Observable o) {
-				
-				String search = searchField.getText();
-				
-				String[] split = search.split(":");
-				
-				if(split.length == 0)
-					return;
-				
-				final String moduleName = split[0];
-				final String funcName = (split.length > 1) ? split[1] : ""; 
-				
-				if(search.contains(":")) {
-					for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
-						treeItem.setExpanded(true);
-					}
-				}
-				
-				filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
-				
-			    for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
-					funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
-				}
-			}});
+		traceSearchField.setPromptText("Search for traces containing text");
+		traceSearchField.textProperty().addListener(this::onTraceFilterChange);
+		
+		searchField.setPromptText("Search for functions i.e. gen_s:call");
+		searchField.textProperty().addListener(this::onFunctionSearchChange);
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
 			@Override
@@ -121,7 +107,7 @@ public class DbgView implements Initializable {
 							                              
 						TraceLog trace = new TraceLog(map);
 						
-						tracesBox.getItems().add(0, trace);
+						traces.add(0, trace);
 					}
 				}
 			}});
@@ -145,8 +131,40 @@ public class DbgView implements Initializable {
 					goButton.setText("Trace " + modFunc.toFullString());
 				}
 			}});
+
+		
+		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		dbgController.initialize(url, r);
+	}
+	
+	private void onTraceFilterChange(ObservableValue<? extends String> o, String oldValue, String newValue) {
+		filteredTraces.setPredicate((t) -> { return t.toString().contains(newValue); });
+	}
+	
+	public void onFunctionSearchChange(Observable o) {
+		
+		String search = searchField.getText();
+		
+		String[] split = search.split(":");
+		
+		if(split.length == 0)
+			return;
+		
+		final String moduleName = split[0];
+		final String funcName = (split.length > 1) ? split[1] : ""; 
+		
+		if(search.contains(":")) {
+			for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
+				treeItem.setExpanded(true);
+			}
+		}
+		
+		filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
+		
+	    for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+			funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
+		}
 	}
 
 	private void onTraceClicked(MouseEvent me) {
