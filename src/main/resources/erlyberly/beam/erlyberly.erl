@@ -5,7 +5,8 @@
           erlyberly_tcollector/0,
           module_functions/0,
           process_info/0,
-          start_trace/4 ]).
+          start_trace/4,
+          stop_trace/4 ]).
 
 %% ============================================================================
 %% process info
@@ -59,19 +60,34 @@ module_functions2(Mod) when is_atom(Mod) ->
 %% tracing
 %% ============================================================================
 
+%%
 start_trace(Mod, Func, Arity, IsExported) ->
-    % start the process that will collect the traces
-    case whereis(erlyberly_tcollector) of
-        undefined -> 
-            Pid = spawn(?MODULE, erlyberly_tcollector, []),
-            register(erlyberly_tcollector, Pid);
-        _ -> 
-            ok
-    end,
+    ensure_dbg_started(),
 
+    case IsExported of
+        true  -> dbg:tp(Mod, Func, Arity, cx);
+        false -> dbg:tpl(Mod, Func, Arity, cx)
+    end,
+    dbg:p(all, c).
+%%
+stop_trace(Mod, Func, Arity, IsExported) ->
+    case IsExported of
+        true  -> dbg:ctp(Mod, Func, Arity);
+        false -> dbg:ctpl(Mod, Func, Arity)
+    end.
+
+%%
+when_process_unregistered(ProcName, Fn) ->
+    case whereis(ProcName) of
+        undefined -> Fn();
+        _         -> ok
+    end.
+%%
+ensure_dbg_started() ->
     % restart dbg
-    dbg:stop_clear(),
-    dbg:start(),
+    when_process_unregistered(dbg, fun dbg:start/0),
+
+    when_process_unregistered(erlyberly_tcollector, fun start_trace_collector/0),
 
     % create a tracer that will send the trace logs to erlyberly_tcollector
     % to be stored.
@@ -79,15 +95,13 @@ start_trace(Mod, Func, Arity, IsExported) ->
                   store_trace(Trace),
                   ok
               end,
-    dbg:tracer(process, {TraceFn, ok}),
+    dbg:tracer(process, {TraceFn, ok}).
 
-    case IsExported of
-        true  -> dbg:tp(Mod, Func, Arity, cx);
-        false -> dbg:tpl(Mod, Func, Arity, cx)
-    end,
-    dbg:p(all, c).
+start_trace_collector() ->
+    Pid = spawn(?MODULE, erlyberly_tcollector, []),
+    register(erlyberly_tcollector, Pid).
 
-
+%%
 store_trace(Trace) ->
     erlyberly_tcollector ! Trace.
 

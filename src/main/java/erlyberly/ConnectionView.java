@@ -10,11 +10,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 
+/**
+ * Connection details control to connect to the remote node. 
+ */
 public class ConnectionView implements Initializable {
 
 	@FXML
@@ -23,8 +25,6 @@ public class ConnectionView implements Initializable {
 	private TextField cookieField;
 	@FXML
 	private Button connectButton;
-	@FXML
-	private GridPane root;
 	@FXML
 	private Label messageLabel;
 
@@ -42,10 +42,7 @@ public class ConnectionView implements Initializable {
 					
 				ErlyBerly.nodeAPI().connectedProperty().removeListener(this);
 				
-				Stage stage;
-				
-				stage = (Stage) connectButton.getScene().getWindow();
-				stage.close();
+				closeThisWindow();
 			}});
 	}
 	
@@ -64,5 +61,12 @@ public class ConnectionView implements Initializable {
 		return Icon.create()
 				.icon(AwesomeIcon.BAN)
 				.style("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
+	}
+
+	private void closeThisWindow() {
+		Stage stage;
+		
+		stage = (Stage) connectButton.getScene().getWindow();
+		stage.close();
 	}
 }

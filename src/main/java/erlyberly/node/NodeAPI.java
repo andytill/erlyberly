@@ -137,18 +137,28 @@ public class NodeAPI {
 		return (OtpErlangList) receiveRPC(); 
 	}
 
-	public synchronized void startTrace(ModFunc value) throws Exception {
-		assert value.getFuncName() != null : "function name cannot be null";
+	public synchronized void startTrace(ModFunc mf) throws Exception {
+		assert mf.getFuncName() != null : "function name cannot be null";
 		
-		OtpErlangObject[] args = new OtpErlangObject[] {
-			new OtpErlangAtom(value.getModuleName()),
-			new OtpErlangAtom(value.getFuncName()),
-			new OtpErlangInt(value.getArity()),
-			new OtpErlangAtom(value.isExported())
-		};
-
-		connection.sendRPC("erlyberly", "start_trace", args);
+		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
 		receiveRPC();
+	}
+
+	public synchronized void stopTrace(ModFunc mf) throws Exception {
+		assert mf.getFuncName() != null : "function name cannot be null";
+		
+		connection.sendRPC("erlyberly", "stop_trace", toTraceTuple(mf));
+		receiveRPC();
+	}
+
+	private OtpErlangObject[] toTraceTuple(ModFunc mf) {
+		OtpErlangObject[] args = new OtpErlangObject[] {
+			new OtpErlangAtom(mf.getModuleName()),
+			new OtpErlangAtom(mf.getFuncName()),
+			new OtpErlangInt(mf.getArity()),
+			new OtpErlangAtom(mf.isExported())
+		};
+		return args;
 	}
 
 	public SimpleBooleanProperty connectedProperty() {

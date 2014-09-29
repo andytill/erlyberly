@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -15,11 +16,13 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
@@ -28,6 +31,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -78,11 +82,17 @@ public class DbgView implements Initializable {
 	private TextField traceSearchField;
 	@FXML
 	private TextField filterTracesField;
+	@FXML
+	private FlowPane currentTraceBox;
+	@FXML
+	private Label noTracesLabel;
 	
 	private final DbgController dbgController = new DbgController();
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		currentTraceBox.getChildren().addListener(this::onRemoveTraceButtonsAdded);
+		
 		sortedTreeModules.setComparator(treeItemModFuncComparator());
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
@@ -246,15 +256,62 @@ public class DbgView implements Initializable {
 	
 	@FXML
 	private void onGo() throws Exception {
-		ModFunc value = modulesTree.getSelectionModel().getSelectedItem().getValue();
+		ModFunc function = modulesTree.getSelectionModel().getSelectedItem().getValue();
 		
-		if(value == null || value.getFuncName() == null) {
+		if(function == null || function.getFuncName() == null) {
 			return;
 		}
 		
-		ErlyBerly.nodeAPI().startTrace(value);
+		ErlyBerly.nodeAPI().startTrace(function);
 		
 		dbgController.setCollectingTraces(true);
+		
+		Button newRemoveTraceButton;
+		
+		newRemoveTraceButton = newRemoveTraceButton(function);
+		newRemoveTraceButton.setOnAction((e) -> onRemoveTracer(e, function));
+		
+		currentTraceBox.getChildren().add(newRemoveTraceButton);
+	}
+	
+	private void onRemoveTracer(ActionEvent e, ModFunc mf) {
+		try {
+			ErlyBerly.nodeAPI().stopTrace(mf);
+			
+			currentTraceBox.getChildren().remove(e.getSource());
+		} 
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * When the number of trace remove buttons changes, we need to show or hide
+	 * the label saying there are no active traces.
+	 */
+	private void onRemoveTraceButtonsAdded(Observable o) {
+		Platform.runLater(() -> {
+			ObservableList<Node> currentTraces = currentTraceBox.getChildren();
+			if(currentTraces.size() > 1 && noTracesLabel.getParent() != null) {
+				currentTraces.remove(0);
+			}
+			else if(currentTraces.isEmpty()) {
+				currentTraces.add(0, noTracesLabel);
+			}
+		});
+	}
+
+	private Button newRemoveTraceButton(ModFunc value) {
+		String graphicCSS = "-fx-font-family: FontAwesome; -fx-font-size: 1.6em; -fx-padding: 0 0 2 0;";
+		
+		Button removeTraceButton;
+		
+		removeTraceButton = new Button(value.toFullString());
+		removeTraceButton.setMnemonicParsing(false);
+		removeTraceButton.setContentDisplay(ContentDisplay.RIGHT);
+		removeTraceButton.setGraphic(Icon.create().icon(AwesomeIcon.CLOSE).style(graphicCSS));
+		
+		return removeTraceButton;
 	}
 
 	private void onConnected() {
