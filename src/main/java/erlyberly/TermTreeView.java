@@ -32,32 +32,45 @@ public class TermTreeView extends TreeView {
 			parent.getChildren().add(item);
 		}
 		else if(obj instanceof OtpErlangTuple) {
-			TreeItem tupleItem;
+			OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
 			
-			tupleItem = new TreeItem("{");
-			tupleItem.setExpanded(true);
-			
-			parent.getChildren().add(tupleItem);
-			
-			for (OtpErlangObject e : ((OtpErlangTuple) obj).elements()) {
-				addToTreeItem(tupleItem, e);
+			if(elements.length == 0) {
+				parent.getChildren().add(new TreeItem("{ }"));
 			}
-			
-			parent.getChildren().add(new TreeItem("}"));
+			else {
+				TreeItem tupleItem;
+				
+				tupleItem = new TreeItem("{");
+				tupleItem.setExpanded(true);
+				
+				parent.getChildren().add(tupleItem);
+				for (OtpErlangObject e : elements) {
+					addToTreeItem(tupleItem, e);
+				}
+				
+				parent.getChildren().add(new TreeItem("}"));
+			}
 		}
 		else if(obj instanceof OtpErlangList) {
-			TreeItem listItem;
+			OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
 			
-			listItem = new TreeItem("[");
-			listItem.setExpanded(true);
-			
-			parent.getChildren().add(listItem);
-			
-			for (OtpErlangObject e : ((OtpErlangList) obj).elements()) {
-				addToTreeItem(listItem, e);
+			if(elements.length == 0) {
+				parent.getChildren().add(new TreeItem("[ ]"));
 			}
-			
-			parent.getChildren().add(new TreeItem("]"));
+			else {
+				TreeItem listItem;
+				
+				listItem = new TreeItem("[");
+				listItem.setExpanded(true);
+				
+				parent.getChildren().add(listItem);
+				
+				for (OtpErlangObject e : elements) {
+					addToTreeItem(listItem, e);
+				}
+				
+				parent.getChildren().add(new TreeItem("]"));
+			}
 		}
 		else {
 			parent.getChildren().add(new TreeItem(OtpUtil.otpObjectToString(obj)));
