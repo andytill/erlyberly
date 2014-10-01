@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 /**
@@ -29,8 +30,15 @@ public class OtpUtil {
 	public static String otpObjectToString(OtpErlangObject obj) {
 		if(obj instanceof OtpErlangBinary)
 			return binaryToString((OtpErlangBinary) obj);
+		else if(obj instanceof OtpErlangPid) {
+			return pidToString((OtpErlangPid) obj);
+		}
 		else
 			return obj.toString();
+	}
+	
+	public static String pidToString(OtpErlangPid pid) {
+		return "<0." + pid.id() + "." + pid.serial() + ">";
 	}
 	
 	public static String binaryToString(OtpErlangBinary bin) {
