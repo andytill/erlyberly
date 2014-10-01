@@ -1,6 +1,5 @@
 package erlyberly;
 
-import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -22,12 +21,7 @@ public class TermTreeView extends TreeView {
 	public void populateFromTerm(OtpErlangObject obj) {
 		setShowRoot(false);
 		
-		TreeItem root = getRoot();
-		ObservableList children = root.getChildren();
-		
-		children.clear();
-		
-		addToTreeItem(root, obj);
+		addToTreeItem(getRoot(), obj);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -67,6 +61,12 @@ public class TermTreeView extends TreeView {
 		}
 		else {
 			parent.getChildren().add(new TreeItem(OtpUtil.otpObjectToString(obj)));
+		}
+	}
+
+	public void populateFromListContents(OtpErlangList list) {
+		for (OtpErlangObject a : list) {
+			populateFromTerm(a);
 		}
 	}
 

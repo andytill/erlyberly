@@ -32,6 +32,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -214,11 +215,11 @@ public class DbgView implements Initializable {
 	private void showTraceTermView(OtpErlangObject args, OtpErlangObject result) {
 		TermTreeView resultTermsTreeView, argTermsTreeView;
 		
-		resultTermsTreeView = new TermTreeView();
+		resultTermsTreeView = newTermTreeView();
 		resultTermsTreeView.populateFromTerm(result);
 		
-		argTermsTreeView = new TermTreeView();
-		argTermsTreeView.populateFromTerm(args);
+		argTermsTreeView = newTermTreeView();
+		argTermsTreeView.populateFromListContents((OtpErlangList)args);
 		
 		SplitPane splitPane;
 		
@@ -236,6 +237,16 @@ public class DbgView implements Initializable {
         termsStage.setHeight(600);
 
         termsStage.show();
+	}
+
+	private TermTreeView newTermTreeView() {
+		TermTreeView termTreeView;
+		
+		termTreeView = new TermTreeView();
+		termTreeView.setMaxHeight(Integer.MAX_VALUE);
+		VBox.setVgrow(termTreeView, Priority.ALWAYS);
+		
+		return termTreeView;
 	}
 	
 	private Node labelledTreeView(String label, TermTreeView node) {		
