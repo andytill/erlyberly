@@ -104,11 +104,7 @@ public class DbgView implements Initializable {
 		searchField.setPromptText("Search for functions i.e. gen_s:call");
 		searchField.textProperty().addListener(this::onFunctionSearchChange);
 		
-		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
-			@Override
-			public void invalidated(Observable o) {
-				onConnected();
-			}});
+		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
 		dbgController.getTraces().addListener(new ListChangeListener<Object>() {
 			@Override
@@ -325,16 +321,18 @@ public class DbgView implements Initializable {
 		return removeTraceButton;
 	}
 
-	private void onConnected() {
-		if(!ErlyBerly.nodeAPI().connectedProperty().get())
-			return;
-		
-		try {
-			modulesTree.setShowRoot(false);
-			modulesTree.setRoot(buildObjectTreeRoot());
-		} 
-		catch (Exception e) {
-			throw new RuntimeException("failed to build module/function tree", e);
+	private void onConnected(Observable o) {
+		if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
+			treeModules.clear();
+		}
+		else {
+			try {
+				modulesTree.setShowRoot(false);
+				modulesTree.setRoot(buildObjectTreeRoot());
+			} 
+			catch (Exception e) {
+				throw new RuntimeException("failed to build module/function tree", e);
+			}
 		}
 	}
 	

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -36,12 +37,24 @@ public class NodeAPI {
 	private OtpConnection connection;
 
 	private OtpSelf self;
+
+	private String remoteNodeName;
+
+	private String cookie;
 	
 	public NodeAPI() {
 		connectedProperty = new SimpleBooleanProperty();
 	}
 	
-	public synchronized void connect(String remoteNodeName, String cookie) throws IOException, OtpAuthException, OtpErlangExit {
+	public NodeAPI connectionInfo(String remoteNodeName, String cookie) {
+		this.remoteNodeName = remoteNodeName;
+		this.cookie = cookie;
+		
+		return this;
+	}
+	
+	public synchronized void connect() throws IOException, OtpAuthException, OtpErlangExit {
+		
 		String nodeName = remoteNodeName;
 		self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
 		
@@ -60,8 +73,8 @@ public class NodeAPI {
 		connection = self.connect(new OtpPeer(nodeName));
 		
 		loadRemoteErlyberly();
-		
-		connectedProperty.set(true);
+
+		Platform.runLater(() -> { connectedProperty.set(true); });
 	}
 	
 	private void loadRemoteErlyberly() throws IOException, OtpErlangExit, OtpAuthException {
@@ -113,6 +126,7 @@ public class NodeAPI {
 	}
 
 	public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
+		ensureAlive();
 		OtpErlangObject receiveRPC = null;
 		
 		try {
@@ -132,12 +146,37 @@ public class NodeAPI {
 		}
 	}
 
+	private void ensureAlive() {
+		if(connection.isAlive())
+			return;
+		
+		Platform.runLater(() -> { connectedProperty.set(false); });
+		
+		while(true) {
+			try {
+				connect();
+				break;
+			}
+			catch(Exception e) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				System.out.println("couldn't connect: " + e.getMessage());
+				
+			}
+		}
+	}
+
 	public synchronized OtpErlangList requestFunctions() throws Exception {
+		ensureAlive();
 		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
 		return (OtpErlangList) receiveRPC(); 
 	}
 
 	public synchronized void startTrace(ModFunc mf) throws Exception {
+		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
 		
 		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
@@ -145,6 +184,7 @@ public class NodeAPI {
 	}
 
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
+		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
 		
 		connection.sendRPC("erlyberly", "stop_trace", toTraceTuple(mf));
@@ -166,6 +206,7 @@ public class NodeAPI {
 	}
 
 	public ArrayList<OtpErlangObject> collectTraceLogs() throws Exception {
+		ensureAlive();
 		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
 		OtpErlangList traceLogs = (OtpErlangList) receiveRPC();

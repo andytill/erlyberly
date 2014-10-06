@@ -37,13 +37,15 @@ public class ProcController {
 		
 		waiter = new Object();
 		
-		ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
-			@Override
-			public void invalidated(Observable o) {
-				if(ErlyBerly.nodeAPI().connectedProperty().get()) {
-					procPollerThread.start();
-				}
-			}});
+		Platform.runLater(() -> {
+			ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
+				@Override
+				public void invalidated(Observable o) {
+					if(ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
+						procPollerThread.start();
+					}
+				}});
+		});
 	}
 	
 	

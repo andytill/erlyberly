@@ -49,7 +49,10 @@ public class ConnectionView implements Initializable {
 	@FXML
 	public void onConnect() {
 		try {
-			ErlyBerly.nodeAPI().connect(nodeNameField.getText(), cookieField.getText());
+			ErlyBerly
+				.nodeAPI()
+				.connectionInfo(nodeNameField.getText(), cookieField.getText())
+				.connect();
 		} 
 		catch (Exception e) {
 			messageLabel.setGraphic(bannedIcon());
