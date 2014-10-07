@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -58,27 +59,33 @@ public class ProcView implements Initializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
+		final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 		
 		procController.getProcs().addListener(this::onProcessCountChange);
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		heapPieButton.setStyle("-fx-background-color: transparent;");
 		heapPieButton.setText("");
+		heapPieButton.disableProperty().bind(notConnected);
 		
 		stackPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		stackPieButton.setStyle("-fx-background-color: transparent;");
 		stackPieButton.setText("");
+		stackPieButton.disableProperty().bind(notConnected);
 		
 		totalHeapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		totalHeapPieButton.setStyle("-fx-background-color: transparent;");
 		totalHeapPieButton.setText("");
-
+		totalHeapPieButton.disableProperty().bind(notConnected);
+		
+		//ErlyBerly.nodeAPI().connectedProperty().addListener((Observable o) -> { System.out.println("now connected? " + ErlyBerly.nodeAPI().connectedProperty().get()); } );
 		refreshButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
 		refreshButton.setGraphicTextGap(8d);
-		refreshButton.disableProperty().bind(procController.pollingProperty());
+		refreshButton.disableProperty().bind(procController.pollingProperty().or(notConnected));
 		
 		pollButton.setGraphic(Icon.create().icon(AwesomeIcon.REFRESH));
 		pollButton.setGraphicTextGap(9d);
+		pollButton.disableProperty().bind(notConnected);
 
 		procController.pollingProperty().addListener(this::onPollingChange);
 		onPollingChange(null);
