@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -27,6 +28,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
@@ -87,6 +90,8 @@ public class DbgView implements Initializable {
 	private FlowPane currentTraceBox;
 	@FXML
 	private Label noTracesLabel;
+	@FXML
+	private ToggleButton hideProcsButton;
 	
 	private final DbgController dbgController = new DbgController();
 	
@@ -144,8 +149,30 @@ public class DbgView implements Initializable {
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		dbgController.initialize(url, r);
+		
+		hideProcsButton.setContentDisplay(ContentDisplay.CENTER);
+		hideProcsButton.setGraphicTextGap(0d);
+		hideProcsButton.setSelected(true);
+		hideProcsButton.setTooltip(new Tooltip("Show/Hide the processes table"));
+		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsIcon(); });
+		toggleHideProcsIcon();
+	}
+
+	public BooleanProperty hideProcsProperty() {
+		return hideProcsButton.selectedProperty();
 	}
 	
+	private void toggleHideProcsIcon() {
+		AwesomeIcon icon;
+		
+		if(hideProcsButton.isSelected())
+			icon = AwesomeIcon.BACKWARD;
+		else
+			icon = AwesomeIcon.FORWARD;
+		
+		hideProcsButton.setGraphic(Icon.create().icon(icon).style("-fx-font-family: FontAwesome; -fx-font-size: 1em;"));
+	}
+
 	@FXML
 	private void onTraceLogClear() {
 		traces.clear();

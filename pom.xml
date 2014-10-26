@@ -18,6 +18,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>de.jensd</groupId>
+      <artifactId>shichimifx</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.erlang.otp</groupId>
       <artifactId>jinterface</artifactId>
       <version>1.5.6</version>
