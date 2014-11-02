@@ -189,7 +189,12 @@ public class NodeAPI {
 		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
 		
-		connection.sendRPC("erlyberly", "stop_trace", toTraceTuple(mf));
+		connection.sendRPC("erlyberly", "stop_trace", new OtpErlangObject[] {
+				OtpUtil.atom(mf.getModuleName()),
+				OtpUtil.atom(mf.getFuncName()),
+				new OtpErlangInt(mf.getArity()),
+				new OtpErlangAtom(mf.isExported())
+			});
 		receiveRPC();
 	}
 

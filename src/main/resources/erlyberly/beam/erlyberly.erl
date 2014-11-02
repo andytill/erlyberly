@@ -66,10 +66,7 @@ start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
     erlyberly_tcollector ! {start_trace, Mod, Func, Arity, IsExported}.
 %%
 stop_trace(Mod, Func, Arity, IsExported) ->
-    case IsExported of
-        true  -> dbg:ctp(Mod, Func, Arity);
-        false -> dbg:ctpl(Mod, Func, Arity)
-    end.
+    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity, IsExported}.
 %%
 when_process_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
@@ -122,10 +119,19 @@ erlyberly_tcollector(Node) ->
 
     erlyberly_tcollector2(#tcollector{}).
 %%
-erlyberly_tcollector2(#tcollector{ logs = Logs} = TC) ->
+erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
         {start_trace, _, _, _, _} = Eb_spec ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
+            erlyberly_tcollector2(TC1);
+        {stop_trace, Mod, Func, Arity, IsExported} = Msg ->
+            io:format("stop_trace ~p~n", [Msg]),
+            case IsExported of
+                true  -> dbg:ctp(Mod, Func, Arity);
+                false -> dbg:ctpl(Mod, Func, Arity)
+            end,
+            Traces_1 = Traces -- [{Mod, Func, Arity, IsExported}],
+            TC1 = TC#tcollector{ traces = Traces_1 },
             erlyberly_tcollector2(TC1);
         {nodedown, _Node} ->
             ok = dbg:stop_clear();
