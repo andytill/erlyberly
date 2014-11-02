@@ -180,7 +180,9 @@ public class NodeAPI {
 		assert mf.getFuncName() != null : "function name cannot be null";
 		
 		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
-		receiveRPC();
+		OtpErlangObject receiveRPC = receiveRPC();
+		
+		System.out.println(receiveRPC);
 	}
 
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
@@ -193,8 +195,9 @@ public class NodeAPI {
 
 	private OtpErlangObject[] toTraceTuple(ModFunc mf) {
 		OtpErlangObject[] args = new OtpErlangObject[] {
-			new OtpErlangAtom(mf.getModuleName()),
-			new OtpErlangAtom(mf.getFuncName()),
+			OtpUtil.tuple(OtpUtil.atom(self.node()), self.pid()),
+			OtpUtil.atom(mf.getModuleName()),
+			OtpUtil.atom(mf.getFuncName()),
 			new OtpErlangInt(mf.getArity()),
 			new OtpErlangAtom(mf.isExported())
 		};
@@ -209,7 +212,8 @@ public class NodeAPI {
 		ensureAlive();
 		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
-		OtpErlangList traceLogs = (OtpErlangList) receiveRPC();
+		OtpErlangObject prcResult = receiveRPC();
+		OtpErlangList traceLogs = (OtpErlangList) prcResult;
 		
 		ArrayList<OtpErlangObject> arrayList = new ArrayList<OtpErlangObject>();
 		for (OtpErlangObject otpErlangObject : traceLogs) {

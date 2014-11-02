@@ -2,6 +2,7 @@ package erlyberly.node;
 
 import java.util.HashMap;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
@@ -12,6 +13,15 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
  * Sin bin for utils dealing with jinterface.
  */
 public class OtpUtil {
+	
+	public static OtpErlangTuple tuple(OtpErlangObject... obj) {
+		return new OtpErlangTuple(obj);
+	}
+
+
+	public static OtpErlangAtom atom(String name) {
+		return new OtpErlangAtom(name);
+	}
 
 	/**
 	 * Take an {@link OtpErlangList} of erlang key value tuples and converts it to a map.

@@ -2,10 +2,10 @@
 -module(erlyberly).
 
 -export([ collect_trace_logs/0,
-          erlyberly_tcollector/0,
+          erlyberly_tcollector/1,
           module_functions/0,
           process_info/0,
-          start_trace/4,
+          start_trace/5,
           stop_trace/4 ]).
 
 %% ============================================================================
@@ -61,8 +61,8 @@ module_functions2(Mod) when is_atom(Mod) ->
 %% ============================================================================
 
 %%
-start_trace(Mod, Func, Arity, IsExported) ->
-    ensure_dbg_started(),
+start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
+    ensure_dbg_started({Node, Pid}),
 
     case IsExported of
         true  -> dbg:tp(Mod, Func, Arity, cx);
@@ -83,11 +83,16 @@ when_process_unregistered(ProcName, Fn) ->
         _         -> ok
     end.
 %%
-ensure_dbg_started() ->
+ensure_dbg_started({Eb_Node, _Eb_Pid}) ->
     % restart dbg
     when_process_unregistered(dbg, fun dbg:start/0),
 
-    when_process_unregistered(erlyberly_tcollector, fun start_trace_collector/0),
+    StartFn = fun() -> 
+                  Pid = spawn(?MODULE, erlyberly_tcollector, [Eb_Node]),
+                  register(erlyberly_tcollector, Pid)
+              end,
+
+    when_process_unregistered(erlyberly_tcollector, StartFn),
 
     % create a tracer that will send the trace logs to erlyberly_tcollector
     % to be stored.
@@ -97,21 +102,28 @@ ensure_dbg_started() ->
               end,
     dbg:tracer(process, {TraceFn, ok}).
 
-start_trace_collector() ->
-    Pid = spawn(?MODULE, erlyberly_tcollector, []),
-    register(erlyberly_tcollector, Pid).
-
 %%
 store_trace(Trace) ->
     erlyberly_tcollector ! Trace.
 
--record(tcollector, { call, logs = [] }).
+-record(tcollector, {
+    %% the last call, we need this to match up the result
+    call, 
 
-erlyberly_tcollector() ->
+    %% a 
+    logs = [] 
+}).
+
+erlyberly_tcollector(Node) ->
+    % throws a badarg if the node has already closed down
+    erlang:monitor_node(Node, true),
+
     erlyberly_tcollector2(#tcollector{}).
 
 erlyberly_tcollector2(#tcollector{ logs = Logs } = TC) ->
     receive
+        {nodedown, _Node} ->
+            ok = dbg:stop_clear();
         {take_logs, Pid} ->
             Pid ! {trace_logs, lists:reverse(Logs)},
             erlyberly_tcollector2(TC#tcollector{ logs = []});
