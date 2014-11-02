@@ -148,6 +148,9 @@ tcollector_start_trace({start_trace, Mod, Func, Arity, IsExported}, #tcollector{
 %%
 collect_log({trace, Pid, call, Args, CallingMFA}, #tcollector{ call = undefined } = TC) ->
     TC#tcollector{ call = {Pid, Args, CallingMFA} };
+collect_log({trace, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
+    % ensure loaded can be called many times for one reload so just skip it
+    TC;
 collect_log({trace, _, return_from, {code, _, _}, {module, Loaded_module}}, TC) ->
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
     TC;
@@ -164,8 +167,14 @@ collect_log(_, TC) ->
     TC.
 %%
 reapply_traces(Loaded_module, Traces) ->
+    % filter out the traces for the reloaded, module, could be
+    % done in the list comp but it causes a compiler warning
+    Traces_1 = lists:filter(fun(T) -> 
+                                element(1, T) == Loaded_module 
+                            end, Traces),
+
     % reapply each trace that has the loaded module
-    [erlyberly_tcollector ! {start_trace, Loaded_module, F, A, IsExported} || {Loaded_module, F, A, IsExported} <- Traces],
+    [erlyberly_tcollector ! {start_trace, M, F, A, IsExported} || {M, F, A, IsExported} <- Traces_1],
     ok.
 %%
 collect_trace_logs() ->
