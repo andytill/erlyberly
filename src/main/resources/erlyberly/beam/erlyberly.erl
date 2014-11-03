@@ -125,7 +125,6 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
             erlyberly_tcollector2(TC1);
         {stop_trace, Mod, Func, Arity, IsExported} = Msg ->
-            io:format("stop_trace ~p~n", [Msg]),
             case IsExported of
                 true  -> dbg:ctp(Mod, Func, Arity);
                 false -> dbg:ctpl(Mod, Func, Arity)
@@ -168,6 +167,15 @@ collect_log({trace, Pid, return_from, _Func, Result},
             {calling_fn, CallingMFA},
             {fn, Args},
             {result, Result} ],
+    TC#tcollector{ call = undefined, logs = [Log | Logs]};
+collect_log({trace, Pid, exception_from, _Func, {Class, Value}},
+            #tcollector{ call = {Pid, Args, CallingMFA}, logs = Logs } = TC) ->
+    Reg_name = get_registered_name(Pid),
+    Log = [ {pid, pid_to_list(Pid)},
+            {reg_name, Reg_name},
+            {calling_fn, CallingMFA},
+            {fn, Args},
+            {exception_from, {Class, Value}} ],
     TC#tcollector{ call = undefined, logs = [Log | Logs]};
 collect_log(_, TC) ->
     TC.

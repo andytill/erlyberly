@@ -13,7 +13,8 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.node.OtpUtil;
 
 public class TraceLog implements Comparable<TraceLog> {
-	
+
+	private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
 	private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
 	private static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
@@ -54,9 +55,19 @@ public class TraceLog implements Comparable<TraceLog> {
 		}
 		trace += " ";
 		trace += fnToFunctionString((OtpErlangTuple)map.get(new OtpErlangAtom("fn")));
-		trace += " => ";
-		trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM));
 		
+		trace += " => ";
+		
+		if(map.containsKey(RESULT_ATOM)) {
+			trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM));
+		}
+		else if(map.containsKey(EXCEPTION_FROM_ATOM)) {
+			OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
+			
+			String clazz = OtpUtil.otpObjectToString(exception.elementAt(0));
+			String reason = OtpUtil.otpObjectToString(exception.elementAt(1));
+			trace += clazz + ":" +  reason;
+		}
 		return trace;
 	}
 	
@@ -83,7 +94,13 @@ public class TraceLog implements Comparable<TraceLog> {
 	}
 
 	public OtpErlangObject getResult() {
-		return (OtpErlangObject) map.get(RESULT_ATOM);
+		Object object = map.get(RESULT_ATOM);
+		if(object == null) {
+			OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
+			
+			return exception.elementAt(1);
+		}
+		return (OtpErlangObject) object;
 	}
 
 	@Override
