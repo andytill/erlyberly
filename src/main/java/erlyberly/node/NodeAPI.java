@@ -24,6 +24,8 @@ import com.ericsson.otp.erlang.OtpSelf;
 import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
 
+import static erlyberly.node.OtpUtil.*;
+
 public class NodeAPI {
 	
 	private static final OtpErlangAtom MODULE_ATOM = new OtpErlangAtom("module");
@@ -176,13 +178,17 @@ public class NodeAPI {
 	}
 
 	public synchronized void startTrace(ModFunc mf) throws Exception {
-		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
 		
-		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
-		OtpErlangObject receiveRPC = receiveRPC();
+		ensureAlive();
 		
-		System.out.println(receiveRPC);
+		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
+		
+		OtpErlangObject result = receiveRPC();
+		
+		if(!isTupleTagged(OK_ATOM, result)) {
+			System.out.println(result);
+		}
 	}
 
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
@@ -215,15 +221,24 @@ public class NodeAPI {
 
 	public ArrayList<OtpErlangObject> collectTraceLogs() throws Exception {
 		ensureAlive();
+		
 		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
-		OtpErlangObject prcResult = receiveRPC();
-		OtpErlangList traceLogs = (OtpErlangList) prcResult;
+		ArrayList<OtpErlangObject> traceList = new ArrayList<OtpErlangObject>();
 		
-		ArrayList<OtpErlangObject> arrayList = new ArrayList<OtpErlangObject>();
-		for (OtpErlangObject otpErlangObject : traceLogs) {
-			arrayList.add(otpErlangObject);
+		OtpErlangObject prcResult = receiveRPC();
+		
+		if(!isTupleTagged(OK_ATOM, prcResult)) {
+			System.out.println(prcResult);
+			
+			return traceList;
 		}
-		return arrayList;
+		
+		OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult).elementAt(1);
+		
+		for (OtpErlangObject otpErlangObject : traceLogs) {
+			traceList.add(otpErlangObject);
+		}
+		return traceList;
 	}
 }

@@ -63,7 +63,10 @@ module_functions2(Mod) when is_atom(Mod) ->
 %%
 start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
     ensure_dbg_started({Node, Pid}),
-    erlyberly_tcollector ! {start_trace, Mod, Func, Arity, IsExported}.
+
+    erlyberly_tcollector ! {start_trace, Mod, Func, Arity, IsExported},
+
+    {ok, whereis(erlyberly_tcollector)}.
 %%
 stop_trace(Mod, Func, Arity, IsExported) ->
     erlyberly_tcollector ! {stop_trace, Mod, Func, Arity, IsExported}.
@@ -124,7 +127,7 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
         {start_trace, _, _, _, _} = Eb_spec ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
             erlyberly_tcollector2(TC1);
-        {stop_trace, Mod, Func, Arity, IsExported} = Msg ->
+        {stop_trace, Mod, Func, Arity, IsExported} ->
             case IsExported of
                 true  -> dbg:ctp(Mod, Func, Arity);
                 false -> dbg:ctpl(Mod, Func, Arity)
@@ -194,7 +197,7 @@ reapply_traces(Loaded_module, Traces) ->
 collect_trace_logs() ->
     erlyberly_tcollector ! {take_logs, self()},
     receive
-        {trace_logs, Logs} -> Logs
+        {trace_logs, Logs} -> {ok, Logs}
     after 2000 -> fail
     end.
 %%

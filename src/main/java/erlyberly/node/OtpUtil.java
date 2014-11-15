@@ -13,6 +13,9 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
  * Sin bin for utils dealing with jinterface.
  */
 public class OtpUtil {
+
+	public static final OtpErlangAtom OK_ATOM = atom("ok");
+	
 	
 	public static OtpErlangTuple tuple(OtpErlangObject... obj) {
 		return new OtpErlangTuple(obj);
@@ -92,5 +95,18 @@ public class OtpUtil {
 		s.append(">>");
 		
 		return s.toString();
+	}
+	
+
+
+	public static boolean isTupleTagged(OtpErlangObject tag, OtpErlangObject result) {
+		boolean r = false;
+		
+		if(result instanceof OtpErlangTuple) {
+			OtpErlangTuple resultTuple = (OtpErlangTuple) result;
+			r = resultTuple.arity() > 0 && resultTuple.elementAt(0).equals(tag);
+		}
+		
+		return r;
 	}
 }
