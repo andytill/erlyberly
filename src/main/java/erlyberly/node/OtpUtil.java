@@ -7,6 +7,7 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
+import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 /**
@@ -14,6 +15,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
  */
 public class OtpUtil {
 
+	private static final OtpErlangAtom ERROR_ATOM = atom("error");
 	public static final OtpErlangAtom OK_ATOM = atom("ok");
 	
 	
@@ -96,10 +98,12 @@ public class OtpUtil {
 		
 		return s.toString();
 	}
-	
-
 
 	public static boolean isTupleTagged(OtpErlangObject tag, OtpErlangObject result) {
+		return isTupleTagged(tag, 0, result);
+	}
+
+	public static boolean isTupleTagged(OtpErlangObject tag, int index, OtpErlangObject result) {
 		boolean r = false;
 		
 		if(result instanceof OtpErlangTuple) {
@@ -109,4 +113,25 @@ public class OtpUtil {
 		
 		return r;
 	}
+	
+	public static boolean isErrorReason(OtpErlangObject reason, OtpErlangObject error) {
+		assert isTupleTagged(ERROR_ATOM, error) : "tuple " + error + "is not tagged with 'error'";
+		return isTupleTagged(reason, 1, error);
+	}
+	
+
+
+	public static OtpErlangList toOtpList(OtpErlangObject obj) {
+		if(obj instanceof OtpErlangList) {
+			return (OtpErlangList) obj;
+		}
+		else if(obj instanceof OtpErlangString) {
+			OtpErlangString s = (OtpErlangString) obj;
+			
+			return new OtpErlangList(s.stringValue());
+		}
+		else {
+			throw new ClassCastException("" + obj + " cannot be converted to an OtpErlangList");
+		}
+	}	
 }

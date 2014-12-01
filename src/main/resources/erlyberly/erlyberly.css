@@ -1,0 +1,25 @@
+
+/* 
+ * used to show trace logs for functions that returned errors.
+ */
+
+.exception {
+    -fx-background-color: #F9F2F4;
+    -fx-text-fill: #C7254E;
+}
+
+.exception:odd {
+    /* make the background a little darker for alternate cells */
+    -fx-background-color: #F1E0E4;
+    -fx-text-fill: #C7254E;
+}
+
+.exception:selected {
+    /* invert the colours when the cell is selected */
+    -fx-background-color: #C7254E;
+    -fx-text-fill: white;
+}
+
+.erlyberly-icon-button {
+    -fx-text-fill: #039ED3;
+}

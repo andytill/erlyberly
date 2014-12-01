@@ -4,8 +4,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
-import com.ericsson.otp.erlang.OtpErlangObject;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,7 +12,7 @@ import javafx.fxml.Initializable;
 
 public class DbgController implements Initializable {
 	
-	public final ObservableList<Object> traces = FXCollections.observableArrayList();
+	public final ObservableList<TraceLog> traces = FXCollections.observableArrayList();
 
 	private volatile boolean collectingTraces;
 
@@ -27,7 +25,7 @@ public class DbgController implements Initializable {
 		new TraceCollectorThread().start();
 	}
 	
-	public ObservableList<Object> getTraces() {
+	public ObservableList<TraceLog> getTraces() {
 		return traces;
 	}
 
@@ -41,7 +39,7 @@ public class DbgController implements Initializable {
 			while (true) {
 				if(collectingTraces) {
 					try {
-						final ArrayList<OtpErlangObject> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
+						final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
 						Platform.runLater(new Runnable() {
 							@Override
 							public void run() {
@@ -53,7 +51,7 @@ public class DbgController implements Initializable {
 				}
 				
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

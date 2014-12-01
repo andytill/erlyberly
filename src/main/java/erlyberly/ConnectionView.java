@@ -49,9 +49,12 @@ public class ConnectionView implements Initializable {
 	@FXML
 	public void onConnect() {
 		try {
+			String cookie = cookieField.getText();
+			String cookie2 = cookie.replaceAll("'", "");
+			
 			ErlyBerly
 				.nodeAPI()
-				.connectionInfo(nodeNameField.getText(), cookieField.getText())
+				.connectionInfo(nodeNameField.getText(), cookie2)
 				.connect();
 		} 
 		catch (Exception e) {

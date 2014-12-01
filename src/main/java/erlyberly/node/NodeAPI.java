@@ -1,12 +1,19 @@
 package erlyberly.node;
 
+import static erlyberly.node.OtpUtil.OK_ATOM;
+import static erlyberly.node.OtpUtil.atom;
+import static erlyberly.node.OtpUtil.isTupleTagged;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpConnection;
@@ -23,8 +30,7 @@ import com.ericsson.otp.erlang.OtpSelf;
 
 import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
-
-import static erlyberly.node.OtpUtil.*;
+import erlyberly.TraceLog;
 
 public class NodeAPI {
 	
@@ -34,7 +40,11 @@ public class NodeAPI {
 	
 	private static final int BEAM_SIZE_LIMIT = 1024 * 20;
 	
+	private final TraceManager traceManager;
+	
 	private final SimpleBooleanProperty connectedProperty;
+	
+	private final SimpleStringProperty summary;
 	
 	private OtpConnection connection;
 
@@ -45,7 +55,13 @@ public class NodeAPI {
 	private String cookie;
 	
 	public NodeAPI() {
+		traceManager = new TraceManager();
+		
 		connectedProperty = new SimpleBooleanProperty();
+		
+		summary = new SimpleStringProperty("erlyberly not connected");
+		
+		connectedProperty.addListener(this::summaryUpdater);
 	}
 	
 	public NodeAPI connectionInfo(String remoteNodeName, String cookie) {
@@ -186,8 +202,12 @@ public class NodeAPI {
 		
 		OtpErlangObject result = receiveRPC();
 		
-		if(!isTupleTagged(OK_ATOM, result)) {
+		if(isTupleTagged(atom("error"), result)) {
 			System.out.println(result);
+		
+			
+			// TODO notify caller of failure!
+			return;
 		}
 	}
 
@@ -219,26 +239,36 @@ public class NodeAPI {
 		return connectedProperty;
 	}
 
-	public ArrayList<OtpErlangObject> collectTraceLogs() throws Exception {
+	public ArrayList<TraceLog> collectTraceLogs() throws Exception {
 		ensureAlive();
 		
 		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
-		
-		ArrayList<OtpErlangObject> traceList = new ArrayList<OtpErlangObject>();
 		
 		OtpErlangObject prcResult = receiveRPC();
 		
 		if(!isTupleTagged(OK_ATOM, prcResult)) {
 			System.out.println(prcResult);
 			
-			return traceList;
+			return new ArrayList<TraceLog>();
 		}
 		
 		OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult).elementAt(1);
 		
-		for (OtpErlangObject otpErlangObject : traceLogs) {
-			traceList.add(otpErlangObject);
-		}
-		return traceList;
+		return traceManager.collateTraces(traceLogs);
+	}
+
+	public ObservableValue<? extends String> summaryProperty() {
+		return summary;
+	}
+	
+	private void summaryUpdater(Observable o, Boolean wasConnected, Boolean isConnected) {
+		String summaryText = "erlyberly";
+		
+		if(!wasConnected && isConnected)
+			summaryText = "erlyberly, connected as " + self.node();
+		else if(wasConnected && !isConnected)
+			summaryText = "erlyberly, connection lost.  reconnecting..."; 
+		
+		summary.set(summaryText);
 	}
 }

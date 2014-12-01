@@ -49,8 +49,13 @@ public class ErlyBerly extends Application {
 		
 		setupProcPaneHiding(dbgFxml);
 		
-        primaryStage.setScene(new Scene(splitPane));
-        primaryStage.setTitle("erlyberly");
+        Scene scene;
+        
+		scene = new Scene(splitPane);
+		scene.getStylesheets().add(getClass().getResource("/erlyberly/erlyberly.css").toString());  
+		
+		primaryStage.setScene(scene);
+        primaryStage.titleProperty().bind(nodeAPI.summaryProperty());
         primaryStage.sizeToScene();
         primaryStage.show();
         

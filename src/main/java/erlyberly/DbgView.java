@@ -3,7 +3,6 @@ package erlyberly;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -25,6 +24,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
@@ -38,6 +38,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -47,7 +48,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
-import erlyberly.node.OtpUtil;
 
 
 public class DbgView implements Initializable {
@@ -92,6 +92,8 @@ public class DbgView implements Initializable {
 	private Label noTracesLabel;
 	@FXML
 	private ToggleButton hideProcsButton;
+	@FXML
+	private Button refreshModulesButton;
 	
 	private final DbgController dbgController = new DbgController();
 	
@@ -111,20 +113,41 @@ public class DbgView implements Initializable {
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
-		dbgController.getTraces().addListener(new ListChangeListener<Object>() {
+		dbgController.getTraces().addListener(new ListChangeListener<TraceLog>() {
 			@Override
-			public void onChanged(ListChangeListener.Change<? extends Object> e) {
+			public void onChanged(ListChangeListener.Change<? extends TraceLog> e) {
 				while(e.next()) {
-					for (Object obj : e.getAddedSubList()) {
-						HashMap<Object, Object> map = OtpUtil.propsToMap((OtpErlangList) obj);
-							                              
-						TraceLog trace = new TraceLog(map);
-						
+					for (TraceLog trace : e.getAddedSubList()) {
 						traces.add(0, trace);
 					}
 				}
 			}});
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
+		tracesBox.setCellFactory(new Callback<ListView<TraceLog>, ListCell<TraceLog>>() {
+			@Override
+			public ListCell<TraceLog> call(ListView<TraceLog> view) {
+				return new ListCell<TraceLog>() {
+					@Override
+					protected void updateItem(TraceLog item, boolean empty) {
+						super.updateItem(item, empty);
+
+						getStyleClass().remove("exception");
+						textProperty().unbind();
+		                
+						if (item == null || empty) {
+			                setText(null);
+			            }
+						else {
+							textProperty().bind(item.summaryProperty());
+							
+							if(item.isExceptionThrower()) {
+								getStyleClass().add("exception");
+							}
+						}
+					}
+				};
+			}});
+		
 		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
 		
 		modulesTree.getSelectionModel().selectedItemProperty().addListener(new InvalidationListener() {
@@ -156,8 +179,21 @@ public class DbgView implements Initializable {
 		hideProcsButton.setTooltip(new Tooltip("Show/Hide the processes table"));
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsIcon(); });
 		toggleHideProcsIcon();
+		
+		refreshModulesButton.setContentDisplay(ContentDisplay.CENTER);
+		refreshModulesButton.setGraphicTextGap(0d);
+		refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
+		refreshModulesButton.setTooltip(new Tooltip("Refresh the module list to view newly loaded modules"));
+		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT).style("-fx-font-family: FontAwesome; -fx-font-size: 1em;"));
+		refreshModulesButton.setOnAction(this::onRefreshModules);
 	}
 
+	private void onRefreshModules(ActionEvent e) {
+		treeModules.clear();
+		
+		refreshModules();
+	}
+	
 	public BooleanProperty hideProcsProperty() {
 		return hideProcsButton.selectedProperty();
 	}
@@ -353,13 +389,17 @@ public class DbgView implements Initializable {
 			treeModules.clear();
 		}
 		else {
-			try {
-				modulesTree.setShowRoot(false);
-				modulesTree.setRoot(buildObjectTreeRoot());
-			} 
-			catch (Exception e) {
-				throw new RuntimeException("failed to build module/function tree", e);
-			}
+			refreshModules();
+		}
+	}
+
+	private void refreshModules() {
+		try {
+			modulesTree.setShowRoot(false);
+			modulesTree.setRoot(buildObjectTreeRoot());
+		} 
+		catch (Exception e) {
+			throw new RuntimeException("failed to build module/function tree", e);
 		}
 	}
 	

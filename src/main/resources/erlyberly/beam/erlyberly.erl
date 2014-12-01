@@ -101,9 +101,6 @@ store_trace(Trace) ->
     erlyberly_tcollector ! Trace.
 
 -record(tcollector, {
-    %% the last call, we need this to match up the result
-    call, 
-
     %%
     logs = [],
 
@@ -154,34 +151,45 @@ tcollector_start_trace({start_trace, Mod, Func, Arity, IsExported}, #tcollector{
     Trace_spec = {Mod, Func, Arity, IsExported},
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 %%
-collect_log({trace, Pid, call, Args, CallingMFA}, #tcollector{ call = undefined } = TC) ->
-    TC#tcollector{ call = {Pid, Args, CallingMFA} };
 collect_log({trace, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
     % ensure loaded can be called many times for one reload so just skip it
     TC;
 collect_log({trace, _, return_from, {code, _, _}, {module, Loaded_module}}, TC) ->
+    % if we trace that a module is reloaded then reapply traces to it
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
     TC;
-collect_log({trace, Pid, return_from, _Func, Result}, 
-            #tcollector{ call = {Pid, Args, CallingMFA}, logs = Logs } = TC) ->
-    Reg_name = get_registered_name(Pid),
-    Log = [ {pid, pid_to_list(Pid)},
-            {reg_name, Reg_name},
-            {calling_fn, CallingMFA},
-            {fn, Args},
-            {result, Result} ],
-    TC#tcollector{ call = undefined, logs = [Log | Logs]};
-collect_log({trace, Pid, exception_from, _Func, {Class, Value}},
-            #tcollector{ call = {Pid, Args, CallingMFA}, logs = Logs } = TC) ->
-    Reg_name = get_registered_name(Pid),
-    Log = [ {pid, pid_to_list(Pid)},
-            {reg_name, Reg_name},
-            {calling_fn, CallingMFA},
-            {fn, Args},
-            {exception_from, {Class, Value}} ],
-    TC#tcollector{ call = undefined, logs = [Log | Logs]};
-collect_log(_, TC) ->
+collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace ->
+    Logs_1 = maybe_add_log(trace_to_props(Trace), Logs),
+    TC#tcollector{ logs = Logs_1 };
+collect_log(U, TC) ->
+    io:format("unknown trace ~p", [U]),
     TC.
+%%
+maybe_add_log(skip, Logs) -> Logs;
+maybe_add_log(Log, Logs)  -> [Log | Logs].
+%%
+trace_to_props({trace, Pid, call, Func, _}) ->
+    {call, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func} ]};
+trace_to_props({trace, Pid, exception_from, Func, {Class, Value}}) ->
+    {exception_from, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func},
+          {exception_from, {Class, Value}} ]};
+trace_to_props({trace, Pid, return_from, Func, Result}) ->
+    {return_from, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func},
+          {result, Result} ]};
+trace_to_props(U) ->
+    io:format("skipped trace ~p", [U]),
+
+    skip.                     
+
 %%
 reapply_traces(Loaded_module, Traces) ->
     % filter out the traces for the reloaded, module, could be
@@ -195,10 +203,17 @@ reapply_traces(Loaded_module, Traces) ->
     ok.
 %%
 collect_trace_logs() ->
-    erlyberly_tcollector ! {take_logs, self()},
-    receive
-        {trace_logs, Logs} -> {ok, Logs}
-    after 2000 -> fail
+    case whereis(erlyberly_tcollector) of
+        undefined ->
+            % monitoring of a pid from jinterface is not implemented as far as I can
+            % tell so just make do with polling
+            {error, tcollector_down};
+        _ ->
+            erlyberly_tcollector ! {take_logs, self()},
+            receive
+                {trace_logs, Logs} -> {ok, Logs}
+            after 2000 -> {error, tcollector_timeout}
+            end
     end.
 %%
 get_registered_name(Pid) ->

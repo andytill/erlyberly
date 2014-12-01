@@ -15,6 +15,7 @@
                </VBox.margin>
                <children>
                   <ToggleButton fx:id="hideProcsButton" />
+                  <Button fx:id="refreshModulesButton" />
                   <TextField fx:id="searchField" HBox.hgrow="ALWAYS">
                   </TextField>
                </children>
@@ -29,7 +30,7 @@
       </VBox>
       <VBox spacing="5.0">
          <children>
-            <FlowPane fx:id="currentTraceBox" hgap="5.0">
+            <FlowPane fx:id="currentTraceBox" hgap="5.0" vgap="5.0">
                <children>
                   <Label fx:id="noTracesLabel" text="No traces" />
                </children>

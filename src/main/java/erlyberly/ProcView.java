@@ -64,6 +64,7 @@ public class ProcView implements Initializable {
 		procController.getProcs().addListener(this::onProcessCountChange);
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+		heapPieButton.getStyleClass().add("erlyberly-icon-button");
 		heapPieButton.setStyle("-fx-background-color: transparent;");
 		heapPieButton.setText("");
 		heapPieButton.disableProperty().bind(notConnected);
