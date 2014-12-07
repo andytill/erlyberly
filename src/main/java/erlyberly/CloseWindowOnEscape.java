@@ -7,6 +7,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 class CloseWindowOnEscape implements EventHandler<KeyEvent> {
+	
 	private final Stage stage;
 
 	public CloseWindowOnEscape(Stage aTermsStage) {

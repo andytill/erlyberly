@@ -23,6 +23,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 
@@ -128,33 +129,54 @@ public class ProcView implements Initializable {
 	
 	@FXML
 	private void onHeapPie() {
-		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : chartableProcs()) {
-			String pid = procDescription(proc);
-			data.add(new Data(pid, proc.getHeapSize()));
-		}
+		ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getHeapSize(); });
 		
 		showPieChart("Process Heap", data);
 	}
 
 	@FXML
 	private void onStackPie() {
-		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : chartableProcs()) {
-			data.add(new Data(procDescription(proc), proc.getStackSize()));
-		}
-		
+		ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getStackSize(); });
+			
 		showPieChart("Process Stack", data);
 	}
 
 	@FXML
 	private void onTotalHeapPie() {
-		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
-		for (ProcInfo proc : chartableProcs()) {
-			data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
-		}
+		ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getTotalHeapSize(); });
 		
 		showPieChart("Total Heap", data);
+	}
+	
+	private ObservableList<PieChart.Data> buildData(ObservableList<ProcInfo> procs, Callback<ProcInfo, Long> extractor) {
+		
+		long total = 0;
+
+		for (ProcInfo proc : procs) {
+			total += extractor.call(proc);
+		}
+		
+		// threshold is 1%, this is a limit on how many segments are added to the pie chart
+		// too many seems to crash the process
+		long threshold = total / 100;
+
+		long other = 0;
+		
+		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
+
+		for (ProcInfo proc : procs) {
+			long value = extractor.call(proc);
+			
+			if(value >= threshold)
+				data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
+			else
+				other += value;
+		}
+		
+		if(other > 0)
+			data.add(new Data("Other", other));
+		
+		return data;
 	}
 
 	private ObservableList<ProcInfo> chartableProcs() {
@@ -172,10 +194,12 @@ public class ProcView implements Initializable {
 		pieChart = new PieChart(data);
         pieChart.setTitle(title);
         
-		Stage pieStage;
+		Stage pieStage = new Stage();
+		Scene scene = new Scene(pieChart);
     
-		pieStage = new Stage();
-		pieStage.setScene(new Scene(pieChart));
+		CloseWindowOnEscape.apply(scene, pieStage);
+		
+		pieStage.setScene(scene);
         pieStage.setWidth(800);
         pieStage.setHeight(600);
 
