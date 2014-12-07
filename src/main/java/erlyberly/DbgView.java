@@ -287,11 +287,14 @@ public class DbgView implements Initializable {
 			labelledTreeView("Function arguments", argTermsTreeView), 
 			labelledTreeView("Result", resultTermsTreeView)
 		);
+
+		Stage termsStage = new Stage();
 		
-		Stage termsStage;
-    
-		termsStage = new Stage();
-		termsStage.setScene(new Scene(splitPane));
+		Scene scene  = new Scene(splitPane);
+		
+		CloseWindowOnEscape.apply(scene, termsStage);
+		
+		termsStage.setScene(scene);
         termsStage.setWidth(800);
         termsStage.setHeight(600);
 
