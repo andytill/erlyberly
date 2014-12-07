@@ -168,6 +168,11 @@ collect_log(U, TC) ->
 maybe_add_log(skip, Logs) -> Logs;
 maybe_add_log(Log, Logs)  -> [Log | Logs].
 %%
+trace_to_props({trace, Pid, call, Func}) ->
+    {call, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func} ]};
 trace_to_props({trace, Pid, call, Func, _}) ->
     {call, 
         [ {pid, pid_to_list(Pid)},
