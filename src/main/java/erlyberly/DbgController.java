@@ -23,6 +23,8 @@ public class DbgController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 		new TraceCollectorThread().start();
+		
+		
 	}
 	
 	public ObservableList<TraceLog> getTraceLogs() {

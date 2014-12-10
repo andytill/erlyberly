@@ -51,7 +51,7 @@ import de.jensd.fx.fontawesome.Icon;
 
 
 public class DbgView implements Initializable {
-	
+
 	private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
 	
 	private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
@@ -113,60 +113,13 @@ public class DbgView implements Initializable {
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
-		dbgController.getTraceLogs().addListener(new ListChangeListener<TraceLog>() {
-			@Override
-			public void onChanged(ListChangeListener.Change<? extends TraceLog> e) {
-				while(e.next()) {
-					for (TraceLog trace : e.getAddedSubList()) {
-						traces.add(0, trace);
-					}
-				}
-			}});
+		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
-		tracesBox.setCellFactory(new Callback<ListView<TraceLog>, ListCell<TraceLog>>() {
-			@Override
-			public ListCell<TraceLog> call(ListView<TraceLog> view) {
-				return new ListCell<TraceLog>() {
-					@Override
-					protected void updateItem(TraceLog item, boolean empty) {
-						super.updateItem(item, empty);
-
-						getStyleClass().remove("exception");
-						textProperty().unbind();
-		                
-						if (item == null || empty) {
-			                setText(null);
-			            }
-						else {
-							textProperty().bind(item.summaryProperty());
-							
-							if(item.isExceptionThrower()) {
-								getStyleClass().add("exception");
-							}
-						}
-					}
-				};
-			}});
+		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
 		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
 		
-		modulesTree.getSelectionModel().selectedItemProperty().addListener(new InvalidationListener() {
-			@Override
-			public void invalidated(Observable o) {
-				TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-				
-				if(selectedItem == null)
-					return;
-				
-				ModFunc modFunc = selectedItem.getValue();
-				
-				if(modFunc.getFuncName() == null) {
-					goButton.setText("Select a function");
-				}
-				else {
-					goButton.setText("Trace " + modFunc.toFullString());
-				}
-			}});
+		modulesTree.getSelectionModel().selectedItemProperty().addListener(new UpdateTraceButton());
 
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
@@ -186,6 +139,14 @@ public class DbgView implements Initializable {
 		refreshModulesButton.setTooltip(new Tooltip("Refresh the module list to view newly loaded modules"));
 		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT).style("-fx-font-family: FontAwesome; -fx-font-size: 1em;"));
 		refreshModulesButton.setOnAction(this::onRefreshModules);
+	}
+
+	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
+		while(e.next()) {
+			for (TraceLog trace : e.getAddedSubList()) {
+				traces.add(0, trace);
+			}
+		}
 	}
 
 	private void onRefreshModules(ActionEvent e) {
@@ -488,5 +449,51 @@ public class DbgView implements Initializable {
 			mfs.add(modFunc);
 		}
 		return mfs;
+	}
+	
+	private final class TraceLogListCellFactory implements
+			Callback<ListView<TraceLog>, ListCell<TraceLog>> {
+		@Override
+		public ListCell<TraceLog> call(ListView<TraceLog> view) {
+			return new ListCell<TraceLog>() {
+				@Override
+				protected void updateItem(TraceLog item, boolean empty) {
+					super.updateItem(item, empty);
+
+					getStyleClass().remove("exception");
+					textProperty().unbind();
+		            
+					if (item == null || empty) {
+		                setText(null);
+		            }
+					else {
+						textProperty().bind(item.summaryProperty());
+						
+						if(item.isExceptionThrower()) {
+							getStyleClass().add("exception");
+						}
+					}
+				}
+			};
+		}
+	}
+
+	private final class UpdateTraceButton implements InvalidationListener {
+		@Override
+		public void invalidated(Observable o) {
+			TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+			
+			if(selectedItem == null)
+				return;
+			
+			ModFunc modFunc = selectedItem.getValue();
+			
+			if(modFunc.getFuncName() == null) {
+				goButton.setText("Select a function");
+			}
+			else {
+				goButton.setText("Trace " + modFunc.toFullString());
+			}
+		}
 	}
 }
