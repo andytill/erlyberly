@@ -25,7 +25,7 @@ public class DbgController implements Initializable {
 		new TraceCollectorThread().start();
 	}
 	
-	public ObservableList<TraceLog> getTraces() {
+	public ObservableList<TraceLog> getTraceLogs() {
 		return traces;
 	}
 

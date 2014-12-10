@@ -113,7 +113,7 @@ public class DbgView implements Initializable {
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
-		dbgController.getTraces().addListener(new ListChangeListener<TraceLog>() {
+		dbgController.getTraceLogs().addListener(new ListChangeListener<TraceLog>() {
 			@Override
 			public void onChanged(ListChangeListener.Change<? extends TraceLog> e) {
 				while(e.next()) {
