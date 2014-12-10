@@ -3,6 +3,7 @@ package erlyberly;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -54,15 +55,17 @@ public class DbgView implements Initializable {
 
 	private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
 	
+	private final DbgController dbgController = new DbgController();
+	
 	private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
 	
 	private final SortedList<TreeItem<ModFunc>> sortedTreeModules = new SortedList<TreeItem<ModFunc>>(treeModules);
 	
 	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
 	
-	private final ObservableList<TraceLog> traces = FXCollections.observableArrayList();
+	private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
 	
-	private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traces);
+	private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traceLogs);
 	
 	private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
 	
@@ -71,6 +74,8 @@ public class DbgView implements Initializable {
 	 * the predicate property does not seem to work.
 	 */
 	private final ObservableList<FilteredList<TreeItem<ModFunc>>> functionLists = FXCollections.observableArrayList();
+	
+	private final HashSet<ModFunc> traces = new HashSet<ModFunc>();
 	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
@@ -94,8 +99,6 @@ public class DbgView implements Initializable {
 	private ToggleButton hideProcsButton;
 	@FXML
 	private Button refreshModulesButton;
-	
-	private final DbgController dbgController = new DbgController();
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -121,7 +124,6 @@ public class DbgView implements Initializable {
 		
 		modulesTree.getSelectionModel().selectedItemProperty().addListener(new UpdateTraceButton());
 
-		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		dbgController.initialize(url, r);
@@ -144,7 +146,7 @@ public class DbgView implements Initializable {
 	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
 		while(e.next()) {
 			for (TraceLog trace : e.getAddedSubList()) {
-				traces.add(0, trace);
+				traceLogs.add(0, trace);
 			}
 		}
 	}
@@ -172,7 +174,7 @@ public class DbgView implements Initializable {
 
 	@FXML
 	private void onTraceLogClear() {
-		traces.clear();
+		traceLogs.clear();
 		tracesBox.getItems().clear();
 	}
 	
@@ -297,6 +299,8 @@ public class DbgView implements Initializable {
 		}
 		
 		ErlyBerly.nodeAPI().startTrace(function);
+
+		traces.add(function);
 		
 		dbgController.setCollectingTraces(true);
 		
@@ -308,11 +312,13 @@ public class DbgView implements Initializable {
 		currentTraceBox.getChildren().add(newRemoveTraceButton);
 	}
 	
-	private void onRemoveTracer(ActionEvent e, ModFunc mf) {
+	private void onRemoveTracer(ActionEvent e, ModFunc function) {
 		try {
-			ErlyBerly.nodeAPI().stopTrace(mf);
+			ErlyBerly.nodeAPI().stopTrace(function);
 			
 			currentTraceBox.getChildren().remove(e.getSource());
+			
+			traces.remove(function);
 		} 
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -354,6 +360,16 @@ public class DbgView implements Initializable {
 		}
 		else {
 			refreshModules();
+		}
+		
+		for (ModFunc function : traces) {
+			try {
+				ErlyBerly.nodeAPI().startTrace(function);
+			} catch (Exception e) {
+				e.printStackTrace();
+				
+				traces.remove(function);
+			}
 		}
 	}
 
