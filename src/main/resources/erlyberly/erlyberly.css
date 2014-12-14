@@ -7,7 +7,6 @@
     -fx-background-color: #F9F2F4;
     -fx-text-fill: #C7254E;
 }
-
 .exception:odd {
     /* make the background a little darker for alternate cells */
     -fx-background-color: #F1E0E4;
@@ -19,6 +18,35 @@
     -fx-background-color: #C7254E;
     -fx-text-fill: white;
 }
+
+/*
+ * show function calls that have not completed yet with a yellow bg and
+ * brown text.
+ */
+
+.not-completed {
+    -fx-background-color: #FFEB9C;
+
+    -fx-text-fill: #9C6500;
+}
+
+.not-completed:odd {
+    /* make the background a little darker for alternate cells */
+    -fx-background-color: #FFD93E;
+
+    -fx-text-fill: #9C6500;
+}
+
+.not-completed:selected {
+    /* invert the colours when the cell is selected */
+    -fx-background-color: #9C6500;
+
+    -fx-text-fill: #FFEB9C;
+}
+
+/*
+ * off-black text for icon buttons
+ */
 
 .erlyberly-icon-button {
     -fx-text-fill: #039ED3;

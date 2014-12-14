@@ -154,4 +154,8 @@ public class TraceLog implements Comparable<TraceLog> {
 	public ReadOnlyBooleanProperty isCompleteProperty() {
 		return complete;
 	}
+
+	public boolean isComplete() {
+		return complete.get();
+	}
 }
