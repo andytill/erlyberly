@@ -53,6 +53,8 @@ public class NodeAPI {
 	private String remoteNodeName;
 
 	private String cookie;
+
+	private volatile Thread checkAliveThread;
 	
 	public NodeAPI() {
 		traceManager = new TraceManager();
@@ -94,11 +96,10 @@ public class NodeAPI {
 
 		Platform.runLater(() -> { connectedProperty.set(true); });
 		
-		// TODO
-		// this could be improved, it doesn't guarantee that a user click 
-		// that triggers an erlang RPC will not block the thread, this just
-		// makes it much more unlikely
-		Thread thread = new Thread() {
+		if(checkAliveThread == null)
+			return;
+		
+		checkAliveThread = new Thread() {
 			@Override
 			public void run() {
 				while(true) {
@@ -107,8 +108,8 @@ public class NodeAPI {
 					mySleep(450);
 				}
 			}};
-		thread.setDaemon(true);
-		thread.start();
+		checkAliveThread.setDaemon(true);
+		checkAliveThread.start();
 	}
 	
 	private void loadRemoteErlyberly() throws IOException, OtpErlangExit, OtpAuthException {
