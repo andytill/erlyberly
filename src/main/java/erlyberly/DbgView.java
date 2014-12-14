@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -35,13 +38,16 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -122,7 +128,7 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
-		goButton.disableProperty().bind(modulesTree.getSelectionModel().selectedItemProperty().isNull());
+		goButton.setDisable(true);
 		
 		modulesTree.getSelectionModel().selectedItemProperty().addListener(new UpdateTraceButton());
 
@@ -562,7 +568,45 @@ public class DbgView implements Initializable {
 			}
 			else {
 				goButton.setText("Trace " + modFunc.toFullString());
+				
+				initateTraceButtonGlow();
 			}
+			
+			goButton.setDisable(modFunc.getFuncName() == null);
+		}
+
+		private void initateTraceButtonGlow() {
+			int diameter = 15;
+			
+			DropShadow glow;
+			
+			glow = new DropShadow();
+			glow.setOffsetY(0f);
+			glow.setOffsetX(0f);
+			glow.setColor(Color.rgb(0, 150, 201));
+			glow.setWidth(diameter);
+			glow.setHeight(diameter);
+			
+			goButton.setEffect(glow);
+
+			int endValue = 0;
+			Duration duration = Duration.millis(700);
+			
+			final KeyValue kvWidth = new KeyValue(glow.widthProperty(), endValue);
+			final KeyFrame kfWidth = new KeyFrame(duration, kvWidth);
+
+			final KeyValue kHeight = new KeyValue(glow.heightProperty(), endValue);
+			final KeyFrame kfHeight = new KeyFrame(duration, kHeight);
+ 
+			Timeline timeline;
+			
+			timeline = new Timeline();
+			timeline.setCycleCount(1);
+			timeline.setAutoReverse(true);
+			timeline.getKeyFrames().add(kfWidth);
+			timeline.getKeyFrames().add(kfHeight);
+			timeline.setOnFinished((e) -> { goButton.setEffect(null); });
+			timeline.play();
 		}
 	}
 }
