@@ -93,6 +93,22 @@ public class NodeAPI {
 		loadRemoteErlyberly();
 
 		Platform.runLater(() -> { connectedProperty.set(true); });
+		
+		// TODO
+		// this could be improved, it doesn't guarantee that a user click 
+		// that triggers an erlang RPC will not block the thread, this just
+		// makes it much more unlikely
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				while(true) {
+					ensureAlive();
+					
+					mySleep(450);
+				}
+			}};
+		thread.setDaemon(true);
+		thread.start();
 	}
 	
 	private void loadRemoteErlyberly() throws IOException, OtpErlangExit, OtpAuthException {
@@ -164,9 +180,9 @@ public class NodeAPI {
 		}
 	}
 
-	private void ensureAlive() {
+	private boolean ensureAlive() {
 		if(connection.isAlive())
-			return;
+			return true;
 		
 		Platform.runLater(() -> { connectedProperty.set(false); });
 		
@@ -176,14 +192,20 @@ public class NodeAPI {
 				break;
 			}
 			catch(Exception e) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
+				int millis = 1000;
+				mySleep(millis);
 				System.out.println("couldn't connect: " + e.getMessage());
 				
 			}
+		}
+		return true;
+	}
+
+	private void mySleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
 	}
 
