@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -30,6 +32,8 @@ public class TraceLog implements Comparable<TraceLog> {
 	private final long instanceNum;
 	
 	private final SimpleStringProperty summary = new SimpleStringProperty("");
+	
+	private final SimpleBooleanProperty complete = new SimpleBooleanProperty(false);
 	
 
 	public TraceLog(HashMap<Object, Object> map) {
@@ -121,7 +125,9 @@ public class TraceLog implements Comparable<TraceLog> {
 		if(object == null) {
 			OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
 			
-			return exception.elementAt(1);
+			if(exception != null) {
+				return exception.elementAt(1);
+			}
 		}
 		return (OtpErlangObject) object;
 	}
@@ -140,6 +146,10 @@ public class TraceLog implements Comparable<TraceLog> {
 		if(r != null)
 			map.put(RESULT_ATOM, r);
 		
-		Platform.runLater(() -> { summary.set(toString()); });
+		Platform.runLater(() -> { summary.set(toString()); complete.set(true); });
+	}
+	
+	public ReadOnlyBooleanProperty isCompleteProperty() {
+		return complete;
 	}
 }

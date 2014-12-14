@@ -12,6 +12,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -219,7 +220,7 @@ public class DbgView implements Initializable {
             	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
             	
             	if(selectedItem != null) {
-                	showTraceTermView(selectedItem.getArgs(), selectedItem.getResult()); 
+                	showTraceTermView(selectedItem); 
             	}
         	}
         }
@@ -234,11 +235,27 @@ public class DbgView implements Initializable {
 	}
 
 
-	private void showTraceTermView(OtpErlangObject args, OtpErlangObject result) {
+	private void showTraceTermView(final TraceLog traceLog) {
+		OtpErlangObject args = traceLog.getArgs(); 
+		OtpErlangObject result = traceLog.getResult();
+		
+		Stage termsStage = new Stage();
+		
 		TermTreeView resultTermsTreeView, argTermsTreeView;
 		
 		resultTermsTreeView = newTermTreeView();
-		resultTermsTreeView.populateFromTerm(result);
+		
+		if(result != null) {
+			resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
+		}
+		else {
+			WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
+				if(newV)
+					resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
+			});
+
+			traceLog.isCompleteProperty().addListener(listener);
+		}
 		
 		argTermsTreeView = newTermTreeView();
 		argTermsTreeView.populateFromListContents((OtpErlangList)args);
@@ -250,8 +267,6 @@ public class DbgView implements Initializable {
 			labelledTreeView("Function arguments", argTermsTreeView), 
 			labelledTreeView("Result", resultTermsTreeView)
 		);
-
-		Stage termsStage = new Stage();
 		
 		Scene scene  = new Scene(splitPane);
 		
