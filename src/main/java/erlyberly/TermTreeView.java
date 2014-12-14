@@ -73,7 +73,9 @@ public class TermTreeView extends TreeView {
 			}
 		}
 		else {
-			parent.getChildren().add(new TreeItem(OtpUtil.otpObjectToString(obj)));
+			StringBuilder stringBuilder = new StringBuilder();
+			OtpUtil.otpObjectToString(obj, stringBuilder);
+			parent.getChildren().add(new TreeItem(stringBuilder.toString()));
 		}
 	}
 

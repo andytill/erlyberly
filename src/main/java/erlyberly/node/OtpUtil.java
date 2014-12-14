@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
@@ -19,8 +20,35 @@ public class OtpUtil {
 	public static final OtpErlangAtom OK_ATOM = atom("ok");
 	
 	
-	public static OtpErlangTuple tuple(OtpErlangObject... obj) {
-		return new OtpErlangTuple(obj);
+	public static OtpErlangTuple tuple(Object... elements) {
+		OtpErlangObject[] tuple = toOtpElementArray(elements);
+		
+		return new OtpErlangTuple(tuple);
+	}
+	
+	public static OtpErlangList list(Object... elements) {
+		OtpErlangObject[] tuple = toOtpElementArray(elements);
+		
+		return new OtpErlangList(tuple);
+	}
+
+
+	private static OtpErlangObject[] toOtpElementArray(Object... elements) {
+		OtpErlangObject[] tuple = new OtpErlangObject[elements.length];
+		
+		for(int i=0; i < elements.length; i++) {
+			Object e = elements[i];
+			if(e instanceof Integer) {
+				tuple[i] = new OtpErlangLong((Integer)e);
+			}
+			else if(e instanceof OtpErlangObject) {
+				tuple[i] = (OtpErlangObject) elements[i];
+			}
+			else {
+				throw new RuntimeException(e + " cannot be converted to an OtpErlangObject");
+			}
+		}
+		return tuple;
 	}
 
 
@@ -42,14 +70,52 @@ public class OtpUtil {
 		return map;
 	}
 	
-	public static String otpObjectToString(OtpErlangObject obj) {
-		if(obj instanceof OtpErlangBinary)
-			return binaryToString((OtpErlangBinary) obj);
-		else if(obj instanceof OtpErlangPid) {
-			return pidToString((OtpErlangPid) obj);
+	public static void otpObjectToString(OtpErlangObject obj, StringBuilder sb) {
+		if(obj instanceof OtpErlangBinary) {
+			sb.append(binaryToString((OtpErlangBinary) obj));
 		}
+		else if(obj instanceof OtpErlangPid) {
+			sb.append(pidToString((OtpErlangPid) obj));
+		}
+		else if(obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
+			String brackets = bracketsForTerm(obj);
+			OtpErlangObject[] elements = elementsForTerm(obj);
+			
+			sb.append(brackets.charAt(0));
+			
+			for(int i=0; i < elements.length; i++) {
+				if(i != 0) {
+					sb.append(", ");
+				}
+				otpObjectToString(elements[i], sb);
+			}
+			sb.append(brackets.charAt(1));
+		}
+		else {
+			sb.append(obj.toString());
+		}
+	}
+	
+	public static String bracketsForTerm(OtpErlangObject obj) {
+		assert obj != null;
+		
+		if(obj instanceof OtpErlangTuple)
+			return "{}";
+		else if(obj instanceof OtpErlangList)
+			return "[]";
 		else
-			return obj.toString();
+			throw new RuntimeException("No brackets for type " + obj.getClass());
+	}
+	
+	public static OtpErlangObject[] elementsForTerm(OtpErlangObject obj) {
+		assert obj != null;
+		
+		if(obj instanceof OtpErlangTuple)
+			return ((OtpErlangTuple) obj).elements();
+		else if(obj instanceof OtpErlangList)
+			return ((OtpErlangList) obj).elements();
+		else
+			throw new RuntimeException("No brackets for type " + obj.getClass());
 	}
 	
 	public static String pidToString(OtpErlangPid pid) {

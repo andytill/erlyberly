@@ -1,6 +1,5 @@
 package erlyberly;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -54,62 +53,65 @@ public class TraceLog implements Comparable<TraceLog> {
 	}
 	
 	private String tracePropsToString() {
-		String trace = "";
+		StringBuilder sb = new StringBuilder(1024);
 		
 		OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
 		
 		if(!ATOM_UNDEFINED.equals(regName)) {
-			trace += regName.atomValue();
+			sb.append(regName.atomValue());
 		}
 		else {
 			OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-			trace += pidString.stringValue();
+			sb.append(pidString.stringValue());
 		}
-		trace += " ";
-		trace += fnToFunctionString((OtpErlangTuple)map.get(new OtpErlangAtom("fn")));
+		sb.append(" ");
 		
-		trace += " => ";
+		fnToFunctionString(getFunction(), sb);
+		
+		sb.append(" => ");
 		
 		if(map.containsKey(RESULT_ATOM)) {
-			trace += OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM));
+			OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM), sb);
 		}
 		else if(isExceptionThrower()) {
 			OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
 			
-			String clazz = OtpUtil.otpObjectToString(exception.elementAt(0));
-			String reason = OtpUtil.otpObjectToString(exception.elementAt(1));
-			trace += clazz + ":" +  reason;
+			// class
+			OtpUtil.otpObjectToString(exception.elementAt(0), sb);
+			sb.append(":");
+			// reason
+			OtpUtil.otpObjectToString(exception.elementAt(1), sb);
 		}
-		return trace;
+		return sb.toString();
+	}
+
+	private OtpErlangTuple getFunction() {
+		return (OtpErlangTuple)map.get(new OtpErlangAtom("fn"));
 	}
 
 	public boolean isExceptionThrower() {
 		return map.containsKey(EXCEPTION_FROM_ATOM);
 	}
 	
-	private String fnToFunctionString(OtpErlangTuple tuple) {
+	private void fnToFunctionString(OtpErlangTuple tuple, StringBuilder sb) {
 		OtpErlangAtom mod = (OtpErlangAtom) tuple.elementAt(0);
 		OtpErlangAtom func = (OtpErlangAtom) tuple.elementAt(1);
 		
 		// arguments of one or more integers that all come within the ASCII 
 		// range can get miscast as OtpErlangString instances
-		OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2));
-		
-		ArrayList<String> sargs = new ArrayList<String>();
-		
-		for (OtpErlangObject otpErlangObject : args) {
-			sargs.add(otpErlangObject.toString());
-		}
-		
-		String join = String.join(", ", sargs);
-		
-		String fn = mod.atomValue() + ":" + func.atomValue() + "(" + join + ")";
-		
-		return fn;
+		OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2));	
+
+		sb
+			.append(mod.atomValue())
+			.append(":")
+			.append(func.atomValue())
+			.append("(");
+		OtpUtil.otpObjectToString(args, sb);
+		sb.append(")");
 	}
 
 	public OtpErlangObject getArgs() {
-		OtpErlangTuple tuple = (OtpErlangTuple) map.get(new OtpErlangAtom("fn"));
+		OtpErlangTuple tuple = getFunction();
 		OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2));
 		return args;
 	}
