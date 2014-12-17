@@ -158,6 +158,10 @@ collect_log({trace, _, return_from, {code, _, _}, {module, Loaded_module}}, TC) 
     % if we trace that a module is reloaded then reapply traces to it
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
     TC;
+collect_log({trace, _, _, {code, _, _}, _}, TC) ->
+    TC;
+collect_log({trace, _, _, {code, _, _}}, TC) ->
+    TC;
 collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace ->
     Logs_1 = maybe_add_log(trace_to_props(Trace), Logs),
     TC#tcollector{ logs = Logs_1 };
