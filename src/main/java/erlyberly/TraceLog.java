@@ -106,7 +106,16 @@ public class TraceLog implements Comparable<TraceLog> {
 			.append(":")
 			.append(func.atomValue())
 			.append("(");
-		OtpUtil.otpObjectToString(args, sb);
+		
+		OtpErlangObject[] elements = args.elements();
+		if(elements.length > 0)
+			OtpUtil.otpObjectToString(elements[0], sb);
+		
+		for(int i=1; i<elements.length; i++) {
+			sb.append(", ");
+			OtpUtil.otpObjectToString(elements[i], sb);
+		}
+		
 		sb.append(")");
 	}
 
