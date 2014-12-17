@@ -66,7 +66,7 @@ public class TraceLog implements Comparable<TraceLog> {
 		}
 		sb.append(" ");
 		
-		fnToFunctionString(getFunction(), sb);
+		appendFunctionToString(sb);
 		
 		sb.append(" => ");
 		
@@ -93,7 +93,8 @@ public class TraceLog implements Comparable<TraceLog> {
 		return map.containsKey(EXCEPTION_FROM_ATOM);
 	}
 	
-	private void fnToFunctionString(OtpErlangTuple tuple, StringBuilder sb) {
+	public void appendFunctionToString(StringBuilder sb) {
+		OtpErlangTuple tuple = getFunction();
 		OtpErlangAtom mod = (OtpErlangAtom) tuple.elementAt(0);
 		OtpErlangAtom func = (OtpErlangAtom) tuple.elementAt(1);
 		

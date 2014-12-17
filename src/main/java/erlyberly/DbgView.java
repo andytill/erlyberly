@@ -279,10 +279,14 @@ public class DbgView implements Initializable {
 		
 		CloseWindowOnEscape.apply(scene, termsStage);
 		
+		StringBuilder sb = new StringBuilder(traceLog.getPidString());
+		sb.append(" ");
+		traceLog.appendFunctionToString(sb);
+		
 		termsStage.setScene(scene);
         termsStage.setWidth(800);
         termsStage.setHeight(600);
-
+        termsStage.setTitle(sb.toString());
         termsStage.show();
 	}
 
