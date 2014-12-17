@@ -25,7 +25,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
 	private static final OtpErlangAtom HEAP_SIZE_ATOM = new OtpErlangAtom("heap_size");
 
-	private static final OtpErlangAtom MSG_QUEUE_LEN_ATOM = new OtpErlangAtom("msg_queue_len");
+	private static final OtpErlangAtom MSG_QUEUE_LEN_ATOM = new OtpErlangAtom("message_queue_len");
 
 	private static final OtpErlangList EMPTY_LIST = new OtpErlangList();
 
