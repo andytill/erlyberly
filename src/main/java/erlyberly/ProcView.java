@@ -158,7 +158,7 @@ public class ProcView implements Initializable {
 		
 		// threshold is 1%, this is a limit on how many segments are added to the pie chart
 		// too many seems to crash the process
-		long threshold = total / 100;
+		long threshold = total / 200;
 
 		long other = 0;
 		
