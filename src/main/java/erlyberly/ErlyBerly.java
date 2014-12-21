@@ -83,7 +83,7 @@ public class ErlyBerly extends Application {
 		dbgView = (DbgView) dbgFxml.controller;
 		
 		topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
-			if(nb) {
+			if(!nb) {
 				splitPane.getItems().add(0, entopPane);
 				
 				Divider div = splitPane.getDividers().get(0);

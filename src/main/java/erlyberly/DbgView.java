@@ -593,8 +593,8 @@ public class DbgView implements Initializable {
 		}
 	}
 
-	public void setFunctionsVisibility(Boolean visible) {
-		if(visible) {
+	public void setFunctionsVisibility(Boolean hidden) {
+		if(!hidden) {
 			dbgSplitPane.getItems().add(0, modulesBox);
 			
 			Divider div = dbgSplitPane.getDividers().get(0);

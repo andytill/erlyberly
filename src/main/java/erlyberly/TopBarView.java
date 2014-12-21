@@ -24,13 +24,11 @@ public class TopBarView implements Initializable {
 		hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
 		hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
 		hideProcessesButton.setGraphicTextGap(0d);
-		hideProcessesButton.setSelected(true);
 		hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes"));
 
 		hideFunctionsButton.setGraphic(Icon.create().icon(AwesomeIcon.CUBE));
 		hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
 		hideFunctionsButton.setGraphicTextGap(0d);
-		hideFunctionsButton.setSelected(true);
 		hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Functions"));
 		
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
@@ -51,7 +49,7 @@ public class TopBarView implements Initializable {
 	private void toggleHideProcsText() {
 		String buttonText = "";
 		
-		if(!hideProcessesButton.isSelected())
+		if(hideProcessesButton.isSelected())
 			buttonText = "Show Processes";
 		else
 			buttonText = "Hide Processes";
@@ -62,7 +60,7 @@ public class TopBarView implements Initializable {
 	private void toggleHideFuncsText() {
 		String buttonText = "";
 		
-		if(!hideFunctionsButton.isSelected())
+		if(hideFunctionsButton.isSelected())
 			buttonText = "Show Functions";
 		else
 			buttonText = "Hide Functions";
