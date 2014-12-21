@@ -43,6 +43,13 @@ You will need Java 8 run erlyberly, download it [here](http://www.oracle.com/tec
 
 **If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.**
 
+### Shortcuts
+
+|   Keys   |                    Action                   |
+| -------- | :-----------------------------------------: |
+| `ctrl+p` |       Toggle visibility of processes.       |
+| `ctrl+m  | Toggle visibility of modules and functions. |
+
 ### Compiling
 
 You will need JDK 8 and Maven to compile.  erlyberly loads an erlang module to the remote node and then uses RPC to run traces and collect stats.  For convenience I have bundled the beam code in the source as well as the original erlang source.  If you want to recompile the beam code for yourself run the following command from the project directory:
