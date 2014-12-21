@@ -14,7 +14,6 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
@@ -34,7 +33,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -104,8 +102,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private Label noTracesLabel;
 	@FXML
-	private ToggleButton hideProcsButton;
-	@FXML
 	private Button refreshModulesButton;
 	
 	@Override
@@ -136,13 +132,6 @@ public class DbgView implements Initializable {
 		
 		dbgController.initialize(url, r);
 		
-		hideProcsButton.setContentDisplay(ContentDisplay.CENTER);
-		hideProcsButton.setGraphicTextGap(0d);
-		hideProcsButton.setSelected(true);
-		hideProcsButton.setTooltip(new Tooltip("Show/Hide the processes table"));
-		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsIcon(); });
-		toggleHideProcsIcon();
-		
 		refreshModulesButton.setContentDisplay(ContentDisplay.CENTER);
 		refreshModulesButton.setGraphicTextGap(0d);
 		refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
@@ -163,21 +152,6 @@ public class DbgView implements Initializable {
 		treeModules.clear();
 		
 		refreshModules();
-	}
-	
-	public BooleanProperty hideProcsProperty() {
-		return hideProcsButton.selectedProperty();
-	}
-	
-	private void toggleHideProcsIcon() {
-		AwesomeIcon icon;
-		
-		if(hideProcsButton.isSelected())
-			icon = AwesomeIcon.BACKWARD;
-		else
-			icon = AwesomeIcon.FORWARD;
-		
-		hideProcsButton.setGraphic(Icon.create().icon(icon).style("-fx-font-family: FontAwesome; -fx-font-size: 1em;"));
 	}
 
 	@FXML

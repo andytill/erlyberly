@@ -14,7 +14,6 @@
                   <Insets left="5.0" right="5.0" top="5.0" />
                </VBox.margin>
                <children>
-                  <ToggleButton fx:id="hideProcsButton" />
                   <Button fx:id="refreshModulesButton" />
                   <TextField fx:id="searchField" HBox.hgrow="ALWAYS">
                   </TextField>

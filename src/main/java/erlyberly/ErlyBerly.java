@@ -11,18 +11,23 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import de.jensd.shichimifx.utils.SplitPaneDividerSlider;
-import de.jensd.shichimifx.utils.SplitPaneDividerSlider.Direction;
 import erlyberly.node.NodeAPI;
 
 public class ErlyBerly extends Application {
 
 	private static final NodeAPI nodeAPI = new NodeAPI();
 
-	private SplitPaneDividerSlider divider;
+	private SplitPane splitPane;
+
+	private Region entopPane;
+
+	private double entopDivPosition;
 
 	public static void main(String[] args) throws Exception {
 		launch(args);
@@ -35,23 +40,32 @@ public class ErlyBerly extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
-		SplitPane splitPane;
-		
-		splitPane = new SplitPane();
 
-		FxmlLoadable dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
+		FxmlLoadable topBarFxml;
 		
-		splitPane.getItems().add(loadEntopPane());
+		topBarFxml = new FxmlLoadable("/erlyberly/topbar.fxml");
+		topBarFxml.load();
+        
+		splitPane = new SplitPane();
+		
+		FxmlLoadable dbgFxml;
+		
+		dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
+		
+		entopPane = (Region) loadEntopPane();
+		splitPane.getItems().add(entopPane);
+		
 		splitPane.getItems().add(dbgFxml.load());
 		
-		divider = new SplitPaneDividerSlider(splitPane, 0, Direction.LEFT);
+		/*divider = new SplitPaneDividerSlider(splitPane, 0, Direction.LEFT);*/
 		
-		setupProcPaneHiding(dbgFxml);
+		setupProcPaneHiding(topBarFxml);
+
+		VBox rootView = new VBox(topBarFxml.load(), splitPane);
 		
         Scene scene;
         
-		scene = new Scene(splitPane);
+		scene = new Scene(rootView);
 		scene.getStylesheets().add(getClass().getResource("/erlyberly/erlyberly.css").toString());  
 		
 		primaryStage.setScene(scene);
@@ -63,15 +77,25 @@ public class ErlyBerly extends Application {
     }
 
 	private void setupProcPaneHiding(FxmlLoadable dbgFxml) {
-		DbgView dbgView;
+		TopBarView topView;
 		
-		dbgView = (DbgView)dbgFxml.controller;
-		dbgView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) -> {
-			divider.setAimContentVisible(t1);
-		});
+		topView = (TopBarView)dbgFxml.controller;
+		topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
+			if(nb) {
+				splitPane.getItems().add(0, entopPane);
+				
+				Divider div = splitPane.getDividers().get(0);
+				div.setPosition(entopDivPosition);
+			}
+			else {
+				Divider div = splitPane.getDividers().get(0);
 
-		// initialise
-		divider.setAimContentVisible(dbgView.hideProcsProperty().get());
+				entopDivPosition = div.getPosition();
+				
+				div.setPosition(0d);
+				splitPane.getItems().remove(0);
+			}
+		});
 	}
 
 	private Parent loadEntopPane() {
@@ -119,6 +143,9 @@ public class ErlyBerly extends Application {
 		}
 
 		public Parent load() {
+			if(fxmlNode != null)
+				return fxmlNode;
+			
 			URL location = getClass().getResource(resource);
 	        FXMLLoader fxmlLoader = new FXMLLoader(location);
 
