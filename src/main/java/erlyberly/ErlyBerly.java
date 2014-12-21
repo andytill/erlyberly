@@ -45,21 +45,20 @@ public class ErlyBerly extends Application {
 		
 		topBarFxml = new FxmlLoadable("/erlyberly/topbar.fxml");
 		topBarFxml.load();
-        
-		splitPane = new SplitPane();
 		
 		FxmlLoadable dbgFxml;
 		
 		dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
+		dbgFxml.load();
+        
+		splitPane = new SplitPane();
 		
 		entopPane = (Region) loadEntopPane();
 		splitPane.getItems().add(entopPane);
 		
 		splitPane.getItems().add(dbgFxml.load());
 		
-		/*divider = new SplitPaneDividerSlider(splitPane, 0, Direction.LEFT);*/
-		
-		setupProcPaneHiding(topBarFxml);
+		setupProcPaneHiding(topBarFxml, dbgFxml);
 
 		VBox rootView = new VBox(topBarFxml.load(), splitPane);
 		
@@ -76,10 +75,13 @@ public class ErlyBerly extends Application {
         displayConnectionPopup(primaryStage);
     }
 
-	private void setupProcPaneHiding(FxmlLoadable dbgFxml) {
+	private void setupProcPaneHiding(FxmlLoadable topBarFxml, FxmlLoadable dbgFxml) {
 		TopBarView topView;
+		DbgView dbgView;
 		
-		topView = (TopBarView)dbgFxml.controller;
+		topView = (TopBarView)topBarFxml.controller;
+		dbgView = (DbgView) dbgFxml.controller;
+		
 		topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
 			if(nb) {
 				splitPane.getItems().add(0, entopPane);
@@ -95,6 +97,10 @@ public class ErlyBerly extends Application {
 				div.setPosition(0d);
 				splitPane.getItems().remove(0);
 			}
+		});
+		
+		topView.hideFunctionsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
+			dbgView.setFunctionsVisibility(nb);
 		});
 	}
 

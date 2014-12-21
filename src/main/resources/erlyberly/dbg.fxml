@@ -5,7 +5,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<SplitPane dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
+<SplitPane fx:id="dbgSplitPane" dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
    <items>
       <VBox fx:id="modulesBox" prefWidth="200.0" spacing="5.0" SplitPane.resizableWithParent="false">
          <children>

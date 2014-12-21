@@ -36,6 +36,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -103,6 +104,10 @@ public class DbgView implements Initializable {
 	private Label noTracesLabel;
 	@FXML
 	private Button refreshModulesButton;
+	@FXML
+	private SplitPane dbgSplitPane;
+
+	private double functionsDivPosition;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -585,6 +590,23 @@ public class DbgView implements Initializable {
 			timeline.getKeyFrames().add(kfHeight);
 			timeline.setOnFinished((e) -> { goButton.setEffect(null); });
 			timeline.play();
+		}
+	}
+
+	public void setFunctionsVisibility(Boolean visible) {
+		if(visible) {
+			dbgSplitPane.getItems().add(0, modulesBox);
+			
+			Divider div = dbgSplitPane.getDividers().get(0);
+			div.setPosition(functionsDivPosition);
+		}
+		else {
+			Divider div = dbgSplitPane.getDividers().get(0);
+
+			functionsDivPosition = div.getPosition();
+			
+			div.setPosition(0d);
+			dbgSplitPane.getItems().remove(0);
 		}
 	}
 }

@@ -12,6 +12,11 @@
          <font>
             <Font size="10.0" />
          </font></ToggleButton>
+      <ToggleButton fx:id="hideFunctionsButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Functions">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </ToggleButton>
    </children>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
