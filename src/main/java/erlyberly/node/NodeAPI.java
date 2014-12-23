@@ -6,12 +6,14 @@ import static erlyberly.node.OtpUtil.isTupleTagged;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
@@ -56,12 +58,16 @@ public class NodeAPI {
 
 	private volatile Thread checkAliveThread;
 	
+	private final SimpleObjectProperty<AppProcs> appProcs;
+	
 	public NodeAPI() {
 		traceManager = new TraceManager();
 		
 		connectedProperty = new SimpleBooleanProperty();
 		
 		summary = new SimpleStringProperty("erlyberly not connected");
+		
+		appProcs = new SimpleObjectProperty<AppProcs>(new AppProcs(0, LocalDateTime.now()));
 		
 		connectedProperty.addListener(this::summaryUpdater);
 	}
@@ -73,6 +79,10 @@ public class NodeAPI {
 		return this;
 	}
 	
+	public SimpleObjectProperty<AppProcs> appProcsProperty() {
+		return appProcs;
+	}
+
 	public synchronized void connect() throws IOException, OtpAuthException, OtpErlangExit {
 		
 		String nodeName = remoteNodeName;
@@ -176,6 +186,8 @@ public class NodeAPI {
 					processes.add(ProcInfo.toProcessInfo(propsToMap));
 				}
 			}
+			
+			Platform.runLater(() -> { appProcs.set(new AppProcs(processes.size(), LocalDateTime.now())); });
 		} catch (ClassCastException e) {
 			throw new RuntimeException("unexpected result: " + receiveRPC, e);
 		}

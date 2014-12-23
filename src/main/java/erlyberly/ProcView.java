@@ -1,9 +1,6 @@
 package erlyberly;
 
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.ResourceBundle;
 
 import javafx.beans.InvalidationListener;
@@ -17,7 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -33,13 +29,9 @@ import de.jensd.fx.fontawesome.Icon;
 public class ProcView implements Initializable {
 
 	private final ProcController procController;
-
-	private final DateFormat timeFormat;
 	
 	@FXML
 	private TableView<ProcInfo> processView;
-	@FXML
-	private Label procCountLabel;
 	@FXML
 	private Button refreshButton;
 	@FXML
@@ -53,16 +45,12 @@ public class ProcView implements Initializable {
 	
 	public ProcView() {
 		procController = new ProcController();
-	
-		timeFormat = new SimpleDateFormat("h:mm:ssaa");
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
 		final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
-		
-		procController.getProcs().addListener(this::onProcessCountChange);
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		heapPieButton.getStyleClass().add("erlyberly-icon-button");
@@ -229,10 +217,6 @@ public class ProcView implements Initializable {
 	@FXML
 	private void onTogglePolling() {
 		procController.togglePolling();
-	}
-	
-	private void onProcessCountChange(Observable o) {
-		procCountLabel.setText(procController.getProcs().size() + " processes at " + timeFormat.format(new Date()).toLowerCase());
 	}
 	
 	private void initialiseProcessSorting() {

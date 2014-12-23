@@ -1,6 +1,7 @@
 package erlyberly;
 
 import java.net.URL;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
@@ -22,6 +23,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
+import erlyberly.node.AppProcs;
 import floatyfield.FloatyFieldView;
 
 public class TopBarView implements Initializable {
@@ -59,6 +61,16 @@ public class TopBarView implements Initializable {
 			accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
 		});
 		
+		FxmlLoadable loader = processCountStat();	
+		
+		topBox.getChildren().add(new Separator(Orientation.VERTICAL));
+		topBox.getChildren().add(loader.fxmlNode);
+		
+		toggleHideProcsText();
+		toggleHideFuncsText();
+	}
+
+	private FxmlLoadable processCountStat() {
 		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
 		
 		loader.load();
@@ -72,14 +84,19 @@ public class TopBarView implements Initializable {
 		
 		ffView = (FloatyFieldView) loader.controller;
 		ffView.promptTextProperty().set("Processes");
-		ffView.textProperty().set("3434");
+		ffView.textProperty().set("0");
 		ffView.disableProperty().set(true);
+
+		ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> { upateProcsStat(ffView, nv); });
 		
-		topBox.getChildren().add(new Separator(Orientation.VERTICAL));
-		topBox.getChildren().add(loader.fxmlNode);
+		return loader;
+	}
+	
+	private void upateProcsStat(FloatyFieldView ffView, AppProcs nv) {
+		String dateString = nv.getDateTime().format(DateTimeFormatter.ISO_TIME);
 		
-		toggleHideProcsText();
-		toggleHideFuncsText();
+		ffView.textProperty().set(Integer.toString(nv.getProcCount()));
+		ffView.promptTextProperty().set("Processes @ " + dateString);
 	}
 
 	private ObservableMap<KeyCombination, Runnable> accelerators() {

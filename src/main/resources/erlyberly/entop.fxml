@@ -11,11 +11,6 @@
 <children>
       <HBox alignment="CENTER_RIGHT" spacing="5.0">
          <children>
-            <Label fx:id="procCountLabel" maxWidth="1.7976931348623157E308" text="No Processes" HBox.hgrow="SOMETIMES">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin>
-            </Label>
             <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#onRefresh" text="Refresh">
                <HBox.margin>
                   <Insets />
