@@ -64,6 +64,8 @@ This creates a runnable jar in the target directory.  Either double click it if 
 
     java -jar erlyberly-n.n.n-jar-with-dependencies.jar
 
+You'll also need the [floaty-field](https://github.com/andytill/floaty-field) library installed in your local Maven cache.
+
 ### Roadmap
 
 Some things that are important.
