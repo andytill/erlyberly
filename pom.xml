@@ -33,6 +33,11 @@
       <artifactId>fontawesomefx</artifactId>
       <version>8.0.10</version>
     </dependency>
+    <dependency>
+      <groupId>andytill</groupId>
+      <artifactId>floaty-field</artifactId>
+      <version>1.0.1</version>
+    </dependency>
   </dependencies>
 
   <build>

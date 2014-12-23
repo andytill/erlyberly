@@ -51,3 +51,12 @@
 .erlyberly-icon-button {
     -fx-text-fill: #039ED3;
 }
+
+.debug {
+    -fx-border-color: red;
+    -fx-border-width: 1;
+}
+
+.floaty-field {
+	-fx-font-size: 1.7em;
+}

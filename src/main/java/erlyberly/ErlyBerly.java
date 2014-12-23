@@ -1,17 +1,16 @@
 package erlyberly;
 
 import java.io.IOException;
-import java.net.URL;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -60,13 +59,19 @@ public class ErlyBerly extends Application {
 		
 		setupProcPaneHiding(topBarFxml, dbgFxml);
 
-		VBox rootView = new VBox(topBarFxml.load(), splitPane);
+		VBox rootView;
+		
+		rootView = new VBox(topBarFxml.load(), splitPane);
+		rootView.setMaxWidth(Double.MAX_VALUE);
+		
+		VBox.setVgrow(splitPane, Priority.ALWAYS);
 		
         Scene scene;
         
 		scene = new Scene(rootView);
+		scene.getStylesheets().add(getClass().getResource("/floatyfield/floaty-field.css").toExternalForm());
 		scene.getStylesheets().add(getClass().getResource("/erlyberly/erlyberly.css").toString());  
-		
+
 		primaryStage.setScene(scene);
         primaryStage.titleProperty().bind(nodeAPI.summaryProperty());
         primaryStage.sizeToScene();
@@ -137,31 +142,5 @@ public class ErlyBerly extends Application {
 
 	public static NodeAPI nodeAPI() {
 		return nodeAPI;
-	}
-	
-	static class FxmlLoadable {
-		String resource;
-		Parent fxmlNode;
-		Object controller;
-
-		public FxmlLoadable(String aResource) {
-			resource = aResource;
-		}
-
-		public Parent load() {
-			if(fxmlNode != null)
-				return fxmlNode;
-			
-			URL location = getClass().getResource(resource);
-	        FXMLLoader fxmlLoader = new FXMLLoader(location);
-
-			try {
-				fxmlNode = (Parent) fxmlLoader.load();
-				controller = fxmlLoader.getController();
-			} catch (IOException e) {
-				throw new RuntimeException("Cannot load FXML");
-			}
-			return fxmlNode;
-		}
 	}
 }
