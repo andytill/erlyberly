@@ -109,6 +109,8 @@ public class ErlyBerly extends Application {
 		});
 		
 		topView.setOnRefreshModules(dbgView::onRefreshModules);
+		
+		Platform.runLater(() -> { topView.addAccelerators(); });
 	}
 
 	private Parent loadEntopPane() {

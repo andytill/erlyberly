@@ -65,14 +65,6 @@ public class TopBarView implements Initializable {
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
 		hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
 		
-		// these have to be run after initialisation is complete or an exception occurs
-		Platform.runLater(() -> {
-			accelerators().put(TOGGLE_HIDE_PROCESSES_SHORTCUT, () -> { invertSelection(hideProcessesButton); });
-		});
-		Platform.runLater(() -> {
-			accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
-		});
-		
 		FxmlLoadable loader = processCountStat();	
 		
 		topBox.getChildren().add(new Separator(Orientation.VERTICAL));
@@ -80,6 +72,18 @@ public class TopBarView implements Initializable {
 		
 		toggleHideProcsText();
 		toggleHideFuncsText();
+	}
+
+	/**
+	 * these have to be run after initialisation is complete or an exception occurs
+	 */
+	public void addAccelerators() {
+		Platform.runLater(() -> {
+			accelerators().put(TOGGLE_HIDE_PROCESSES_SHORTCUT, () -> { invertSelection(hideProcessesButton); });
+		});
+		Platform.runLater(() -> {
+			accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
+		});
 	}
 
 	private FxmlLoadable processCountStat() {
