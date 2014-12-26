@@ -6,11 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -36,16 +31,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import javafx.util.Duration;
 import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -87,8 +78,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
-	private Button goButton;
-	@FXML
 	private ListView<TraceLog> tracesBox;
 	@FXML
 	private TextField searchField;
@@ -98,8 +87,6 @@ public class DbgView implements Initializable {
 	private TextField traceSearchField;
 	@FXML
 	private TextField filterTracesField;
-	@FXML
-	private FlowPane currentTraceBox;
 	@FXML
 	private Label noTracesLabel;
 	@FXML
@@ -111,8 +98,6 @@ public class DbgView implements Initializable {
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
-		currentTraceBox.getChildren().addListener(this::onRemoveTraceButtonsAdded);
-		
 		sortedTreeModules.setComparator(treeItemModFuncComparator());
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
@@ -129,9 +114,6 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
-		goButton.setDisable(true);
-		
-		modulesTree.getSelectionModel().selectedItemProperty().addListener(new UpdateTraceButton());
 		modulesTree.setCellFactory((tree) -> {
 			ModFuncGraphic mfg = new ModFuncGraphic(this::toggleTraceModFunc, traces::contains);
 			traces.addListener((Observable o) -> { 
@@ -331,8 +313,6 @@ public class DbgView implements Initializable {
 			newRemoveTraceButton = newRemoveTraceButton(function);
 			newRemoveTraceButton
 					.setOnAction((e) -> onRemoveTracer(e, function));
-			
-			currentTraceBox.getChildren().add(newRemoveTraceButton);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -341,31 +321,12 @@ public class DbgView implements Initializable {
 	private void onRemoveTracer(ActionEvent e, ModFunc function) {
 		try {
 			ErlyBerly.nodeAPI().stopTrace(function);
-			
-			if(e != null)
-				currentTraceBox.getChildren().remove(e.getSource());
-			
+
 			traces.remove(function);
 		} 
 		catch (Exception ex) {
 			ex.printStackTrace();
 		}
-	}
-	
-	/**
-	 * When the number of trace remove buttons changes, we need to show or hide
-	 * the label saying there are no active traces.
-	 */
-	private void onRemoveTraceButtonsAdded(Observable o) {
-		Platform.runLater(() -> {
-			ObservableList<Node> currentTraces = currentTraceBox.getChildren();
-			if(currentTraces.size() > 1 && noTracesLabel.getParent() != null) {
-				currentTraces.remove(0);
-			}
-			else if(currentTraces.isEmpty()) {
-				currentTraces.add(0, noTracesLabel);
-			}
-		});
 	}
 
 	private Button newRemoveTraceButton(ModFunc value) {
@@ -544,63 +505,6 @@ public class DbgView implements Initializable {
 				getStyleClass().add("exception");
 			else if(!item.isComplete())
 				getStyleClass().add("not-completed");
-		}
-	}
-
-	private final class UpdateTraceButton implements InvalidationListener {
-		@Override
-		public void invalidated(Observable o) {
-			TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-			
-			if(selectedItem == null)
-				return;
-			
-			ModFunc modFunc = selectedItem.getValue();
-			
-			if(modFunc.getFuncName() == null) {
-				goButton.setText("Select a function");
-			}
-			else {
-				goButton.setText("Trace " + modFunc.toFullString());
-				
-				initateTraceButtonGlow();
-			}
-			
-			goButton.setDisable(modFunc.getFuncName() == null);
-		}
-
-		private void initateTraceButtonGlow() {
-			int diameter = 15;
-			
-			DropShadow glow;
-			
-			glow = new DropShadow();
-			glow.setOffsetY(0f);
-			glow.setOffsetX(0f);
-			glow.setColor(Color.rgb(0, 150, 201));
-			glow.setWidth(diameter);
-			glow.setHeight(diameter);
-			
-			goButton.setEffect(glow);
-
-			int endValue = 0;
-			Duration duration = Duration.millis(700);
-			
-			final KeyValue kvWidth = new KeyValue(glow.widthProperty(), endValue);
-			final KeyFrame kfWidth = new KeyFrame(duration, kvWidth);
-
-			final KeyValue kHeight = new KeyValue(glow.heightProperty(), endValue);
-			final KeyFrame kfHeight = new KeyFrame(duration, kHeight);
- 
-			Timeline timeline;
-			
-			timeline = new Timeline();
-			timeline.setCycleCount(1);
-			timeline.setAutoReverse(true);
-			timeline.getKeyFrames().add(kfWidth);
-			timeline.getKeyFrames().add(kfHeight);
-			timeline.setOnFinished((e) -> { goButton.setEffect(null); });
-			timeline.play();
 		}
 	}
 

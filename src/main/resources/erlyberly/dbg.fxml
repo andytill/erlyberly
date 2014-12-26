@@ -19,29 +19,11 @@
                   </TextField>
                </children>
             </HBox>
-            <Button fx:id="goButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onGo" text="Select a function">
-               <VBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </VBox.margin>
-            </Button>
             <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
       <VBox spacing="5.0">
          <children>
-            <FlowPane fx:id="currentTraceBox" hgap="5.0" vgap="5.0">
-               <children>
-                  <Label fx:id="noTracesLabel" text="No traces" />
-               </children>
-               <VBox.margin>
-                  <Insets left="5.0" right="5.0" top="5.0" />
-               </VBox.margin>
-            </FlowPane>
-            <Separator prefWidth="200.0">
-               <padding>
-                  <Insets left="5.0" right="5.0" />
-               </padding>
-            </Separator>
             <HBox spacing="5.0">
                <children>
                   <TextField fx:id="traceSearchField" maxWidth="1.7976931348623157E308" promptText="Only traces containing..." HBox.hgrow="ALWAYS" />
@@ -49,7 +31,7 @@
                   <Button mnemonicParsing="false" onAction="#onTraceLogClear" text="Clear" textOverrun="CLIP" HBox.hgrow="ALWAYS" />
                </children>
                <padding>
-                  <Insets left="5.0" right="5.0" />
+                  <Insets left="5.0" right="5.0" top="5.0" />
                </padding>
             </HBox>
             <ListView fx:id="tracesBox" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS" />
