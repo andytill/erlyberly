@@ -5,12 +5,12 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.TableColumn.SortType;
 
 /**
@@ -28,6 +28,12 @@ public class ProcController {
 
 	private int timeout = -1;
 	
+	private final SimpleStringProperty filter = new SimpleStringProperty();
+	
+	private final ObservableList<ProcInfo> processes2 = FXCollections.observableArrayList();
+	
+	private final FilteredList<ProcInfo> filteredProcesses2 = new FilteredList<ProcInfo>(processes2);
+	
 	public ProcController() {
 		polling = new SimpleBooleanProperty();
 		
@@ -38,17 +44,33 @@ public class ProcController {
 		waiter = new Object();
 		
 		Platform.runLater(() -> {
-			ErlyBerly.nodeAPI().connectedProperty().addListener(new InvalidationListener() {
-				@Override
-				public void invalidated(Observable o) {
-					if(ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
-						procPollerThread.start();
-					}
-				}});
+			ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> { startPollingThread(); } );
 		});
+		
+		filter.addListener((o, ov, nv) -> { updateProcFilter(nv); });
 	}
 	
-	
+	private void updateProcFilter(String filterText) {
+		filteredProcesses2.setPredicate((proc) -> { return isMatchingProcess(filterText, proc); });
+	}
+
+	private boolean isMatchingProcess(String filterText, ProcInfo proc) {
+		return 
+				"".equals(filterText)
+				|| proc.getPid().contains(filterText)
+				|| (proc.getProcessName() != null && proc.getProcessName().contains(filterText));
+	}
+
+	private void startPollingThread() {
+		if(ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
+			procPollerThread.start();
+		}
+	}
+
+	public SimpleStringProperty filterProperty() {
+		return filter;
+	}
+
 	public void refreshOnce() {
 		synchronized (waiter) {
 			waiter.notify();
@@ -68,7 +90,7 @@ public class ProcController {
 	}
 
 	public ObservableList<ProcInfo> getProcs() {
-		return procPollerThread.processes2;
+		return filteredProcesses2;
 	}
 	
 	public SimpleBooleanProperty pollingProperty() {
@@ -84,11 +106,7 @@ public class ProcController {
 	}
 
 	private final class ProcPollerThread extends Thread {
-		public final ObservableList<ProcInfo> processes2;
-		
 		public ProcPollerThread() {
-			processes2 = FXCollections.observableArrayList();
-			
 			// make sure we don't hang the VM on close because of this thread
 			setDaemon(true);
 			setName("Process Info Poller");

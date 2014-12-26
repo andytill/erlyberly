@@ -57,6 +57,6 @@
     -fx-border-width: 1;
 }
 
-.floaty-field {
+.floaty-label .text-field {
 	-fx-font-size: 1.7em;
 }

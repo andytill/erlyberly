@@ -98,4 +98,8 @@ public class ModFunc implements Comparable<ModFunc> {
 		}
 		return comp;
 	}
+
+	public boolean isModule() {
+		return (funcName == null);
+	}
 }

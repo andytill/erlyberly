@@ -3,7 +3,6 @@ package erlyberly;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -32,11 +31,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -47,6 +46,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -82,7 +82,7 @@ public class DbgView implements Initializable {
 	 */
 	private final ObservableList<FilteredList<TreeItem<ModFunc>>> functionLists = FXCollections.observableArrayList();
 	
-	private final HashSet<ModFunc> traces = new HashSet<ModFunc>();
+	private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
 	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
@@ -132,7 +132,14 @@ public class DbgView implements Initializable {
 		goButton.setDisable(true);
 		
 		modulesTree.getSelectionModel().selectedItemProperty().addListener(new UpdateTraceButton());
-
+		modulesTree.setCellFactory((tree) -> {
+			ModFuncGraphic mfg = new ModFuncGraphic(this::toggleTraceModFunc, traces::contains);
+			traces.addListener((Observable o) -> { 
+				mfg.onTracesChange(); 
+			});
+			
+			return new FXTreeCell<ModFunc>(mfg, mfg);
+		});
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		dbgController.initialize(url, r);
@@ -298,30 +305,45 @@ public class DbgView implements Initializable {
 	@FXML
 	private void onGo() throws Exception {
 		ModFunc function = modulesTree.getSelectionModel().getSelectedItem().getValue();
-		
-		if(function == null || function.getFuncName() == null) {
-			return;
-		}
-		
-		ErlyBerly.nodeAPI().startTrace(function);
 
-		traces.add(function);
+		if(function == null || function.getFuncName() == null)
+			return;
 		
-		dbgController.setCollectingTraces(true);
-		
-		Button newRemoveTraceButton;
-		
-		newRemoveTraceButton = newRemoveTraceButton(function);
-		newRemoveTraceButton.setOnAction((e) -> onRemoveTracer(e, function));
-		
-		currentTraceBox.getChildren().add(newRemoveTraceButton);
+		traceModFunc(function);
+	}
+	
+	private void toggleTraceModFunc(ModFunc function) {
+		if(traces.contains(function))
+			onRemoveTracer(null, function);
+		else
+			traceModFunc(function);
+	}
+
+	private void traceModFunc(ModFunc function) {
+		try {
+			ErlyBerly.nodeAPI().startTrace(function);
+			
+			traces.add(function);
+			
+			dbgController.setCollectingTraces(true);
+			
+			Button newRemoveTraceButton;
+			newRemoveTraceButton = newRemoveTraceButton(function);
+			newRemoveTraceButton
+					.setOnAction((e) -> onRemoveTracer(e, function));
+			
+			currentTraceBox.getChildren().add(newRemoveTraceButton);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	private void onRemoveTracer(ActionEvent e, ModFunc function) {
 		try {
 			ErlyBerly.nodeAPI().stopTrace(function);
 			
-			currentTraceBox.getChildren().remove(e.getSource());
+			if(e != null)
+				currentTraceBox.getChildren().remove(e.getSource());
 			
 			traces.remove(function);
 		} 
@@ -432,7 +454,7 @@ public class DbgView implements Initializable {
 		
 		return root;
 	}
-
+	
 	private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
 		for (ModFunc modFunc : modFuncs) {
 			if(!modFunc.isSynthetic()) {
@@ -444,18 +466,7 @@ public class DbgView implements Initializable {
 	}
 
 	private TreeItem<ModFunc> newFuncTreeItem(ModFunc modFunc) {
-		TreeItem<ModFunc> item = new TreeItem<ModFunc>(modFunc);
-
-		Icon icon;
-		
-		if(modFunc.isExported()) {
-			icon = treeIcon(AwesomeIcon.SQUARE);
-		}
-		else {
-			icon = treeIcon(AwesomeIcon.SQUARE_ALT);
-		}
-		item.setGraphic(icon);
-		return item;
+		return new TreeItem<ModFunc>(modFunc);
 	}
 
 

@@ -9,7 +9,7 @@
 
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ProcView">
 <children>
-      <HBox alignment="CENTER_RIGHT" spacing="5.0">
+      <HBox fx:id="headerBox" alignment="CENTER_RIGHT" spacing="5.0">
          <children>
             <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#onRefresh" text="Refresh">
                <HBox.margin>

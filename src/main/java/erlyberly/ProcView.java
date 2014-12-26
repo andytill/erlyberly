@@ -10,18 +10,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
+import floatyfield.FloatyFieldView;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}. 
@@ -42,6 +47,8 @@ public class ProcView implements Initializable {
 	private Button stackPieButton;
 	@FXML
 	private Button totalHeapPieButton;
+	@FXML
+	private HBox headerBox;
 	
 	public ProcView() {
 		procController = new ProcController();
@@ -68,7 +75,6 @@ public class ProcView implements Initializable {
 		totalHeapPieButton.setText("");
 		totalHeapPieButton.disableProperty().bind(notConnected);
 		
-		//ErlyBerly.nodeAPI().connectedProperty().addListener((Observable o) -> { System.out.println("now connected? " + ErlyBerly.nodeAPI().connectedProperty().get()); } );
 		refreshButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
 		refreshButton.setGraphicTextGap(8d);
 		refreshButton.disableProperty().bind(procController.pollingProperty().or(notConnected));
@@ -112,7 +118,29 @@ public class ProcView implements Initializable {
 		processView.setItems(procController.getProcs());
 		processView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
+		processCountStat();
+		
 		initialiseProcessSorting();
+	}
+
+	private FxmlLoadable processCountStat() {
+		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+		
+		loader.load();
+
+		FloatyFieldView ffView;
+		
+		ffView = (FloatyFieldView) loader.controller;
+		ffView.promptTextProperty().set("Process Search");
+		
+		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
+		
+		headerBox.getChildren().add(0, new Separator(Orientation.VERTICAL));
+		headerBox.getChildren().add(0, loader.fxmlNode);
+		
+		procController.filterProperty().bind(ffView.textProperty());
+		
+		return loader;
 	}
 	
 	@FXML
