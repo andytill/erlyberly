@@ -61,7 +61,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		traceIcon.textProperty().bind(tracedIconText);
 		traceIcon.visibleProperty().bind(tracable);
 		traceIcon.setOnMouseClicked((e) -> {
-			traceFn.trace(modFunc);
+			if(e.getClickCount() == 2)
+				traceFn.trace(modFunc);
 		});
 		return traceIcon;
 	}
