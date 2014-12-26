@@ -28,7 +28,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
@@ -90,8 +89,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private Label noTracesLabel;
 	@FXML
-	private Button refreshModulesButton;
-	@FXML
 	private SplitPane dbgSplitPane;
 
 	private double functionsDivPosition;
@@ -125,13 +122,6 @@ public class DbgView implements Initializable {
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		dbgController.initialize(url, r);
-		
-		refreshModulesButton.setContentDisplay(ContentDisplay.CENTER);
-		refreshModulesButton.setGraphicTextGap(0d);
-		refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
-		refreshModulesButton.setTooltip(new Tooltip("Refresh the module list to view newly loaded modules"));
-		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT).style("-fx-font-family: FontAwesome; -fx-font-size: 1em;"));
-		refreshModulesButton.setOnAction(this::onRefreshModules);
 	}
 
 	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
@@ -142,7 +132,7 @@ public class DbgView implements Initializable {
 		}
 	}
 
-	private void onRefreshModules(ActionEvent e) {
+	public void onRefreshModules(ActionEvent e) {
 		treeModules.clear();
 		
 		refreshModules();

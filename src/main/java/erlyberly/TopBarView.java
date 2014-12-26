@@ -8,11 +8,14 @@ import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.ObservableMap;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
@@ -35,6 +38,8 @@ public class TopBarView implements Initializable {
 	private ToggleButton hideProcessesButton;
 	@FXML
 	private ToggleButton hideFunctionsButton;
+	@FXML
+	private Button refreshModulesButton;
   	@FXML
 	private HBox topBox;
 	
@@ -49,6 +54,13 @@ public class TopBarView implements Initializable {
 		hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
 		hideFunctionsButton.setGraphicTextGap(0d);
 		hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules"));
+		
+
+		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
+		refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
+		refreshModulesButton.setGraphicTextGap(0d);
+		refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code"));
+		refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
 		
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
 		hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
@@ -139,5 +151,9 @@ public class TopBarView implements Initializable {
 			buttonText = "Hide Modules";
 		
 		hideFunctionsButton.setText(buttonText);
+	}
+
+	public final void setOnRefreshModules(EventHandler<ActionEvent> e) {
+		refreshModulesButton.setOnAction(e);
 	}
 }

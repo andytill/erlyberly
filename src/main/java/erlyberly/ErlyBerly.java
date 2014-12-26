@@ -61,7 +61,7 @@ public class ErlyBerly extends Application {
 
 		VBox rootView;
 		
-		rootView = new VBox(topBarFxml.load(), splitPane);
+		rootView = new VBox(topBarFxml.fxmlNode, splitPane);
 		rootView.setMaxWidth(Double.MAX_VALUE);
 		
 		VBox.setVgrow(splitPane, Priority.ALWAYS);
@@ -107,6 +107,8 @@ public class ErlyBerly extends Application {
 		topView.hideFunctionsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
 			dbgView.setFunctionsVisibility(nb);
 		});
+		
+		topView.setOnRefreshModules(dbgView::onRefreshModules);
 	}
 
 	private Parent loadEntopPane() {
