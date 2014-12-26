@@ -48,7 +48,7 @@ You will need Java 8 run erlyberly, download it [here](http://www.oracle.com/tec
 |   Keys   |                    Action                   |
 | -------- | :-----------------------------------------: |
 | `ctrl+p` |       Toggle visibility of processes.       |
-| `ctrl+m  | Toggle visibility of modules and functions. |
+| `ctrl+m` | Toggle visibility of modules and functions. |
 
 ### Compiling
 
