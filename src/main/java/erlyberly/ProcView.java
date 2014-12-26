@@ -118,12 +118,12 @@ public class ProcView implements Initializable {
 		processView.setItems(procController.getProcs());
 		processView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
-		processCountStat();
+		addFloatySearchControl();
 		
 		initialiseProcessSorting();
 	}
 
-	private FxmlLoadable processCountStat() {
+	private FxmlLoadable addFloatySearchControl() {
 		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
 		
 		loader.load();

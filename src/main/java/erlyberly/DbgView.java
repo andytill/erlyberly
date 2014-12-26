@@ -32,6 +32,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -46,6 +47,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
+import floatyfield.FloatyFieldView;
 
 
 public class DbgView implements Initializable {
@@ -79,8 +81,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private ListView<TraceLog> tracesBox;
 	@FXML
-	private TextField searchField;
-	@FXML
 	private VBox modulesBox;
 	@FXML
 	private TextField traceSearchField;
@@ -102,9 +102,6 @@ public class DbgView implements Initializable {
 		traceSearchField.textProperty().addListener((o) -> { onTraceFilterChange(); });
 		filterTracesField.textProperty().addListener((o) -> { onTraceFilterChange(); });
 		
-		searchField.setPromptText("Search for functions i.e. gen_s:call");
-		searchField.textProperty().addListener(this::onFunctionSearchChange);
-		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
 		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
@@ -121,8 +118,31 @@ public class DbgView implements Initializable {
 		});
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
+		addFloatySearchControl();
+		
 		dbgController.initialize(url, r);
 	}
+
+	private FxmlLoadable addFloatySearchControl() {
+		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+		
+		loader.load();
+
+		FloatyFieldView ffView;
+		
+		ffView = (FloatyFieldView) loader.controller;
+		ffView.promptTextProperty().set("Search for functions i.e. gen_s:call");
+		
+		loader.fxmlNode.setStyle("-fx-padding: 5 5 0 5;");
+		
+		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
+		modulesBox.getChildren().add(0, loader.fxmlNode);
+		
+		ffView.textProperty().addListener(this::onFunctionSearchChange);
+		
+		return loader;
+	}
+	
 
 	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
 		while(e.next()) {
@@ -154,10 +174,7 @@ public class DbgView implements Initializable {
 			return logText.contains(traceSearchField.getText()); });
 	}
 	
-	public void onFunctionSearchChange(Observable o) {
-		
-		String search = searchField.getText();
-		
+	public void onFunctionSearchChange(Observable o, String oldValue, String search) {
 		String[] split = search.split(":");
 		
 		if(split.length == 0)
@@ -262,26 +279,10 @@ public class DbgView implements Initializable {
 		return new VBox(new Label(label), node);
 	}
 
-	public boolean modulePredicate(TreeItem<ModFunc> t) {
-		String searchText = searchField.getText();
-		return isMatchingModFunc(searchText, t);
-	}
-
-
 	private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
 		if(searchText.isEmpty())
 			return true;
 		return t.getValue().toString().contains(searchText);
-	}
-	
-	@FXML
-	private void onGo() throws Exception {
-		ModFunc function = modulesTree.getSelectionModel().getSelectedItem().getValue();
-
-		if(function == null || function.getFuncName() == null)
-			return;
-		
-		traceModFunc(function);
 	}
 	
 	private void toggleTraceModFunc(ModFunc function) {

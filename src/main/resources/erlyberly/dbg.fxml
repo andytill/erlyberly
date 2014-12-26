@@ -9,14 +9,6 @@
    <items>
       <VBox fx:id="modulesBox" prefWidth="200.0" spacing="5.0" SplitPane.resizableWithParent="false">
          <children>
-            <HBox spacing="5.0">
-               <VBox.margin>
-                  <Insets left="5.0" right="5.0" top="5.0" />
-               </VBox.margin>
-               <children>
-                  <TextField fx:id="searchField" HBox.hgrow="ALWAYS" />
-               </children>
-            </HBox>
             <TreeView fx:id="modulesTree" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
