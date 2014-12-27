@@ -8,9 +8,11 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn.SortType;
 
 /**
@@ -30,9 +32,11 @@ public class ProcController {
 	
 	private final SimpleStringProperty filter = new SimpleStringProperty();
 	
-	private final ObservableList<ProcInfo> processes2 = FXCollections.observableArrayList();
+	private final ObservableList<ProcInfo> processes = FXCollections.observableArrayList();
 	
-	private final FilteredList<ProcInfo> filteredProcesses2 = new FilteredList<ProcInfo>(processes2);
+	private final FilteredList<ProcInfo> filteredProcesses = new FilteredList<ProcInfo>(processes);
+	
+	private final SortedList<ProcInfo> sortedProcesses = new SortedList<ProcInfo>(filteredProcesses);
 	
 	public ProcController() {
 		polling = new SimpleBooleanProperty();
@@ -50,9 +54,13 @@ public class ProcController {
 		filter.addListener((o, ov, nv) -> { updateProcFilter(nv); });
 	}
 	
+	public void setListComparator(ObservableValue<? extends Comparator<? super ProcInfo>> tableComparator) {
+		sortedProcesses.comparatorProperty().bind(tableComparator);
+	}
+	
 	private void updateProcFilter(String filterText) {
 		BasicSearch basicSearch = new BasicSearch(filterText);
-		filteredProcesses2.setPredicate((proc) -> { return isMatchingProcess(basicSearch, proc); });
+		filteredProcesses.setPredicate((proc) -> { return isMatchingProcess(basicSearch, proc); });
 	}
 
 	private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
@@ -90,7 +98,7 @@ public class ProcController {
 	}
 
 	public ObservableList<ProcInfo> getProcs() {
-		return filteredProcesses2;
+		return sortedProcesses;
 	}
 	
 	public SimpleBooleanProperty pollingProperty() {
@@ -116,10 +124,10 @@ public class ProcController {
 		public void run() {
 			
 			while(true) {				
-		    	final ArrayList<ProcInfo> processes = new ArrayList<>();
+		    	final ArrayList<ProcInfo> processList = new ArrayList<>();
 		    	
 				try {
-					ErlyBerly.nodeAPI().retrieveProcessInfo(processes);
+					ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -150,11 +158,11 @@ public class ProcController {
 								if(procSort.getSortType() == SortType.DESCENDING) {
 									comparator = Collections.reverseOrder(comparator);
 								}
-								Collections.sort(processes, comparator);
+								Collections.sort(processList, comparator);
 							}
 						}
-						processes2.clear();
-						processes2.addAll(processes);
+						processes.clear();
+						processes.addAll(processList);
 					}});
 
 				try {

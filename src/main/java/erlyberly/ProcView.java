@@ -84,6 +84,8 @@ public class ProcView implements Initializable {
 		pollButton.disableProperty().bind(notConnected);
 
 		procController.pollingProperty().addListener(this::onPollingChange);
+		procController.setListComparator(processView.comparatorProperty());
+		
 		onPollingChange(null);
 		
 		TableColumn<ProcInfo, String> pidColumn = (TableColumn<ProcInfo, String>) processView.getColumns().get(0);
