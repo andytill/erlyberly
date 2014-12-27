@@ -51,14 +51,14 @@ public class ProcController {
 	}
 	
 	private void updateProcFilter(String filterText) {
-		filteredProcesses2.setPredicate((proc) -> { return isMatchingProcess(filterText, proc); });
+		BasicSearch basicSearch = new BasicSearch(filterText);
+		filteredProcesses2.setPredicate((proc) -> { return isMatchingProcess(basicSearch, proc); });
 	}
 
-	private boolean isMatchingProcess(String filterText, ProcInfo proc) {
+	private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
 		return 
-				"".equals(filterText)
-				|| proc.getPid().contains(filterText)
-				|| (proc.getProcessName() != null && proc.getProcessName().contains(filterText));
+				basicSearch.matches(proc.getPid())
+				|| basicSearch.matches(proc.getProcessName());
 	}
 
 	private void startPollingThread() {

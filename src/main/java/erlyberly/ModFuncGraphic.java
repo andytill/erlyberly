@@ -84,7 +84,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	@Override
 	public void updateItem(ModFunc item, boolean empty) {
 		if (item == null || empty) {
-			text.set("");
+			text.set(null);
 	    }
 		else {
 			text.set(item.toString());
