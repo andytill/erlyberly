@@ -18,6 +18,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -25,9 +26,9 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
@@ -83,14 +84,14 @@ public class DbgView implements Initializable {
 	@FXML
 	private VBox modulesBox;
 	@FXML
-	private TextField traceSearchField;
-	@FXML
-	private TextField filterTracesField;
-	@FXML
 	private Label noTracesLabel;
 	@FXML
 	private SplitPane dbgSplitPane;
-
+	@FXML
+	private HBox traceLogSearchBox;
+	@FXML
+	private Button clearTraceLogsButton;
+	
 	private double functionsDivPosition;
 	
 	@Override
@@ -99,8 +100,9 @@ public class DbgView implements Initializable {
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
-		traceSearchField.textProperty().addListener((o) -> { onTraceFilterChange(); });
-		filterTracesField.textProperty().addListener((o) -> { onTraceFilterChange(); });
+		clearTraceLogsButton.setGraphic(Icon.create().icon(AwesomeIcon.FILE_ALT));
+		clearTraceLogsButton.setGraphicTextGap(8d);
+		clearTraceLogsButton.setOnAction((e) -> { onTraceLogClear(); });
 		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
@@ -118,12 +120,14 @@ public class DbgView implements Initializable {
 		});
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
-		addFloatySearchControl();
+		addModulesFloatySearchControl();
+		
+		addTraceLogFloatySearchControl();
 		
 		dbgController.initialize(url, r);
 	}
 
-	private FxmlLoadable addFloatySearchControl() {
+	private FxmlLoadable addModulesFloatySearchControl() {
 		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
 		
 		loader.load();
@@ -139,6 +143,27 @@ public class DbgView implements Initializable {
 		modulesBox.getChildren().add(0, loader.fxmlNode);
 		
 		ffView.textProperty().addListener(this::onFunctionSearchChange);
+		
+		
+		return loader;
+	}
+
+	private FxmlLoadable addTraceLogFloatySearchControl() {
+		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+		
+		loader.load();
+
+		FloatyFieldView ffView;
+		
+		ffView = (FloatyFieldView) loader.controller;
+		ffView.promptTextProperty().set("Search trace logs");
+		
+		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
+		
+		traceLogSearchBox.getChildren().add(0, new Separator(Orientation.VERTICAL));
+		traceLogSearchBox.getChildren().add(0, loader.fxmlNode);
+
+		ffView.textProperty().addListener((o, ov, nv) -> { onTraceFilterChange(nv); });
 		
 		return loader;
 	}
@@ -158,20 +183,17 @@ public class DbgView implements Initializable {
 		refreshModules();
 	}
 
-	@FXML
 	private void onTraceLogClear() {
 		traceLogs.clear();
 		tracesBox.getItems().clear();
 	}
 	
-	private void onTraceFilterChange() {
+	private void onTraceFilterChange(String searchText) {
 		filteredTraces.setPredicate((t) -> {
-			String filterText = filterTracesField.getText();
+			BasicSearch basicSearch = new BasicSearch(searchText);
 			String logText = t.toString();
-			if(!filterText.isEmpty() && logText.contains(filterTracesField.getText())) {
-				return false;
-			}
-			return logText.contains(traceSearchField.getText()); });
+			return basicSearch.matches(logText); 
+		});
 	}
 	
 	public void onFunctionSearchChange(Observable o, String oldValue, String search) {

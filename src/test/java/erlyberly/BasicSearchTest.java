@@ -52,6 +52,17 @@ public class BasicSearchTest {
 		assertNotMatching("all the things", null);
 	}
 
+	@Test
+	public void test10() {
+		assertNotMatching("!the", "all the things");
+	}
+
+	@Test
+	public void test11() {
+		// positive match occurring first
+		assertMatching("the|!the", "all the things");
+	}
+
 	private void assertMatching(String searchText, String sourceText) {
 		BasicSearch basicSearch = new BasicSearch(searchText);
 		
