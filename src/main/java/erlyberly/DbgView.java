@@ -6,6 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
+
+
+
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -31,6 +34,8 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -40,11 +45,17 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import ui.FXTreeCell;
 
+
+
+
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+
+
+
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
@@ -118,6 +129,8 @@ public class DbgView implements Initializable {
 			
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
+		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
+		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		addModulesFloatySearchControl();
@@ -125,6 +138,26 @@ public class DbgView implements Initializable {
 		addTraceLogFloatySearchControl();
 		
 		dbgController.initialize(url, r);
+	}
+	
+	/**
+	 * if <code>ctrl+t</code> is released while focus is on the tree view, then check the 
+	 * selected item is a function and toggle tracing for it. 
+	 */
+	private void onKeyReleaseInModuleTree(KeyEvent e) {
+		
+		TreeItem<ModFunc> item = modulesTree.getSelectionModel().getSelectedItem();
+		
+		if(!e.isControlDown()) 
+			return;
+		if(e.getCode() != KeyCode.T)
+			return;
+		if(item == null || item.getValue() == null)
+			return;
+		if(item.getValue().isModule())
+			return;
+		
+		toggleTraceModFunc(item.getValue());
 	}
 
 	private FxmlLoadable addModulesFloatySearchControl() {

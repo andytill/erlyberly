@@ -41,14 +41,15 @@ Go to the github [releases section](https://github.com/andytill/erlyberly/releas
 
 You will need Java 8 run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  There are no other dependencies.
 
-**If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.**
+If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.
 
 ### Shortcuts
 
-|   Keys   |                    Action                   |
-| -------- | :-----------------------------------------: |
-| `ctrl+p` |       Toggle visibility of processes.       |
-| `ctrl+m` | Toggle visibility of modules and functions. |
+|   Keys   |                            Action                            |
+| -------- | :----------------------------------------------------------: |
+| `ctrl+m` |         Toggle visibility of modules and functions.          |
+| `ctrl+p` |               Toggle visibility of processes.                |
+| `ctrl+t` | Toggle tracing for the selected function in the module tree. |
 
 ### Compiling
 
