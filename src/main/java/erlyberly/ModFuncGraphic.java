@@ -3,6 +3,7 @@ package erlyberly;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import ui.CellController;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -38,6 +39,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		traceFn = aTraceFn;
 		this.isTracedFn = isTracedFn;
 		
+		getStyleClass().add("mod-func-graphic");
+		
 		getChildren().addAll(
 			exportIconGraphic(),
 			traceIcon(),
@@ -60,6 +63,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		traceIcon = Icon.create().style(ICON_STYLE);
 		traceIcon.textProperty().bind(tracedIconText);
 		traceIcon.visibleProperty().bind(tracable);
+		traceIcon.setTooltip(new Tooltip("Double click on this star to toggle tracing of this function"));
+		traceIcon.getStyleClass().add("erlyberly-icon-button");
 		traceIcon.setOnMouseClicked((e) -> {
 			if(e.getClickCount() == 2)
 				traceFn.trace(modFunc);

@@ -45,18 +45,34 @@
 }
 
 /*
- * off-black text for icon buttons
+ * dev-time layout debugging
  */
-
-.erlyberly-icon-button {
-    -fx-text-fill: #039ED3;
-}
 
 .debug {
     -fx-border-color: red;
     -fx-border-width: 1;
 }
 
+/*
+ * increase text size for read only floaty fields
+ */
+
 .floaty-label .text-field {
 	-fx-font-size: 1.7em;
+}
+
+/*
+ * off-black text for icon buttons
+ */
+
+.erlyberly-icon-button {
+
+}
+
+.tree-cell:selected > * > .erlyberly-icon-button:hover {
+    -fx-text-fill: #323232;
+}
+
+.erlyberly-icon-button:hover {
+    -fx-text-fill: #039ED3;
 }
