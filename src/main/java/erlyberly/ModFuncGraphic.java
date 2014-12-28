@@ -82,8 +82,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	}
 
 	private Icon treeIcon(AwesomeIcon treeIcon) {
-		Icon icon = Icon.create().icon(treeIcon).style(ICON_STYLE);
-		return icon;
+		return Icon.create().icon(treeIcon).style(ICON_STYLE);
 	}
 
 	@Override
@@ -99,6 +98,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 			tracable.set(!item.isModule());
 		}
 		modFunc = item;
+		
+		onTracesChange();
 	}
 
 	private AwesomeIcon exportIcon(ModFunc item) {
@@ -111,7 +112,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	}
 
 	public void onTracesChange() {
-		if(isTracedFn.isTraced(modFunc))
+		if(modFunc != null && isTracedFn.isTraced(modFunc))
 			tracedIconText.set(AwesomeIcon.STAR.toString());
 		else
 			tracedIconText.set(AwesomeIcon.STAR_ALT.toString());
