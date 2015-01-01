@@ -19,11 +19,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.HBox;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import erlyberly.node.AppProcs;
@@ -41,7 +41,7 @@ public class TopBarView implements Initializable {
 	@FXML
 	private Button refreshModulesButton;
   	@FXML
-	private HBox topBox;
+	private ToolBar topBox;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -54,7 +54,6 @@ public class TopBarView implements Initializable {
 		hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
 		hideFunctionsButton.setGraphicTextGap(0d);
 		hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules"));
-		
 
 		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
 		refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
@@ -67,8 +66,8 @@ public class TopBarView implements Initializable {
 		
 		FxmlLoadable loader = processCountStat();	
 		
-		topBox.getChildren().add(new Separator(Orientation.VERTICAL));
-		topBox.getChildren().add(loader.fxmlNode);
+		topBox.getItems().add(new Separator(Orientation.VERTICAL));
+		topBox.getItems().add(loader.fxmlNode);
 		
 		toggleHideProcsText();
 		toggleHideFuncsText();

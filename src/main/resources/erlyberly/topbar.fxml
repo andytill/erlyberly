@@ -6,8 +6,8 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox fx:id="topBox" alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" spacing="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.TopBarView">
-   <children>
+<ToolBar fx:id="topBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.TopBarView">
+   <items>
       <ToggleButton fx:id="hideProcessesButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Processes">
          <font>
             <Font size="10.0" />
@@ -22,8 +22,8 @@
             <Font size="10.0" />
          </font>
       </Button>
-   </children>
+   </items>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
    </padding>
-</HBox>
+</ToolBar>

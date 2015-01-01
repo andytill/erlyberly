@@ -45,6 +45,14 @@
 }
 
 /*
+ * remove the bottom line border to avoid a double border line
+ */
+
+.tool-bar:horizontal {
+    -fx-background-insets: 0;
+}
+
+/*
  * dev-time layout debugging
  */
 
@@ -75,4 +83,18 @@
 
 .erlyberly-icon-button:hover {
     -fx-text-fill: #039ED3;
+}
+
+/*
+ * allow decent rendering when a floaty-label gets put in the overflow
+ * list of a tool bar
+ * TODO put this in the floaty-field css
+ */
+
+.menu-item:focused > .floaty-label .text-field {
+    -fx-text-fill: white;
+}
+
+.menu-item:focused > .floaty-label .label {
+    -fx-text-fill: white;
 }
