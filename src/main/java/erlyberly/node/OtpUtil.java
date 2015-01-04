@@ -3,8 +3,11 @@ package erlyberly.node;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangDecodeException;
+import com.ericsson.otp.erlang.OtpErlangExit;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
@@ -18,6 +21,8 @@ import com.ericsson.otp.erlang.OtpMbox;
  */
 public class OtpUtil {
 
+	private static final OtpErlangAtom call = new OtpErlangAtom("call");
+	private static final OtpErlangAtom user = new OtpErlangAtom("user");
 	private static final OtpErlangAtom ERROR_ATOM = atom("error");
 	public static final OtpErlangAtom OK_ATOM = atom("ok");
 	
@@ -186,8 +191,6 @@ public class OtpUtil {
 		assert isTupleTagged(ERROR_ATOM, error) : "tuple " + error + "is not tagged with 'error'";
 		return isTupleTagged(reason, 1, error);
 	}
-	
-
 
 	public static OtpErlangList toOtpList(OtpErlangObject obj) {
 		if(obj instanceof OtpErlangList) {
@@ -203,24 +206,21 @@ public class OtpUtil {
 		}
 	}
 	
-    public static void rpc(OtpErlangPid sendingPid, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
-    	final OtpErlangObject[] rpc = new OtpErlangObject[2];
-    	final OtpErlangObject[] call = new OtpErlangObject[5];
-
-    	/* {self, { call, Mod, Fun, Args, user}} */
-
-    	call[0] = new OtpErlangAtom("call");
-    	call[1] = new OtpErlangAtom(mod);
-    	call[2] = fun;
-    	call[3] = args;
-    	call[4] = new OtpErlangAtom("user");
-
-    	rpc[0] = self.pid();
-    	rpc[1] = new OtpErlangTuple(call);
-    	new OtpMbox()
-    	tuple(sendingPid, tuple());
-    	OtpMbox m = null;
-    	m.send(name, msg)
-    	sendingPid.send("rex", new OtpErlangTuple(rpc));
-        }
+    public static void sendRPC(OtpConn conn, OtpMbox m, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
+    	OtpErlangTuple rpcMessage = tuple(m.self(), tuple(call, mod, fun, args, user));
+    	
+    	conn.send(m.self(), "rex", rpcMessage);
+    }
+    
+    public static OtpErlangObject receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
+    	OtpErlangTuple receive = (OtpErlangTuple) mbox.receive(5000);
+    	
+    	// FIXME handle timeouts
+    	if(receive == null)
+    		return null;
+    	if(!isTupleTagged(atom("rex"), receive))
+    		throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
+    	
+    	return receive.elementAt(1);
+    }
 }

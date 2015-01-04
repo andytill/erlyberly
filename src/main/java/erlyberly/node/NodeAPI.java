@@ -3,6 +3,7 @@ package erlyberly.node;
 import static erlyberly.node.OtpUtil.OK_ATOM;
 import static erlyberly.node.OtpUtil.atom;
 import static erlyberly.node.OtpUtil.isTupleTagged;
+import static erlyberly.node.OtpUtil.list;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,18 +19,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
 import com.ericsson.otp.erlang.OtpAuthException;
-import com.ericsson.otp.erlang.OtpConnection;
+import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.ericsson.otp.erlang.OtpNode;
+import com.ericsson.otp.erlang.OtpMbox;
 import com.ericsson.otp.erlang.OtpPeer;
-import com.ericsson.otp.erlang.OtpSelf;
+import com.ericsson.otp.erlang.OtpSelfNode;
 
 import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
@@ -49,9 +50,9 @@ public class NodeAPI {
 	
 	private final SimpleStringProperty summary;
 	
-	private OtpConnection connection;
+	private OtpConn connection;
 
-	private OtpNode self;
+	private OtpSelfNode self;
 
 	private String remoteNodeName;
 
@@ -60,6 +61,8 @@ public class NodeAPI {
 	private volatile Thread checkAliveThread;
 	
 	private final SimpleObjectProperty<AppProcs> appProcs;
+
+	private OtpMbox mbox;
 	
 	public NodeAPI() {
 		traceManager = new TraceManager();
@@ -84,23 +87,24 @@ public class NodeAPI {
 		return appProcs;
 	}
 
-	public synchronized void connect() throws IOException, OtpAuthException, OtpErlangExit {
+	public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
 		
-		String nodeName = remoteNodeName;
-		self = new OtpNode("erlyberly-" + System.currentTimeMillis());
+		self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
 		if(!cookie.isEmpty()) {
 			self.setCookie(cookie);
 		}
 		
 		// if the node name does not contain a host then assume it is on the
 		// same machine
-		if(!nodeName.contains("@")) {
+		if(!remoteNodeName.contains("@")) {
 			String[] split = self.toString().split("\\@");
 			
-			nodeName += "@" + split[1];
+			remoteNodeName += "@" + split[1];
 		}
 		
-		connection = self.connect();
+		connection = self.connect(new OtpPeer(remoteNodeName));
+		
+		mbox = self.createMbox();
 		
 		loadRemoteErlyberly();
 
@@ -122,14 +126,13 @@ public class NodeAPI {
 		checkAliveThread.start();
 	}
 	
-	private void loadRemoteErlyberly() throws IOException, OtpErlangExit, OtpAuthException {
-		OtpErlangObject[] elems = new OtpErlangObject[]{
-				new OtpErlangAtom("erlyberly"),
-				new OtpErlangString(ERLYBERLY_BEAM_PATH),
-				new OtpErlangBinary(loadBeamFile())
-		};
+	private void loadRemoteErlyberly() throws IOException, OtpErlangException {
 		
-		connection.sendRPC("code", "load_binary", new OtpErlangList(elems));
+		sendRPC("code", "load_binary", 
+				list(
+						atom("erlyberly"),
+						new OtpErlangString(ERLYBERLY_BEAM_PATH),
+						new OtpErlangBinary(loadBeamFile())));
 		
 		OtpErlangObject result = receiveRPC();
 		
@@ -145,8 +148,8 @@ public class NodeAPI {
 		}
 	}
 
-	private OtpErlangObject receiveRPC() throws IOException, OtpErlangExit, OtpAuthException {
-		OtpErlangObject result = connection.receiveRPC();
+	private OtpErlangObject receiveRPC() throws IOException, OtpErlangException {
+		OtpErlangObject result = OtpUtil.receiveRPC(mbox);
 		
 		// hack to support certain projects, don't ask...
 		if(result instanceof OtpErlangTuple) {
@@ -175,7 +178,7 @@ public class NodeAPI {
 		OtpErlangObject receiveRPC = null;
 		
 		try {
-			connection.sendRPC("erlyberly", "process_info", new OtpErlangList());
+			sendRPC("erlyberly", "process_info", new OtpErlangList());
 			receiveRPC = receiveRPC();
 			OtpErlangList received = (OtpErlangList) receiveRPC; 
 			
@@ -224,7 +227,7 @@ public class NodeAPI {
 
 	public synchronized OtpErlangList requestFunctions() throws Exception {
 		ensureAlive();
-		connection.sendRPC("erlyberly", "module_functions", new OtpErlangList());
+		sendRPC("erlyberly", "module_functions", new OtpErlangList());
 		return (OtpErlangList) receiveRPC(); 
 	}
 
@@ -233,7 +236,7 @@ public class NodeAPI {
 		
 		ensureAlive();
 		
-		connection.sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
+		sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
 		
 		OtpErlangObject result = receiveRPC();
 		
@@ -249,35 +252,39 @@ public class NodeAPI {
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
 		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
-		
-		connection.sendRPC("erlyberly", "stop_trace", new OtpErlangObject[] {
+
+		sendRPC("erlyberly", "stop_trace", 
+			list(
 				OtpUtil.atom(mf.getModuleName()),
 				OtpUtil.atom(mf.getFuncName()),
 				new OtpErlangInt(mf.getArity()),
 				new OtpErlangAtom(mf.isExported())
-			});
+			));
 		receiveRPC();
 	}
 
-	private OtpErlangObject[] toTraceTuple(ModFunc mf) {
-		OtpErlangObject[] args = new OtpErlangObject[] {
-			OtpUtil.tuple(OtpUtil.atom(self.node()), self.pid()),
+	private OtpErlangList toTraceTuple(ModFunc mf) {
+		return list(
+			OtpUtil.tuple(OtpUtil.atom(self.node()), mbox.self()),
 			OtpUtil.atom(mf.getModuleName()),
 			OtpUtil.atom(mf.getFuncName()),
 			new OtpErlangInt(mf.getArity()),
 			new OtpErlangAtom(mf.isExported())
-		};
-		return args;
+		);
 	}
 
 	public SimpleBooleanProperty connectedProperty() {
 		return connectedProperty;
 	}
+	
+	private void sendRPC(String module, String function, OtpErlangList args) throws IOException {
+		OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
+	}
 
 	public ArrayList<TraceLog> collectTraceLogs() throws Exception {
 		ensureAlive();
 		
-		connection.sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
+		sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
 		OtpErlangObject prcResult = receiveRPC();
 		
