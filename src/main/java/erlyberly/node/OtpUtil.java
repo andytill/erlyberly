@@ -1,5 +1,6 @@
 package erlyberly.node;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -10,6 +11,7 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+import com.ericsson.otp.erlang.OtpMbox;
 
 /**
  * Sin bin for utils dealing with jinterface.
@@ -199,5 +201,26 @@ public class OtpUtil {
 		else {
 			throw new ClassCastException("" + obj + " cannot be converted to an OtpErlangList");
 		}
-	}	
+	}
+	
+    public static void rpc(OtpErlangPid sendingPid, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
+    	final OtpErlangObject[] rpc = new OtpErlangObject[2];
+    	final OtpErlangObject[] call = new OtpErlangObject[5];
+
+    	/* {self, { call, Mod, Fun, Args, user}} */
+
+    	call[0] = new OtpErlangAtom("call");
+    	call[1] = new OtpErlangAtom(mod);
+    	call[2] = fun;
+    	call[3] = args;
+    	call[4] = new OtpErlangAtom("user");
+
+    	rpc[0] = self.pid();
+    	rpc[1] = new OtpErlangTuple(call);
+    	new OtpMbox()
+    	tuple(sendingPid, tuple());
+    	OtpMbox m = null;
+    	m.send(name, msg)
+    	sendingPid.send("rex", new OtpErlangTuple(rpc));
+        }
 }

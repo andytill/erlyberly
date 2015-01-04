@@ -27,6 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+import com.ericsson.otp.erlang.OtpNode;
 import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelf;
 
@@ -50,7 +51,7 @@ public class NodeAPI {
 	
 	private OtpConnection connection;
 
-	private OtpSelf self;
+	private OtpNode self;
 
 	private String remoteNodeName;
 
@@ -86,8 +87,7 @@ public class NodeAPI {
 	public synchronized void connect() throws IOException, OtpAuthException, OtpErlangExit {
 		
 		String nodeName = remoteNodeName;
-		self = new OtpSelf("erlyberly-" + System.currentTimeMillis());
-		
+		self = new OtpNode("erlyberly-" + System.currentTimeMillis());
 		if(!cookie.isEmpty()) {
 			self.setCookie(cookie);
 		}
@@ -100,7 +100,7 @@ public class NodeAPI {
 			nodeName += "@" + split[1];
 		}
 		
-		connection = self.connect(new OtpPeer(nodeName));
+		connection = self.connect();
 		
 		loadRemoteErlyberly();
 

@@ -104,7 +104,7 @@ You'll also need the [floaty-field](https://github.com/andytill/floaty-field) li
 
 Some things that are important.
 
-1. Bug fixing and stability for current features is number one priority right now.  Help by sending contributing issue reports.
+1. Bug fixing and stability for current features is number one priority right now.  Help by contributing issue reports.
 2. seq_trace visualisation with graphs.
 3. More statistics on the running system, such as memory and CPU.
 4. Beat CAP.
