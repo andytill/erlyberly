@@ -192,7 +192,7 @@ public class ProcView implements Initializable {
 		}
 		
 		if(other > 0)
-			data.add(new Data("Other", other));
+			data.add(new Data("> " + threshold + " bytes", other));
 		
 		return data;
 	}
@@ -200,7 +200,7 @@ public class ProcView implements Initializable {
 	private ObservableList<ProcInfo> chartableProcs() {
 		ObservableList<ProcInfo> procs = processView.getSelectionModel().getSelectedItems();
 		
-		if(procs.isEmpty()) {
+		if(procs.isEmpty() || procs.size() == 1) {
 			procs = procController.getProcs();
 		}
 		return procs;
@@ -220,7 +220,8 @@ public class ProcView implements Initializable {
 		pieStage.setScene(scene);
         pieStage.setWidth(800);
         pieStage.setHeight(600);
-
+        pieStage.setTitle(title);
+        
         pieStage.show();
 	}
 
