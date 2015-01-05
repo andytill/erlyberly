@@ -230,6 +230,17 @@ public class DbgView implements Initializable {
 	}
 	
 	public void onFunctionSearchChange(Observable o, String oldValue, String search) {
+		if(isFilterForTraces(search))
+			filterForTracedFunctions();
+		else
+			filterForFunctionTextMatch(search);
+	}
+
+	private boolean isFilterForTraces(String search) {
+		return "#t".equals(search.trim());
+	}
+
+	private void filterForFunctionTextMatch(String search) {
 		String[] split = search.split(":");
 		
 		if(split.length == 0)
@@ -244,11 +255,20 @@ public class DbgView implements Initializable {
 			}
 		}
 		
-		filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t); });
 		
-	    for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+		for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
 			funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
 		}
+
+		filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty(); });
+	}
+
+	private void filterForTracedFunctions() {
+		for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+			funcItemList.setPredicate((t) -> { return traces.contains(t.getValue()); });
+		}
+
+		filteredTreeModules.setPredicate((t) -> { return !t.getChildren().isEmpty(); });
 	}
 
 	private void onTraceClicked(MouseEvent me) {
