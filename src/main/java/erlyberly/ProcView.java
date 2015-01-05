@@ -192,7 +192,7 @@ public class ProcView implements Initializable {
 		}
 		
 		if(other > 0)
-			data.add(new Data("> " + threshold + " bytes", other));
+			data.add(new Data("All processes > " + threshold + " bytes", other));
 		
 		return data;
 	}
