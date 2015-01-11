@@ -7,49 +7,44 @@ import org.junit.Test;
 public class BasicSearchTest {
 
 	@Test
-	public void test() {
+	public void test01() {
 		assertMatching("wert", "qwerty");
 	}
 
 	@Test
-	public void test2() {
+	public void test02() {
 		assertMatching("derp|wert", "qwerty");
 	}
 
 	@Test
-	public void test3() {
+	public void test03() {
 		assertMatching("wert|derp", "qwerty");
 	}
 
 	@Test
-	public void test4() {
+	public void test04() {
 		assertMatching("wert||derp", "qwerty");
 	}
 
 	@Test
-	public void test5() {
+	public void test05() {
 		assertNotMatching("wert|derp", "turp");
 	}
 	
 	@Test
-	public void test6() {
+	public void test06() {
 		assertNotMatching("wert||derp", "turp");
 	}
 
 	@Test
-	public void test7() {
+	public void test07() {
 		assertMatching("", "trolololol");
 	}
 
 	@Test
-	public void test8() {
+	public void test08() {
 		// even match null when there is no search!
 		assertMatching("", null);
-	}
-
-	@Test
-	public void test9() {
-		assertNotMatching("all the things", null);
 	}
 
 	@Test
@@ -59,8 +54,12 @@ public class BasicSearchTest {
 
 	@Test
 	public void test11() {
-		// positive match occurring first
-		assertMatching("the|!the", "all the things");
+		assertNotMatching("the|!the", "all the things");
+	}
+
+	@Test
+	public void test13() {
+		assertMatching("!the", "banjo");
 	}
 
 	private void assertMatching(String searchText, String sourceText) {

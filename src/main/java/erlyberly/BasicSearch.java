@@ -22,11 +22,14 @@ public class BasicSearch {
 		
 		for (String string : searches) {
 			SearchMatcher sm;
+			
 			if(string.charAt(0) == '!') {
 				if(string.length() == 1)
 					continue;
 				String string2 = string.substring(1);
-				sm = (s) -> { return s.contains(string2) ? IsMatch.FILTERED : IsMatch.NO_MATCH; };
+				
+				// this is a NOT filter, if we match then filter out, otherwise let it though
+				sm = (s) -> { return s.contains(string2) ? IsMatch.FILTERED : IsMatch.MATCH; };
 			}
 			else {
 				sm = (s) -> { return s.contains(string) ? IsMatch.MATCH : IsMatch.NO_MATCH; };
@@ -35,22 +38,31 @@ public class BasicSearch {
 		}
 	}
 
-	public boolean matches(String string) {
+	public boolean matches(String... sourceStrings) {
 		if(matchers.isEmpty())
 			return true;
-		if(string == null)
-			return false;
+
+		boolean match = false;
 		
-		for (SearchMatcher matcher : matchers) {
-			switch(matcher.isMatch(string)) {
-			case FILTERED:
-				return false;
-			case MATCH:
-				return true;
-			case NO_MATCH:
-				break;
+		for (String string : sourceStrings) {
+
+			if(sourceStrings == null)
+				continue;
+			
+			for (SearchMatcher matcher : matchers) {
+				switch(matcher.isMatch(string)) {
+				case FILTERED:
+					// if this is filtered out, return false immediately
+					return false;
+				case MATCH:
+					// we may match but could filter out later on
+					match = true;
+				case NO_MATCH:
+					// keep going until we get something more substantive
+					break;
+				}
 			}
 		}
-		return false;
+		return match;
 	}
 }

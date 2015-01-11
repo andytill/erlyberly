@@ -65,8 +65,7 @@ public class ProcController {
 
 	private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
 		return 
-				basicSearch.matches(proc.getPid())
-				|| basicSearch.matches(proc.getProcessName());
+				basicSearch.matches(proc.getPid(), proc.getProcessName());
 	}
 
 	private void startPollingThread() {

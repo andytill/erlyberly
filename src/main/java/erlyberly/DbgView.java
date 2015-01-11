@@ -222,21 +222,21 @@ public class DbgView implements Initializable {
 	}
 	
 	private void onTraceFilterChange(String searchText) {
+		BasicSearch basicSearch = new BasicSearch(searchText);
 		filteredTraces.setPredicate((t) -> {
-			BasicSearch basicSearch = new BasicSearch(searchText);
 			String logText = t.toString();
 			return basicSearch.matches(logText); 
 		});
 	}
 	
 	public void onFunctionSearchChange(Observable o, String oldValue, String search) {
-		if(isFilterForTraces(search))
+		if(isSpecialTraceFilter(search))
 			filterForTracedFunctions();
 		else
 			filterForFunctionTextMatch(search);
 	}
 
-	private boolean isFilterForTraces(String search) {
+	private boolean isSpecialTraceFilter(String search) {
 		return "#t".equals(search.trim());
 	}
 
@@ -254,7 +254,6 @@ public class DbgView implements Initializable {
 				treeItem.setExpanded(true);
 			}
 		}
-		
 		
 		for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
 			funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
