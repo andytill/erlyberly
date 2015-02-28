@@ -34,6 +34,8 @@ public class TopBarView implements Initializable {
 
 	private static final KeyCodeCombination TOGGLE_HIDE_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.M, KeyCombination.CONTROL_DOWN);
 	
+	private static final KeyCodeCombination REFRESH_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN);
+	
 	@FXML
 	private ToggleButton hideProcessesButton;
 	@FXML
@@ -42,23 +44,25 @@ public class TopBarView implements Initializable {
 	private Button refreshModulesButton;
   	@FXML
 	private ToolBar topBox;
+
+	private EventHandler<ActionEvent> refreshModulesAction;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 		hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
 		hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
 		hideProcessesButton.setGraphicTextGap(0d);
-		hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes"));
+		hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes (ctrl+p)"));
 
 		hideFunctionsButton.setGraphic(Icon.create().icon(AwesomeIcon.CUBE));
 		hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
 		hideFunctionsButton.setGraphicTextGap(0d);
-		hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules"));
+		hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules (ctrl+m)"));
 
 		refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
 		refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
 		refreshModulesButton.setGraphicTextGap(0d);
-		refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code"));
+		refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
 		refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
 		
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
@@ -82,6 +86,12 @@ public class TopBarView implements Initializable {
 		});
 		Platform.runLater(() -> {
 			accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
+		});
+		Platform.runLater(() -> {
+			accelerators().put(REFRESH_MODULES_SHORTCUT, () -> { 
+				if(refreshModulesAction != null)
+					refreshModulesAction.handle(null);
+			});
 		});
 	}
 
@@ -157,6 +167,8 @@ public class TopBarView implements Initializable {
 	}
 
 	public final void setOnRefreshModules(EventHandler<ActionEvent> e) {
-		refreshModulesButton.setOnAction(e);
+		refreshModulesAction = e;
+		
+		refreshModulesButton.setOnAction(refreshModulesAction);
 	}
 }
