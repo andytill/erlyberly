@@ -21,6 +21,8 @@ import com.ericsson.otp.erlang.OtpMbox;
  */
 public class OtpUtil {
 
+	private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
+	private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
 	private static final OtpErlangAtom call = new OtpErlangAtom("call");
 	private static final OtpErlangAtom user = new OtpErlangAtom("user");
 	private static final OtpErlangAtom ERROR_ATOM = atom("error");
@@ -50,6 +52,12 @@ public class OtpUtil {
 			}
 			else if(e instanceof OtpErlangObject) {
 				tuple[i] = (OtpErlangObject) elements[i];
+			}
+			else if(e instanceof Boolean) {
+				if(Boolean.TRUE.equals(e))
+					tuple[i] = TRUE_ATOM;
+				else
+					tuple[i] = FALSE_ATOM;
 			}
 			else {
 				throw new RuntimeException(e + " cannot be converted to an OtpErlangObject");

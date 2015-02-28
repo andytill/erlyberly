@@ -1,10 +1,14 @@
 package erlyberly;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
+
+
+
 
 
 
@@ -26,9 +30,11 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
@@ -48,11 +54,18 @@ import ui.FXTreeCell;
 
 
 
+
+
+
 import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+
+
+
 
 
 
@@ -121,6 +134,11 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
+		MenuItem seqTraceMenuItem;
+		
+		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
+		seqTraceMenuItem.setOnAction(this::onSeqTrace);
+		
 		modulesTree.setCellFactory((tree) -> {
 			ModFuncGraphic mfg = new ModFuncGraphic(this::toggleTraceModFunc, traces::contains);
 			traces.addListener((Observable o) -> { 
@@ -130,6 +148,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
+		modulesTree.setContextMenu(new ContextMenu(seqTraceMenuItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -138,6 +157,21 @@ public class DbgView implements Initializable {
 		addTraceLogFloatySearchControl();
 		
 		dbgController.initialize(url, r);
+	}
+	
+	private void onSeqTrace(ActionEvent ae) {
+		TreeItem<ModFunc> func = modulesTree.getSelectionModel().getSelectedItem();
+		if(func == null)
+			return;
+		if(func.getValue().isModule())
+			return;
+		
+		try {
+			ErlyBerly.nodeAPI().seqTrace(func.getValue());
+		}
+		catch (OtpErlangException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -168,7 +202,7 @@ public class DbgView implements Initializable {
 		FloatyFieldView ffView;
 		
 		ffView = (FloatyFieldView) loader.controller;
-		ffView.promptTextProperty().set("Search functions i.e. gen_s:call or #t for traces");
+		ffView.promptTextProperty().set("Search functions i.e. gen_s:call or #t for all traces");
 		
 		loader.fxmlNode.setStyle("-fx-padding: 5 5 0 5;");
 		

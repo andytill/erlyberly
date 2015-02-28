@@ -1,9 +1,7 @@
 package erlyberly.node;
 
 import static erlyberly.node.OtpUtil.OK_ATOM;
-import static erlyberly.node.OtpUtil.atom;
-import static erlyberly.node.OtpUtil.isTupleTagged;
-import static erlyberly.node.OtpUtil.list;
+import static erlyberly.node.OtpUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -265,11 +263,11 @@ public class NodeAPI {
 
 	private OtpErlangList toTraceTuple(ModFunc mf) {
 		return list(
-			OtpUtil.tuple(OtpUtil.atom(self.node()), mbox.self()),
-			OtpUtil.atom(mf.getModuleName()),
-			OtpUtil.atom(mf.getFuncName()),
-			new OtpErlangInt(mf.getArity()),
-			new OtpErlangAtom(mf.isExported())
+			tuple(OtpUtil.atom(self.node()), mbox.self()),
+			atom(mf.getModuleName()),
+			atom(mf.getFuncName()),
+			mf.getArity(),
+			mf.isExported()
 		);
 	}
 
@@ -312,5 +310,22 @@ public class NodeAPI {
 			summaryText = "erlyberly, connection lost.  reconnecting..."; 
 		
 		summary.set(summaryText);
+	}
+
+	public void seqTrace(ModFunc mf) throws IOException, OtpErlangException {
+		ensureAlive();
+		
+		sendRPC("erlyberly", "seq_trace", 
+			list(
+				tuple(OtpUtil.atom(self.node()), mbox.self()),
+				atom(mf.getModuleName()),
+				atom(mf.getFuncName()),
+				mf.getArity(),
+				new OtpErlangAtom(mf.isExported())
+			));
+		
+		OtpErlangObject result = receiveRPC();
+		
+		System.out.println(result);
 	}
 }

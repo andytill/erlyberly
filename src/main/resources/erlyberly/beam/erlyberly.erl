@@ -1,12 +1,13 @@
 
 -module(erlyberly).
 
--export([ collect_trace_logs/0,
-          erlyberly_tcollector/1,
-          module_functions/0,
-          process_info/0,
-          start_trace/5,
-          stop_trace/4 ]).
+-export([collect_trace_logs/0]).
+-export([erlyberly_tcollector/1]).
+-export([module_functions/0]).
+-export([process_info/0]).
+-export([start_trace/5]).
+-export([stop_trace/4]).
+-export([seq_trace/5]).
 
 %% ============================================================================
 %% process info
@@ -71,29 +72,31 @@ start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
 stop_trace(Mod, Func, Arity, IsExported) ->
     erlyberly_tcollector ! {stop_trace, Mod, Func, Arity, IsExported}.
 %%
-when_process_unregistered(ProcName, Fn) ->
+when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
         undefined -> Fn();
         _         -> ok
     end.
 %%
-ensure_dbg_started({Eb_Node, _Eb_Pid}) ->
+ensure_dbg_started({Eb_Node, _}) ->
     % restart dbg
-    when_process_unregistered(dbg, fun dbg:start/0),
+    when_process_is_unregistered(dbg, fun dbg:start/0),
 
-    StartFn = fun() -> 
-                  Pid = spawn(?MODULE, erlyberly_tcollector, [Eb_Node]),
-                  register(erlyberly_tcollector, Pid)
-              end,
+    StartFn = 
+        fun() -> 
+            Pid = spawn(?MODULE, erlyberly_tcollector, [Eb_Node]),
+            register(erlyberly_tcollector, Pid)
+        end,
 
-    when_process_unregistered(erlyberly_tcollector, StartFn),
+    when_process_is_unregistered(erlyberly_tcollector, StartFn),
 
     % create a tracer that will send the trace logs to erlyberly_tcollector
     % to be stored.
-    TraceFn = fun (Trace, _) -> 
-                  store_trace(Trace),
-                  ok
-              end,
+    TraceFn = 
+        fun (Trace, _) -> 
+            store_trace(Trace),
+            ok
+        end,
     dbg:tracer(process, {TraceFn, ok}).
 
 %%
@@ -231,3 +234,120 @@ get_registered_name(Pid) ->
         {_, Name}   -> Name;
         _           -> undefined
     end.
+
+%%% =============================================================================
+%%%
+%%% seq_trace
+%%%
+%%% this could be its own module, but it is handy to keep everything in a
+%%% single module so that code injection on the remote node is simple.
+%%%
+%%% =============================================================================
+
+-define(erlyberly_seq_trace, erlyberly_seq_trace).
+
+
+%%
+seq_trace(Node_pid, Mod, Function_name, Arity, Is_exported) ->
+    % TODO monitor the pid
+    {ok, _Seq_trace_pid} = ensure_seq_tracer_started(Node_pid),
+
+    case Is_exported of
+        true ->
+            dbg:tp(Mod, Function_name, seq_trace_match_spec(Arity));
+        false ->
+            dbg:tpl(Mod, Function_name, seq_trace_match_spec(Arity))
+    end,
+    dbg:p(all, c),
+    ok.
+
+%%
+ensure_seq_tracer_started(Remote_node) ->
+    ensure_dbg_started(Remote_node),
+
+    case whereis(?erlyberly_seq_trace) of
+        undefined ->
+            start_seq_tracer(Remote_node);
+        Pid ->
+            {ok, Pid}
+    end.
+
+%%
+start_seq_tracer({Node, _}) ->
+    Tracer_collector_pid = 
+        spawn(
+            fun() ->
+                % throws a badarg if the node has already closed down
+                erlang:monitor_node(Node, true),
+
+                % start seq trace
+                seq_trace:set_system_tracer(self()),
+
+                collect_seq_trace_logs()
+            end),
+    register(?erlyberly_seq_trace, Tracer_collector_pid),
+    {ok, Tracer_collector_pid}.
+
+%%
+collect_seq_trace_logs() ->
+    receive
+        {nodedown, _Node} ->
+            ok = dbg:stop_clear(),
+            true = seq_trace:reset_trace();
+        Seq_trace when element(1, Seq_trace) == seq_trace ->
+            log_seq_trace(Seq_trace),
+            collect_seq_trace_logs();
+        Other ->
+            io:format("ERRRRRRRR ~s ~p", [format_utc_timestamp(), Other]),
+
+            collect_seq_trace_logs()
+    end.
+
+%%
+log_seq_trace(Seq_trace) ->
+    io:format("~s ~p", [format_utc_timestamp(), Seq_trace]).
+
+%%
+format_utc_timestamp() ->
+    TS = {_,_,Micro} = os:timestamp(),
+    {{Year,Month,Day},{Hour,Minute,Second}} = 
+    calendar:now_to_universal_time(TS),
+    Mstr = element(Month,{"Jan","Feb","Mar","Apr","May","Jun","Jul",
+              "Aug","Sep","Oct","Nov","Dec"}),
+    io_lib:format("~2w ~s ~4w ~2w:~2..0w:~2..0w.~6..0w",
+          [Day,Mstr,Year,Hour,Minute,Second,Micro]).
+
+-define(SET_SEQ_TOKEN, 
+            set_seq_token(send, true),
+            set_seq_token('receive', true),
+            set_seq_token(print, true)).
+
+-include_lib("stdlib/include/ms_transform.hrl").
+
+%%
+seq_trace_match_spec(1) ->
+    dbg:fun2ms(fun([_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(2) ->
+    dbg:fun2ms(fun([_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(3) ->
+    dbg:fun2ms(fun([_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(4) ->
+    dbg:fun2ms(fun([_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(5) ->
+    dbg:fun2ms(fun([_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(6) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(7) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(8) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(9) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(10) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(11) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(12) ->
+    dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
+seq_trace_match_spec(_) ->
+    error(arity_too_large).
