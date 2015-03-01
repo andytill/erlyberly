@@ -7,12 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-
-
-
-
-
-
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -29,7 +23,6 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -51,24 +44,12 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import ui.FXTreeCell;
 
-
-
-
-
-
-
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-
-
-
-
-
-
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
@@ -99,8 +80,6 @@ public class DbgView implements Initializable {
 	 */
 	private final ObservableList<FilteredList<TreeItem<ModFunc>>> functionLists = FXCollections.observableArrayList();
 	
-	private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
-	
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
@@ -117,6 +96,8 @@ public class DbgView implements Initializable {
 	private Button clearTraceLogsButton;
 	
 	private double functionsDivPosition;
+
+	private MenuItem seqTraceMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -134,14 +115,17 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
-		MenuItem seqTraceMenuItem;
-		
 		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
 		seqTraceMenuItem.setOnAction(this::onSeqTrace);
 		
 		modulesTree.setCellFactory((tree) -> {
-			ModFuncGraphic mfg = new ModFuncGraphic(this::toggleTraceModFunc, traces::contains);
-			traces.addListener((Observable o) -> { 
+			ModFuncGraphic mfg;
+			
+			mfg = new ModFuncGraphic(
+				dbgController::toggleTraceModFunc, 
+				dbgController::isTraced
+			);
+			dbgController.addTraceListener((Observable o) -> { 
 				mfg.onTracesChange(); 
 			});
 			
@@ -298,7 +282,7 @@ public class DbgView implements Initializable {
 
 	private void filterForTracedFunctions() {
 		for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
-			funcItemList.setPredicate((t) -> { return traces.contains(t.getValue()); });
+			funcItemList.setPredicate((t) -> { return dbgController.isTraced(t.getValue()); });
 		}
 
 		filteredTreeModules.setPredicate((t) -> { return !t.getChildren().isEmpty(); });
@@ -394,70 +378,23 @@ public class DbgView implements Initializable {
 	}
 	
 	private void toggleTraceModFunc(ModFunc function) {
-		if(traces.contains(function))
-			onRemoveTracer(null, function);
-		else
-			traceModFunc(function);
-	}
-
-	private void traceModFunc(ModFunc function) {
-		try {
-			ErlyBerly.nodeAPI().startTrace(function);
-			
-			traces.add(function);
-			
-			dbgController.setCollectingTraces(true);
-			
-			Button newRemoveTraceButton;
-			newRemoveTraceButton = newRemoveTraceButton(function);
-			newRemoveTraceButton
-					.setOnAction((e) -> onRemoveTracer(e, function));
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private void onRemoveTracer(ActionEvent e, ModFunc function) {
-		try {
-			ErlyBerly.nodeAPI().stopTrace(function);
-
-			traces.remove(function);
-		} 
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	private Button newRemoveTraceButton(ModFunc value) {
-		String graphicCSS = "-fx-font-family: FontAwesome; -fx-font-size: 1.6em; -fx-padding: 0 0 2 0;";
-		
-		Button removeTraceButton;
-		
-		removeTraceButton = new Button(value.toFullString());
-		removeTraceButton.setMnemonicParsing(false);
-		removeTraceButton.setContentDisplay(ContentDisplay.RIGHT);
-		removeTraceButton.setGraphic(Icon.create().icon(AwesomeIcon.CLOSE).style(graphicCSS));
-		
-		return removeTraceButton;
+		dbgController.toggleTraceModFunc(function);
 	}
 
 	private void onConnected(Observable o) {
-		if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
+		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
+		
+		// disable buttons when not connected
+		seqTraceMenuItem.setDisable(!connected);
+		
+		if(!connected) {
 			treeModules.clear();
 		}
 		else {
 			refreshModules();
 		}
 		
-		for (ModFunc function : traces) {
-			try {
-				ErlyBerly.nodeAPI().startTrace(function);
-			} catch (Exception e) {
-				e.printStackTrace();
-				
-				traces.remove(function);
-			}
-		}
+		dbgController.reapplyTraces();
 	}
 
 	private void refreshModules() {

@@ -5,14 +5,18 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 
 
 public class DbgController implements Initializable {
 	
-	public final ObservableList<TraceLog> traces = FXCollections.observableArrayList();
+	public final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
+	
+	private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
 
 	private volatile boolean collectingTraces;
 
@@ -23,12 +27,60 @@ public class DbgController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 		new TraceCollectorThread().start();
-		
-		
 	}
 	
 	public ObservableList<TraceLog> getTraceLogs() {
-		return traces;
+		return traceLogs;
+	}
+
+	public boolean isTraced(ModFunc function) {
+		return traces.contains(function);
+	}
+	
+	public void toggleTraceModFunc(ModFunc function) {
+		if(traces.contains(function))
+			onRemoveTracer(null, function);
+		else
+			traceModFunc(function);
+	}
+
+	private void traceModFunc(ModFunc function) {
+		try {
+			ErlyBerly.nodeAPI().startTrace(function);
+			
+			traces.add(function);
+			
+			setCollectingTraces(true);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	private void onRemoveTracer(ActionEvent e, ModFunc function) {
+		try {
+			ErlyBerly.nodeAPI().stopTrace(function);
+
+			traces.remove(function);
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void reapplyTraces() {
+		for (ModFunc function : traces) {
+			try {
+				ErlyBerly.nodeAPI().startTrace(function);
+			} catch (Exception e) {
+				e.printStackTrace();
+				
+				traces.remove(function);
+			}
+		}
+	}
+
+	public void addTraceListener(InvalidationListener listener) {
+		traces.addListener(listener);
 	}
 
 	class TraceCollectorThread extends Thread {
@@ -45,7 +97,7 @@ public class DbgController implements Initializable {
 						Platform.runLater(new Runnable() {
 							@Override
 							public void run() {
-								traces.addAll(collectTraceLogs);
+								traceLogs.addAll(collectTraceLogs);
 							}});
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -53,7 +105,7 @@ public class DbgController implements Initializable {
 				}
 				
 				try {
-					Thread.sleep(500);
+					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
