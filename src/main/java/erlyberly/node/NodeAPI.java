@@ -36,6 +36,10 @@ import erlyberly.TraceLog;
 
 public class NodeAPI {
 	
+	public interface RpcCallback<T> {
+		void callback(T result);
+	}
+	
 	private static final OtpErlangAtom MODULE_ATOM = new OtpErlangAtom("module");
 
 	private static final String ERLYBERLY_BEAM_PATH = "/erlyberly/beam/erlyberly.beam";
@@ -109,20 +113,27 @@ public class NodeAPI {
 
 		Platform.runLater(() -> { connectedProperty.set(true); });
 		
-		if(checkAliveThread == null)
+		if(checkAliveThread != null)
 			return;
 		
-		checkAliveThread = new Thread() {
-			@Override
-			public void run() {
-				while(true) {
-					ensureAlive();
-					
-					mySleep(450);
-				}
-			}};
-		checkAliveThread.setDaemon(true);
+		checkAliveThread = new CheckAliveThread();
 		checkAliveThread.start();
+	}
+	
+	class CheckAliveThread extends Thread {
+		public CheckAliveThread() {
+			setDaemon(true);
+			setName("Erlyberly Check Alive");
+		}
+		
+		@Override
+		public void run() {
+			while(true) {
+				ensureAlive();
+				
+				mySleep(450);
+			}
+		}
 	}
 	
 	private void loadRemoteErlyberly() throws IOException, OtpErlangException {
@@ -173,7 +184,8 @@ public class NodeAPI {
 	}
 
 	public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
-		ensureAlive();
+		assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
+		
 		OtpErlangObject receiveRPC = null;
 		
 		try {
@@ -207,9 +219,8 @@ public class NodeAPI {
 				break;
 			}
 			catch(Exception e) {
-				int millis = 1000;
+				int millis = 500;
 				mySleep(millis);
-				System.out.println("couldn't connect: " + e.getMessage());
 				
 			}
 		}
@@ -225,15 +236,14 @@ public class NodeAPI {
 	}
 
 	public synchronized OtpErlangList requestFunctions() throws Exception {
-		ensureAlive();
+		assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
+		
 		sendRPC("erlyberly", "module_functions", new OtpErlangList());
 		return (OtpErlangList) receiveRPC(); 
 	}
 
 	public synchronized void startTrace(ModFunc mf) throws Exception {
 		assert mf.getFuncName() != null : "function name cannot be null";
-		
-		ensureAlive();
 		
 		sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
 		
@@ -249,7 +259,6 @@ public class NodeAPI {
 	}
 
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
-		ensureAlive();
 		assert mf.getFuncName() != null : "function name cannot be null";
 
 		sendRPC("erlyberly", "stop_trace", 
@@ -281,8 +290,6 @@ public class NodeAPI {
 	}
 
 	public ArrayList<TraceLog> collectTraceLogs() throws Exception {
-		ensureAlive();
-		
 		sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
 		OtpErlangObject prcResult = receiveRPC();
@@ -314,8 +321,6 @@ public class NodeAPI {
 	}
 
 	public void seqTrace(ModFunc mf) throws IOException, OtpErlangException {
-		ensureAlive();
-		
 		sendRPC("erlyberly", "seq_trace", 
 			list(
 				tuple(OtpUtil.atom(self.node()), mbox.self()),

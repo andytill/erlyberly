@@ -3,7 +3,6 @@ package erlyberly;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 public class ModFunc implements Comparable<ModFunc> {
@@ -61,7 +60,7 @@ public class ModFunc implements Comparable<ModFunc> {
 		return moduleName + ":" + funcName + "/" + arity;
 	}
 
-	public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported) throws OtpErlangRangeException {
+	public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported)  {
 		OtpErlangAtom funcNameAtom = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);
 		OtpErlangLong arity = (OtpErlangLong) ((OtpErlangTuple) e).elementAt(1);
 		
@@ -70,7 +69,7 @@ public class ModFunc implements Comparable<ModFunc> {
 		return new ModFunc(
 			moduleName.atomValue(), 
 			funcName, 
-			arity.intValue(), 
+			(int)arity.longValue(), 
 			exported,
 			funcName.startsWith("-")
 		);

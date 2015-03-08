@@ -11,6 +11,11 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 
+import com.ericsson.otp.erlang.OtpErlangList;
+
+import erlyberly.node.NodeAPI;
+import erlyberly.node.NodeAPI.RpcCallback;
+
 
 public class DbgController implements Initializable {
 	
@@ -82,10 +87,15 @@ public class DbgController implements Initializable {
 	public void addTraceListener(InvalidationListener listener) {
 		traces.addListener(listener);
 	}
+	
+	public void requestModFuncs(NodeAPI.RpcCallback<OtpErlangList> rpcCallback) {
+		new GetModulesThread(rpcCallback).start();
+	}
 
 	class TraceCollectorThread extends Thread {
 		public TraceCollectorThread() {
 			setDaemon(true);
+			setName("Erlyberly Collect Traces");
 		}
 		
 		@Override
@@ -109,6 +119,28 @@ public class DbgController implements Initializable {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+			}
+		}
+	}
+	
+	class GetModulesThread extends Thread {
+		private final RpcCallback<OtpErlangList> rpcCallback;
+
+		public GetModulesThread(RpcCallback<OtpErlangList> anRpcCallback) {
+			rpcCallback = anRpcCallback;
+			
+			setDaemon(true);
+			setName("Erlyberly Get Modules");
+		}
+		
+		@Override
+		public void run() {
+			try {
+				OtpErlangList functions = ErlyBerly.nodeAPI().requestFunctions();
+				Platform.runLater(() -> { rpcCallback.callback(functions); });
+			} 
+			catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

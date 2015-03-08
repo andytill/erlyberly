@@ -48,7 +48,6 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -400,20 +399,14 @@ public class DbgView implements Initializable {
 	private void refreshModules() {
 		try {
 			modulesTree.setShowRoot(false);
-			modulesTree.setRoot(buildObjectTreeRoot());
+			dbgController.requestModFuncs(this::buildObjectTreeRoot);
 		} 
 		catch (Exception e) {
 			throw new RuntimeException("failed to build module/function tree", e);
 		}
 	}
 	
-	private TreeItem<ModFunc> buildObjectTreeRoot() throws Exception {		
-		TreeItem<ModFunc> root;
-		
-		root = new TreeItem<ModFunc>();
-		root.setExpanded(true);
-		OtpErlangList requestFunctions = ErlyBerly.nodeAPI().requestFunctions();
-
+	private void buildObjectTreeRoot(OtpErlangList requestFunctions) {
 		boolean isExported;
 		
 		for (OtpErlangObject e : requestFunctions) {
@@ -447,9 +440,15 @@ public class DbgView implements Initializable {
 			
 			treeModules.add(moduleItem);
 		}
-		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
+
+		TreeItem<ModFunc> root;
 		
-		return root;
+		root = new TreeItem<ModFunc>();
+		root.setExpanded(true);
+		
+		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
+
+		modulesTree.setRoot(root);
 	}
 	
 	private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
@@ -471,7 +470,7 @@ public class DbgView implements Initializable {
 		return Icon.create().icon(treeIcon).style(ICON_STYLE);
 	}
 
-	private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) throws OtpErlangRangeException {
+	private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) {
 		ArrayList<ModFunc> mfs = new ArrayList<>();
 		for (OtpErlangObject exported : exportedFuncs) {
 			ModFunc modFunc = ModFunc.toFunc(moduleNameAtom, exported, isExported);
