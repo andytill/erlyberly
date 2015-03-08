@@ -97,6 +97,8 @@ public class DbgView implements Initializable {
 	private double functionsDivPosition;
 
 	private MenuItem seqTraceMenuItem;
+
+	private MenuItem functionTraceMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -113,6 +115,10 @@ public class DbgView implements Initializable {
 		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
+		
+
+		functionTraceMenuItem = new MenuItem("Function Trace");
+		functionTraceMenuItem.setOnAction(this::onFunctionTrace);
 		
 		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
 		seqTraceMenuItem.setOnAction(this::onSeqTrace);
@@ -131,7 +137,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(seqTraceMenuItem));
+		modulesTree.setContextMenu(new ContextMenu(functionTraceMenuItem, seqTraceMenuItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -288,7 +294,7 @@ public class DbgView implements Initializable {
 	}
 
 	private void onTraceClicked(MouseEvent me) {
-		if(me.getButton().equals(MouseButton.PRIMARY)){
+		if(me.getButton().equals(MouseButton.PRIMARY)) {
             if(me.getClickCount() == 2) {
             	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
             	
@@ -297,6 +303,16 @@ public class DbgView implements Initializable {
             	}
         	}
         }
+	}
+	
+
+	
+	private void onFunctionTrace(ActionEvent e) {
+    	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+    	
+    	if(selectedItem != null && selectedItem.getValue() != null) {
+    		toggleTraceModFunc(selectedItem.getValue());
+    	}
 	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
