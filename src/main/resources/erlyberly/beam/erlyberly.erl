@@ -3,11 +3,13 @@
 
 -export([collect_trace_logs/0]).
 -export([erlyberly_tcollector/1]).
+-export([get_process_state/1]).
 -export([module_functions/0]).
 -export([process_info/0]).
+-export([seq_trace/5]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
--export([seq_trace/5]).
+
 
 %% ============================================================================
 %% process info
@@ -43,6 +45,10 @@ size_to_bytes({heap_size = K, Size})       -> {K, Size * erlang:system_info(word
 size_to_bytes({stack_size = K, Size})      -> {K, Size * erlang:system_info(wordsize)};
 size_to_bytes({total_heap_size = K, Size}) -> {K, Size * erlang:system_info(wordsize)};
 size_to_bytes(KV)                          -> KV.
+
+get_process_state(Pid_string) when is_list(Pid_string) ->
+    State = sys:get_state(list_to_pid(Pid_string)),
+    {ok, State}.
 
 %% ============================================================================
 %% module function tree

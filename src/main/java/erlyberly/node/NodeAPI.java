@@ -1,6 +1,5 @@
 package erlyberly.node;
 
-import static erlyberly.node.OtpUtil.OK_ATOM;
 import static erlyberly.node.OtpUtil.*;
 
 import java.io.IOException;
@@ -333,5 +332,16 @@ public class NodeAPI {
 		OtpErlangObject result = receiveRPC();
 		
 		System.out.println(result);
+	}
+
+	public OtpErlangObject getProcessState(String pidString) throws IOException, OtpErlangException {
+		sendRPC("erlyberly", "get_process_state", list(pidString));
+		
+		OtpErlangObject result = receiveRPC();
+		
+		if(isTupleTagged(OK_ATOM, result)) {
+			return ((OtpErlangTuple)result).elementAt(1);
+		}
+		return null;
 	}
 }

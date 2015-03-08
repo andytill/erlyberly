@@ -8,6 +8,7 @@ import javafx.beans.Observable;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
@@ -15,6 +16,8 @@ import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TableColumn;
@@ -22,8 +25,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangString;
+
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
@@ -57,6 +65,15 @@ public class ProcView implements Initializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initialize(URL url, ResourceBundle r) {
+		MenuItem menuItem;
+		
+		menuItem = new MenuItem("Get process state");
+		menuItem.setOnAction(this::onShowProcessStateClicked);
+		
+		menuItem.disableProperty().bind(processView.getSelectionModel().selectedItemProperty().isNull());
+		
+		processView.setContextMenu(new ContextMenu(menuItem));
+		
 		final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
@@ -143,6 +160,39 @@ public class ProcView implements Initializable {
 		procController.filterProperty().bind(ffView.textProperty());
 		
 		return loader;
+	}
+	
+	private void onShowProcessStateClicked(ActionEvent e) {
+		ProcInfo proc = processView.getSelectionModel().getSelectedItem();
+		
+		if(proc == null)
+			return;
+		
+		procController.processState(proc, this::showProcessStateInWindow);
+	}
+	
+	private void showProcessStateInWindow(OtpErlangObject obj) {
+		if(obj == null)
+			obj = new OtpErlangString("Error, erlyberly cannot get process state. Probably not OTP compliant process");
+		
+		Stage termsStage = new Stage();
+		
+		TermTreeView termTreeView;
+		
+		termTreeView = new TermTreeView();
+		termTreeView.setMaxHeight(Integer.MAX_VALUE);
+		VBox.setVgrow(termTreeView, Priority.ALWAYS);
+		termTreeView.populateFromTerm(obj); 
+
+		Scene scene  = new Scene(termTreeView);
+		
+		CloseWindowOnEscape.apply(scene, termsStage);
+		
+		termsStage.setScene(scene);
+        termsStage.setWidth(600);
+        termsStage.setHeight(600);
+        termsStage.setTitle("Process State");
+        termsStage.show();
 	}
 	
 	@FXML

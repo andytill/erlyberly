@@ -53,6 +53,9 @@ public class OtpUtil {
 			else if(e instanceof OtpErlangObject) {
 				tuple[i] = (OtpErlangObject) elements[i];
 			}
+			else if(e instanceof String) {
+				tuple[i] = new OtpErlangString((String)elements[i]);
+			}
 			else if(e instanceof Boolean) {
 				if(Boolean.TRUE.equals(e))
 					tuple[i] = TRUE_ATOM;

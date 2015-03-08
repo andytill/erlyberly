@@ -1,5 +1,6 @@
 package erlyberly;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,6 +15,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn.SortType;
+
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangObject;
+
+import erlyberly.node.NodeAPI.RpcCallback;
 
 /**
  * Logic and processing for the entop control. 
@@ -174,6 +180,36 @@ public class ProcController {
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
+			}
+		}
+	}
+
+	public void processState(ProcInfo proc, RpcCallback<OtpErlangObject> callback) {
+		new ProcessStateThread(proc.getPid(), callback).start();
+	}
+	
+	class ProcessStateThread extends Thread {
+		
+		private final String pidString;
+		private final RpcCallback<OtpErlangObject> callback;
+
+		public ProcessStateThread(String aPidString, RpcCallback<OtpErlangObject> aCallback) {
+			pidString = aPidString;
+			callback = aCallback;
+			
+			setDaemon(true);
+			setName("Erlyberly Get Process State");
+		}
+		
+		@Override
+		public void run() {
+			try {
+				OtpErlangObject processState = ErlyBerly.nodeAPI().getProcessState(pidString);
+				
+				Platform.runLater(() -> { callback.callback(processState); });
+			} 
+			catch (OtpErlangException | IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
