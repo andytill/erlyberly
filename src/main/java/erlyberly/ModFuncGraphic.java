@@ -25,6 +25,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
 	private final SimpleStringProperty exportIconText = new SimpleStringProperty();
 
+	private final SimpleStringProperty exportToolTipText = new SimpleStringProperty();
+
 	private final SimpleStringProperty tracedIconText = new SimpleStringProperty(AwesomeIcon.STAR_ALT.toString());
 	
 	private final SimpleBooleanProperty tracable = new SimpleBooleanProperty();
@@ -49,11 +51,16 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	}
 
 	private Icon exportIconGraphic() {
+		Tooltip tooltip;
+		
+		tooltip = new Tooltip();
+		tooltip.textProperty().bind(exportToolTipText);
+		
 		Icon treeIcon;
 		
 		treeIcon = treeIcon(AwesomeIcon.SQUARE);
 		treeIcon.textProperty().bind(exportIconText);
-		
+		treeIcon.setTooltip(tooltip);
 		return treeIcon;
 	}
 
@@ -63,7 +70,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		traceIcon = Icon.create().style(ICON_STYLE);
 		traceIcon.textProperty().bind(tracedIconText);
 		traceIcon.visibleProperty().bind(tracable);
-		traceIcon.setTooltip(new Tooltip("Double click on this star to toggle tracing of this function"));
+		traceIcon.setTooltip(new Tooltip("Toggle tracing, double click on this star or ctrl+t when selected"));
 		traceIcon.getStyleClass().add("erlyberly-icon-button");
 		traceIcon.setOnMouseClicked((e) -> {
 			if(e.getClickCount() == 2)
@@ -92,7 +99,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	    }
 		else {
 			text.set(item.toString());
-			exportIconText.set(exportIcon(item).toString());
+			updateExportIcon(item);
 			
 			// no tracing of the whole module for now!
 			tracable.set(!item.isModule());
@@ -102,13 +109,25 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		onTracesChange();
 	}
 
-	private AwesomeIcon exportIcon(ModFunc item) {
-		if(item.isModule())
-			return (AwesomeIcon.CUBE);
-		else if(item.isExported())
-			return (AwesomeIcon.SQUARE);
-		else
-			return (AwesomeIcon.SQUARE_ALT);
+	private void updateExportIcon(ModFunc item) {
+		AwesomeIcon icon;
+		String tooltipText;
+		
+		if(item.isModule()) {
+			tooltipText = "Module";
+			icon = AwesomeIcon.CUBE;
+		}
+		else if(item.isExported()) {
+			tooltipText = "Exported function";
+			icon = AwesomeIcon.SQUARE;
+		}
+		else {
+			tooltipText = "Unexported function";
+			icon = AwesomeIcon.SQUARE_ALT;
+		}
+
+		exportToolTipText.set(tooltipText);
+		exportIconText.set(icon.toString());
 	}
 
 	public void onTracesChange() {
