@@ -86,6 +86,7 @@ public class NodeAPI {
 	}
 
 	public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
+		assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 		
 		self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
 		if(!cookie.isEmpty()) {
