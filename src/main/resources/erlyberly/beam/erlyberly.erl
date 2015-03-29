@@ -2,6 +2,7 @@
 -module(erlyberly).
 
 -export([collect_trace_logs/0]).
+-export([collect_seq_trace_logs/0]).
 -export([erlyberly_tcollector/1]).
 -export([get_process_state/1]).
 -export([module_functions/0]).
@@ -50,9 +51,9 @@ get_process_state(Pid_string) when is_list(Pid_string) ->
     State = sys:get_state(list_to_pid(Pid_string)),
     {ok, State}.
 
-%% ============================================================================
-%% module function tree
-%% ============================================================================
+%%% ============================================================================
+%%% module function tree
+%%% ============================================================================
 
 module_functions() ->
     [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()].
@@ -63,9 +64,9 @@ module_functions2(Mod) when is_atom(Mod) ->
     {Mod, Exports, Unexported}.
 
 
-%% ============================================================================
-%% tracing
-%% ============================================================================
+%%% ============================================================================
+%%% tracing
+%%% ============================================================================
 
 %%
 start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
@@ -268,6 +269,23 @@ seq_trace(Node_pid, Mod, Function_name, Arity, Is_exported) ->
     ok.
 
 %%
+collect_seq_trace_logs() ->
+    case whereis(?erlyberly_seq_trace) of
+        undefined ->
+            % monitoring of a pid from jinterface is not implemented as far as I can
+            % tell so just make do with polling
+            {error, down};
+        _ ->
+            ?erlyberly_seq_trace ! {take_seq_logs, self()},
+            receive
+                {seq_trace_logs, Logs} -> 
+                    {ok, Logs}
+            after 2000 ->
+                {error, timeout}
+            end
+    end.
+
+%%
 ensure_seq_tracer_started(Remote_node) ->
     ensure_dbg_started(Remote_node),
 
@@ -289,29 +307,54 @@ start_seq_tracer({Node, _}) ->
                 % start seq trace
                 seq_trace:set_system_tracer(self()),
 
-                collect_seq_trace_logs()
+                seq_trace_collector([])
             end),
     register(?erlyberly_seq_trace, Tracer_collector_pid),
     {ok, Tracer_collector_pid}.
 
 %%
-collect_seq_trace_logs() ->
+seq_trace_collector(Trace_logs) ->
     receive
         {nodedown, _Node} ->
             ok = dbg:stop_clear(),
             true = seq_trace:reset_trace();
-        Seq_trace when element(1, Seq_trace) == seq_trace ->
-            log_seq_trace(Seq_trace),
-            collect_seq_trace_logs();
+        {seq_trace, _Label, Trace_log} ->
+            Trace_props = seq_trace_to_props(Trace_log),
+            log_seq_trace(Trace_props),
+            seq_trace_collector([Trace_props | Trace_logs]);
+        {take_seq_logs, Pid} ->
+            Pid ! {seq_trace_logs, lists:reverse(Trace_logs)},
+            seq_trace_collector([]);
         Other ->
-            io:format("ERRRRRRRR ~s ~p", [format_utc_timestamp(), Other]),
+            io:format("Erlyberly seq_trace, unexpected message: ~s ~p~n", [format_utc_timestamp(), Other]),
 
-            collect_seq_trace_logs()
+            seq_trace_collector(Trace_logs)
     end.
 
 %%
+seq_trace_to_props({Msg_type, Serial, From, To, Message}) ->
+    [ {msg_type, Msg_type},
+      {serial, Serial},
+      {from, format_pid(From)},
+      {to, format_pid(To)},
+      {message, Message} ].
+
+%%
+format_pid(Pid) when is_pid(Pid) ->
+    case process_info(Pid, registered_name) of
+        {registered_name, Reg_name} ->
+            atom_to_list(Reg_name);
+        undefined ->
+            pid_to_list(Pid);
+        [] ->
+            pid_to_list(Pid)
+    end;
+format_pid(Port) when is_port(Port) ->
+    erlang:port_to_list(Port).
+
+%%
 log_seq_trace(Seq_trace) ->
-    io:format("~s ~p", [format_utc_timestamp(), Seq_trace]).
+    io:format("~s ~p~n", [format_utc_timestamp(), Seq_trace]).
 
 %%
 format_utc_timestamp() ->

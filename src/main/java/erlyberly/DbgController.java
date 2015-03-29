@@ -1,5 +1,6 @@
 package erlyberly;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -11,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 
+import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 
 import erlyberly.node.NodeAPI;
@@ -22,8 +24,12 @@ public class DbgController implements Initializable {
 	public final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
 	
 	private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
+	
+	private final ObservableList<SeqTraceLog> seqTraces = FXCollections.observableArrayList();
 
 	private volatile boolean collectingTraces;
+
+	private volatile boolean collectingSeqTraces;
 
 	public void setCollectingTraces(boolean collecting) {
 		collectingTraces = collecting;
@@ -32,10 +38,15 @@ public class DbgController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 		new TraceCollectorThread().start();
+		new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
 	}
 	
 	public ObservableList<TraceLog> getTraceLogs() {
 		return traceLogs;
+	}
+	
+	public ObservableList<SeqTraceLog> getSeqTraceLogs() {
+		return seqTraces;
 	}
 
 	public boolean isTraced(ModFunc function) {
@@ -92,6 +103,16 @@ public class DbgController implements Initializable {
 		new GetModulesThread(rpcCallback).start();
 	}
 
+	public void seqTrace(ModFunc value) {
+		try {
+			ErlyBerly.nodeAPI().seqTrace(value);
+			collectingSeqTraces = true;
+		}
+		catch (OtpErlangException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	class TraceCollectorThread extends Thread {
 		public TraceCollectorThread() {
 			setDaemon(true);
@@ -104,11 +125,42 @@ public class DbgController implements Initializable {
 				if(collectingTraces) {
 					try {
 						final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
-						Platform.runLater(new Runnable() {
-							@Override
-							public void run() {
-								traceLogs.addAll(collectTraceLogs);
-							}});
+						
+						Platform.runLater(() -> { traceLogs.addAll(collectTraceLogs); });
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	class SeqTraceCollectorThread extends Thread {
+		private final RpcCallback<SeqTraceLog> callback;
+
+		public SeqTraceCollectorThread(RpcCallback<SeqTraceLog> aCallback) {
+			callback = aCallback;
+			
+			setDaemon(true);
+			setName("Erlyberly Collect Seq Traces");
+		}
+		
+		@Override
+		public void run() {
+			while (true) {
+				if(collectingSeqTraces) {
+					try {
+						final ArrayList<SeqTraceLog> seqTraceLogs = ErlyBerly.nodeAPI().collectSeqTraceLogs();
+
+						for (SeqTraceLog seqTraceLog : seqTraceLogs) {
+							Platform.runLater(() -> { callback.callback(seqTraceLog); });
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

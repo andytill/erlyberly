@@ -63,10 +63,21 @@ Open up the process table, next to the memory usage columns there is a pie chart
 
 ![you cannot see the beautiful screen shot](doc/heap-pie.png)
 
+##### See the state of a process
+
+Right click on a process in the process table and click on *"Get process state"*.  This is possible only if the process handles system messages, OTP behaviours do.
 
 ##### Cross platform
 
 Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
+
+##### Sequential Tracing of messages
+
+Sequential Tracing (seq_trace) is tracing of messages from process to process to see the message flow through the application.
+
+To start a seq trace right click on a function and select **Seq Trace (experimental)**, a Window will pop up that will crudely display the trace messages.  When the traced function is called, messages sent afterwards are shown in the window.
+
+This functionality is experimental and highly likely to bork the remote node under test and erlyberly.  Once a seq trace is set the only way to stop it is to terminate erlyberly or run `seq_trace:reset_trace()` in the shell of the remote node.
 
 ### Shortcuts
 
@@ -76,6 +87,7 @@ Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
 | `ctrl+p` |               Toggle visibility of processes.                |
 | `ctrl+t` | Toggle tracing for the selected function in the module tree. |
 
+
 ### How to get it
 
 Go to the github [releases section](https://github.com/andytill/erlyberly/releases) and download the runnable jar.  In Windows you can double click to run it or from the console in any OS `java -jar erlyberly-runnable.jar`.
@@ -84,11 +96,19 @@ You will need Java 8 run erlyberly, download it [here](http://www.oracle.com/tec
 
 If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.
 
+### Trouble Shooting
+
+erlyberly must have epmd running on the machine as it is running.  Otherwise it will not be able to connect to the remote node with an error about Name Servers.  The easiest way to run epmd is to run the following command in the shell `erl -sname hi`, this requires erlang to be installed and on the `PATH`.
+
 ### Compiling
 
 You will need JDK 8 and Maven to compile.  erlyberly loads an erlang module to the remote node and then uses RPC to run traces and collect stats.  For convenience I have bundled the beam code in the source as well as the original erlang source.  If you want to recompile the beam code for yourself run the following command from the project directory:
 
     erlc -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
+
+Install Maven dependencies that are not in Maven Central.
+
+    mvn install:install-file -Dfile=OtpErlang.jar -DgroupId=org.erlang.otp -DartifactId=jinterface -Dversion=1.5.12 -Dpackaging=jar
 
 To build the jar:
 

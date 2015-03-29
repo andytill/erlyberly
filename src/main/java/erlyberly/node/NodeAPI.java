@@ -31,6 +31,7 @@ import com.ericsson.otp.erlang.OtpSelfNode;
 
 import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
+import erlyberly.SeqTraceLog;
 import erlyberly.TraceLog;
 
 public class NodeAPI {
@@ -302,6 +303,32 @@ public class NodeAPI {
 		OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult).elementAt(1);
 		
 		return traceManager.collateTraces(traceLogs);
+	}
+
+	public ArrayList<SeqTraceLog> collectSeqTraceLogs() throws Exception {
+		sendRPC("erlyberly", "collect_seq_trace_logs", new OtpErlangList());
+		
+		OtpErlangObject prcResult = receiveRPC();
+		
+		if(!isTupleTagged(OK_ATOM, prcResult)) {
+			return new ArrayList<SeqTraceLog>();
+		}
+		
+		ArrayList<SeqTraceLog> seqLogs = new ArrayList<SeqTraceLog>();
+		
+		try {
+			OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult)
+					.elementAt(1);
+			for (OtpErlangObject otpErlangObject : traceLogs) {
+				seqLogs.add(SeqTraceLog.build(OtpUtil
+						.propsToMap((OtpErlangList) otpErlangObject)));
+			}
+		}
+		catch (ClassCastException e) {
+			System.out.println("did not understand result from collect_seq_trace_logs " + prcResult);
+			e.printStackTrace();
+		}
+		return seqLogs;
 	}
 
 	public ObservableValue<? extends String> summaryProperty() {

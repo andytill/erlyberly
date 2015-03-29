@@ -1,6 +1,5 @@
 package erlyberly;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,6 +20,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -45,7 +45,6 @@ import javafx.util.Callback;
 import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -155,12 +154,9 @@ public class DbgView implements Initializable {
 		if(func.getValue().isModule())
 			return;
 		
-		try {
-			ErlyBerly.nodeAPI().seqTrace(func.getValue());
-		}
-		catch (OtpErlangException | IOException e) {
-			e.printStackTrace();
-		}
+		dbgController.seqTrace(func.getValue());
+		
+		showWindow(new SeqTraceView(dbgController.getSeqTraceLogs()), "Seq Trace");
 	}
 	
 	/**
@@ -328,8 +324,6 @@ public class DbgView implements Initializable {
 		OtpErlangObject args = traceLog.getArgs(); 
 		OtpErlangObject result = traceLog.getResult();
 		
-		Stage termsStage = new Stage();
-		
 		TermTreeView resultTermsTreeView, argTermsTreeView;
 		
 		resultTermsTreeView = newTermTreeView();
@@ -357,13 +351,18 @@ public class DbgView implements Initializable {
 			labelledTreeView("Result", resultTermsTreeView)
 		);
 		
-		Scene scene  = new Scene(splitPane);
-		
-		CloseWindowOnEscape.apply(scene, termsStage);
-		
 		StringBuilder sb = new StringBuilder(traceLog.getPidString());
 		sb.append(" ");
 		traceLog.appendFunctionToString(sb);
+		
+		showWindow(splitPane, sb);
+	}
+
+	private void showWindow(Parent parent, CharSequence sb) {
+		Stage termsStage = new Stage();
+		Scene scene  = new Scene(parent);
+		
+		CloseWindowOnEscape.apply(scene, termsStage);
 		
 		termsStage.setScene(scene);
         termsStage.setWidth(800);
