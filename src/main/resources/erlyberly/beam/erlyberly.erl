@@ -48,8 +48,30 @@ size_to_bytes({total_heap_size = K, Size}) -> {K, Size * erlang:system_info(word
 size_to_bytes(KV)                          -> KV.
 
 get_process_state(Pid_string) when is_list(Pid_string) ->
-    State = sys:get_state(list_to_pid(Pid_string)),
-    {ok, State}.
+    Pid = list_to_pid(Pid_string),
+    State = sys:get_state(Pid),
+    {Mod,_,_} = proc_lib:initial_call(Pid),
+    {ok, format_record(State, Mod)}.
+
+format_record(Rec, Mod) when is_atom(element(1, Rec)) ->
+    File = code:which(Mod),
+    {ok,{_Mod,[{abstract_code,{_Version,Forms}},{"CInf",_CB}]}} = beam_lib:chunks(File, [abstract_code,"CInf"]),
+    [Name | RecValues] = tuple_to_list(Rec),
+    [FieldNames] = [record_fields(Fields) || {attribute,_,record,{Tag,Fields}} <- Forms, Tag =:= Name],
+    FieldsAsTuples = lists:zipwith(
+                       fun(K, V) -> {erlyberly_record_field, K, V} end,
+                       FieldNames,
+                       RecValues),
+    {erlyberly_record, Name, FieldsAsTuples};
+format_record(Other, _Mod) ->
+    Other.
+
+record_fields([{record_field,_,{atom,_,Field}} | Fs]) ->
+    [Field | record_fields(Fs)];
+record_fields([{record_field,_,{atom,_,Field},_} | Fs]) ->
+    [Field | record_fields(Fs)];
+record_fields([]) ->
+    [].
 
 %%% ============================================================================
 %%% module function tree
