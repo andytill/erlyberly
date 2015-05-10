@@ -168,10 +168,10 @@ public class ProcView implements Initializable {
 		if(proc == null)
 			return;
 		
-		procController.processState(proc, this::showProcessStateInWindow);
+		procController.processState(proc, (eobj) -> {showProcessStateInWindow(proc, eobj); });
 	}
 	
-	private void showProcessStateInWindow(OtpErlangObject obj) {
+	private void showProcessStateInWindow(ProcInfo procInfo, OtpErlangObject obj) {
 		if(obj == null)
 			obj = new OtpErlangString("Error, erlyberly cannot get process state. Probably not OTP compliant process");
 		
@@ -188,10 +188,12 @@ public class ProcView implements Initializable {
 		
 		CloseWindowOnEscape.apply(scene, termsStage);
 		
+		String shortName = procInfo.getShortName();
+		
 		termsStage.setScene(scene);
         termsStage.setWidth(600);
         termsStage.setHeight(600);
-        termsStage.setTitle("Process State");
+		termsStage.setTitle("Process State for " + shortName);
         termsStage.show();
 	}
 	

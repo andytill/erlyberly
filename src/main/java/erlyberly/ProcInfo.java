@@ -188,4 +188,11 @@ public class ProcInfo implements Comparable<ProcInfo> {
 	public int compareTo(ProcInfo o) {
 		return getProcessName().compareTo(o.getProcessName());
 	}
+
+	public String getShortName() {
+		String processName2 = getProcessName();
+		if(processName2 != null && !"".equals(getProcessName()))
+			return getProcessName();
+		return getPid();
+	}
 }
