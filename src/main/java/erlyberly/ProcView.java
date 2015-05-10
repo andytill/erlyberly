@@ -67,7 +67,7 @@ public class ProcView implements Initializable {
 	public void initialize(URL url, ResourceBundle r) {
 		MenuItem menuItem;
 		
-		menuItem = new MenuItem("Get process state");
+		menuItem = new MenuItem("Get process state (R16B03 or higher)");
 		menuItem.setOnAction(this::onShowProcessStateClicked);
 		
 		menuItem.disableProperty().bind(processView.getSelectionModel().selectedItemProperty().isNull());
