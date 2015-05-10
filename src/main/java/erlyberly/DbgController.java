@@ -17,6 +17,7 @@ import com.ericsson.otp.erlang.OtpErlangList;
 
 import erlyberly.node.NodeAPI;
 import erlyberly.node.NodeAPI.RpcCallback;
+import javafx.scene.control.TreeItem;
 
 
 public class DbgController implements Initializable {
@@ -59,6 +60,15 @@ public class DbgController implements Initializable {
 		else
 			traceModFunc(function);
 	}
+        
+        public void toggleTraceMod(ModFunc module, ObservableList<TreeItem<ModFunc>> funcs){
+        // maybe get all the modules, funcs, and loop over TraceModFunc....
+            for (TreeItem function : funcs) {
+                System.out.println("FUNC:");
+                System.out.println(function.getValue());
+                traceModFunc((ModFunc) function.getValue());
+            }
+        }
 
 	private void traceModFunc(ModFunc function) {
 		try {

@@ -52,6 +52,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
+import java.util.Arrays;
 
 
 public class DbgView implements Initializable {
@@ -98,6 +99,8 @@ public class DbgView implements Initializable {
 	private MenuItem seqTraceMenuItem;
 
 	private MenuItem functionTraceMenuItem;
+        
+        private MenuItem moduleTraceMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -115,6 +118,8 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
+                moduleTraceMenuItem = new MenuItem("Module Trace");
+		moduleTraceMenuItem.setOnAction(this::onModuleTrace);
 
 		functionTraceMenuItem = new MenuItem("Function Trace");
 		functionTraceMenuItem.setOnAction(this::onFunctionTrace);
@@ -136,7 +141,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(functionTraceMenuItem, seqTraceMenuItem));
+		modulesTree.setContextMenu(new ContextMenu(moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -173,8 +178,8 @@ public class DbgView implements Initializable {
 			return;
 		if(item == null || item.getValue() == null)
 			return;
-		if(item.getValue().isModule())
-			return;
+//		if(item.getValue().isModule())
+//			return;
 		
 		toggleTraceModFunc(item.getValue());
 	}
@@ -310,6 +315,17 @@ public class DbgView implements Initializable {
     		toggleTraceModFunc(selectedItem.getValue());
     	}
 	}
+        
+        private void onModuleTrace(ActionEvent e) {
+    	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+        ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
+        
+        
+    	if(selectedItem != null && selectedItem.getValue() != null) {
+                ModFunc module = selectedItem.getValue();
+    		toggleTraceMod(module, moduleFunctions);
+    	}
+	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
@@ -394,6 +410,10 @@ public class DbgView implements Initializable {
 	private void toggleTraceModFunc(ModFunc function) {
 		dbgController.toggleTraceModFunc(function);
 	}
+        
+        private void toggleTraceMod(ModFunc module, ObservableList<TreeItem<ModFunc>> functions){
+                dbgController.toggleTraceMod(module, functions);
+        }
 
 	private void onConnected(Observable o) {
 		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
