@@ -48,9 +48,41 @@ size_to_bytes({total_heap_size = K, Size}) -> {K, Size * erlang:system_info(word
 size_to_bytes(KV)                          -> KV.
 
 get_process_state(Pid_string) when is_list(Pid_string) ->
-    State = sys:get_state(list_to_pid(Pid_string)),
-    {ok, State}.
+    Pid = list_to_pid(Pid_string),
+    State = sys:get_state(Pid, 3000),
+    case proc_lib:initial_call(Pid) of
+        {Mod,_,_} ->
+            {ok, format_record(State, Mod)};
+        false ->
+            {ok, State}
+    end.
 
+format_record(Rec, Mod) when is_atom(element(1, Rec)) ->
+    try
+        File = code:which(Mod),
+        {ok,{_Mod,[{abstract_code,{_Version,Forms}},{"CInf",_CB}]}} = beam_lib:chunks(File, [abstract_code,"CInf"]),
+        [Name | RecValues] = tuple_to_list(Rec),
+        [FieldNames] = [record_fields(Fields) || {attribute,_,record,{Tag,Fields}} <- Forms, Tag =:= Name],
+        FieldsAsTuples = lists:zipwith(
+                           fun(K, V) -> {erlyberly_record_field, K, V} end,
+                           FieldNames,
+                           [format_record(R, Mod) || R <- RecValues]),
+        {erlyberly_record, Name, FieldsAsTuples}
+    catch
+        _:_ ->
+            %% The module might not contain abstract_code (compiled without
+            %% debug_info) or trying to treat a normal tuple as record.
+            Rec
+    end;
+format_record(Other, _Mod) ->
+    Other.
+
+record_fields([{record_field,_,{atom,_,Field}} | Fs]) ->
+    [Field | record_fields(Fs)];
+record_fields([{record_field,_,{atom,_,Field},_} | Fs]) ->
+    [Field | record_fields(Fs)];
+record_fields([]) ->
+    [].
 %%% ============================================================================
 %%% module function tree
 %%% ============================================================================
