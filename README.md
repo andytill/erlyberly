@@ -1,6 +1,8 @@
 
 # erlyberly
 
+[![Join the chat at https://gitter.im/andytill/erlyberly](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/andytill/erlyberly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 erlyberly is a debugger for erlang, and [elixir](https://twitter.com/andy_till/status/539566833515626497). Instead of setting break points in code, a trace is set on a function and calls to it are logged without blocking your processes.
 
 If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  There is no recompliation and no log statements need to be removed (or not!) afterwards.
