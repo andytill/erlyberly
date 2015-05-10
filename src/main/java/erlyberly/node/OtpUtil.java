@@ -234,4 +234,22 @@ public class OtpUtil {
     	
     	return receive.elementAt(1);
     }
+
+	public static OtpErlangObject tupleElement(int i, OtpErlangObject obj) {
+		return ((OtpErlangTuple)obj).elementAt(i);
+	}
+
+	public static OtpErlangObject[] iterableElements(OtpErlangObject obj) {
+		if(obj instanceof OtpErlangTuple)
+			return ((OtpErlangTuple) obj).elements();
+		else if(obj instanceof OtpErlangList)
+			return ((OtpErlangList) obj).elements();
+		else if(obj instanceof OtpErlangString) {
+			OtpErlangString s = (OtpErlangString) obj;
+			return new OtpErlangList(s.stringValue()).elements();
+		}
+		else
+			throw new RuntimeException("" + obj + " cannot return OtpErlangObject[]");
+			
+	}
 }

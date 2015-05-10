@@ -40,15 +40,34 @@ public class TermTreeView extends TreeView {
 			else {
 				TreeItem tupleItem;
 				
-				tupleItem = new TreeItem("{");
-				tupleItem.setExpanded(true);
-				
-				parent.getChildren().add(tupleItem);
-				for (OtpErlangObject e : elements) {
-					addToTreeItem(tupleItem, e);
+				if(isRecord(obj)) {
+					tupleItem = new TreeItem("#" + OtpUtil.tupleElement(1, obj) + " {");
+					parent.getChildren().add(tupleItem);
+					tupleItem.setExpanded(true);
+					
+					elements = OtpUtil.iterableElements(OtpUtil.tupleElement(2, obj));// ((OtpErlangList) OtpUtil.tupleElement(2, obj)).elements();
+					for (OtpErlangObject e : elements) {
+						addToTreeItem(tupleItem, e);
+					}
+					parent.getChildren().add(new TreeItem("}"));
 				}
-				
-				parent.getChildren().add(new TreeItem("}"));
+				else if(isRecordField(obj)) {
+					tupleItem = new TreeItem(OtpUtil.tupleElement(1, obj) + " = ");
+					parent.getChildren().add(tupleItem);
+					tupleItem.setExpanded(true);
+					
+					addToTreeItem(tupleItem, OtpUtil.tupleElement(2, obj));
+					
+				}
+				else {
+					tupleItem = new TreeItem("{");
+					parent.getChildren().add(tupleItem);
+					tupleItem.setExpanded(true);
+					for (OtpErlangObject e : elements) {
+						addToTreeItem(tupleItem, e);
+					}
+					parent.getChildren().add(new TreeItem("}"));
+				}
 			}
 		}
 		else if(obj instanceof OtpErlangList) {
@@ -77,6 +96,14 @@ public class TermTreeView extends TreeView {
 			OtpUtil.otpObjectToString(obj, stringBuilder);
 			parent.getChildren().add(new TreeItem(stringBuilder.toString()));
 		}
+	}
+
+	private boolean isRecordField(OtpErlangObject obj) {
+		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
+	}
+
+	private boolean isRecord(OtpErlangObject obj) {
+		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record"), obj);
 	}
 
 	public void populateFromListContents(OtpErlangList list) {
