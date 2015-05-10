@@ -75,6 +75,7 @@ public class ErlyBerly extends Application {
 		primaryStage.setScene(scene);
         primaryStage.titleProperty().bind(nodeAPI.summaryProperty());
         primaryStage.sizeToScene();
+        primaryStage.setResizable(true);
         primaryStage.show();
         
         displayConnectionPopup(primaryStage);
@@ -139,6 +140,8 @@ public class ErlyBerly extends Application {
 				if(!nodeAPI.connectedProperty().get()) {
 					Platform.exit();
 				}
+				
+				Platform.runLater(() -> { primaryStage.setResizable(true); });
 			}});
 
         connectStage.show();
