@@ -371,4 +371,12 @@ public class NodeAPI {
 		}
 		return null;
 	}
+
+	public HashMap<Object, Object> erlangMemory() throws IOException, OtpErlangException {
+		sendRPC("erlang", "memory", list());
+		
+		OtpErlangList result = (OtpErlangList) receiveRPC();
+		
+		return OtpUtil.propsToMap(result);
+	}
 }

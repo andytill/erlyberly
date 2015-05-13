@@ -125,8 +125,7 @@ public class ErlyBerly extends Application {
 		Stage connectStage;
         
 		connectStage = new Stage();
-        connectStage.initModality(Modality.WINDOW_MODAL);
-        connectStage.initOwner(primaryStage.getScene().getWindow());
+        connectStage.initModality(Modality.APPLICATION_MODAL);
         connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
 
         // javafx vertical resizing is laughably ugly, lets just disallow it
