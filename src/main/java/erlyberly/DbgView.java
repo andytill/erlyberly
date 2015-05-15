@@ -52,7 +52,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
-import java.util.Arrays;
 
 
 public class DbgView implements Initializable {
@@ -168,8 +167,7 @@ public class DbgView implements Initializable {
 	 * if <code>ctrl+t</code> is released while focus is on the tree view, then check the 
 	 * selected item is a function and toggle tracing for it. 
 	 */
-	private void onKeyReleaseInModuleTree(KeyEvent e) {
-		
+	private void onKeyReleaseInModuleTree(KeyEvent e) { 
 		TreeItem<ModFunc> item = modulesTree.getSelectionModel().getSelectedItem();
 		
 		if(!e.isControlDown()) 
@@ -178,9 +176,9 @@ public class DbgView implements Initializable {
 			return;
 		if(item == null || item.getValue() == null)
 			return;
-//		if(item.getValue().isModule())
-//			return;
-		
+		if(item.getValue().isModule())
+			return;		
+                
 		toggleTraceModFunc(item.getValue());
 	}
 
@@ -295,36 +293,38 @@ public class DbgView implements Initializable {
 	}
 
 	private void onTraceClicked(MouseEvent me) {
-		if(me.getButton().equals(MouseButton.PRIMARY)) {
-            if(me.getClickCount() == 2) {
-            	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-            	
-            	if(selectedItem != null) {
-                	showTraceTermView(selectedItem); 
-            	}
-        	}
-        }
+            if(me.getButton().equals(MouseButton.PRIMARY)) {
+                if(me.getClickCount() == 2) {
+                    TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
+                    if(selectedItem != null) {
+                            showTraceTermView(selectedItem); 
+                    }
+                    }
+            }
 	}
 	
-
-	
 	private void onFunctionTrace(ActionEvent e) {
-    	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+            TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
     	
-    	if(selectedItem != null && selectedItem.getValue() != null) {
+            if(selectedItem != null && selectedItem.getValue() != null) {
     		toggleTraceModFunc(selectedItem.getValue());
-    	}
+            }
 	}
         
         private void onModuleTrace(ActionEvent e) {
-    	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-        ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
-        
-        
-    	if(selectedItem != null && selectedItem.getValue() != null) {
-                ModFunc module = selectedItem.getValue();
-    		toggleTraceMod(module, moduleFunctions);
-    	}
+            TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+            ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
+            
+            if(selectedItem != null && selectedItem.getValue() != null){
+                ModFunc mf = (ModFunc) selectedItem.getValue();
+                if(mf.isModule()){
+                    toggleTraceMod(moduleFunctions);
+                }else{
+                    TreeItem<ModFunc> rootModule = modulesTree.getSelectionModel().getSelectedItem().getParent();
+                    ObservableList<TreeItem<ModFunc>> rootModuleFunctions = rootModule.getChildren();
+                    toggleTraceMod(rootModuleFunctions);
+                }
+            }
 	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
@@ -411,10 +411,16 @@ public class DbgView implements Initializable {
 		dbgController.toggleTraceModFunc(function);
 	}
         
-        private void toggleTraceMod(ModFunc module, ObservableList<TreeItem<ModFunc>> functions){
-                dbgController.toggleTraceMod(module, functions);
+        private void toggleTraceMod(ObservableList<TreeItem<ModFunc>> functions){
+                for (TreeItem func : functions) {
+                    if(!func.getValue().toString().equals("module_info/0") && 
+                       !func.getValue().toString().equals("module_info/1")){
+                        ModFunc function = (ModFunc) func.getValue();
+                        dbgController.toggleTraceModFunc(function);
+                    }
+                }
         }
-
+        
 	private void onConnected(Observable o) {
 		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
 		
