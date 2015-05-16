@@ -128,47 +128,52 @@ public class ProcController {
 		@Override
 		public void run() {
 			
-			while(true) {				
+			while(true) {	
+
+		    	boolean connected = ErlyBerly.nodeAPI().isConnected();
+				if(!connected)
+		    		continue;
+		    	
 		    	final ArrayList<ProcInfo> processList = new ArrayList<>();
 		    	
 				try {
 					ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
+					
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							ProcSort procSort = procSortProperty.get();
+							if(procSort != null) {
+								Comparator<ProcInfo> comparator = null;
+								
+								if("proc".equals(procSort.getSortField())) {
+									comparator = new Comparator<ProcInfo>() {
+										@Override
+										public int compare(ProcInfo o1, ProcInfo o2) {
+											return o1.getProcessName().compareTo(o2.getProcessName());
+										}};
+								}
+								else if("reduc".equals(procSort.getSortField())) {
+									comparator = new Comparator<ProcInfo>() {
+										@Override
+										public int compare(ProcInfo o1, ProcInfo o2) {
+											return Long.compare(o1.getReductions(), o2.getReductions());
+										}};
+								}
+								
+								if(comparator != null) {
+									if(procSort.getSortType() == SortType.DESCENDING) {
+										comparator = Collections.reverseOrder(comparator);
+									}
+									Collections.sort(processList, comparator);
+								}
+							}
+							processes.clear();
+							processes.addAll(processList);
+						}});
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						ProcSort procSort = procSortProperty.get();
-						if(procSort != null) {
-							Comparator<ProcInfo> comparator = null;
-							
-							if("proc".equals(procSort.getSortField())) {
-								comparator = new Comparator<ProcInfo>() {
-									@Override
-									public int compare(ProcInfo o1, ProcInfo o2) {
-										return o1.getProcessName().compareTo(o2.getProcessName());
-									}};
-							}
-							else if("reduc".equals(procSort.getSortField())) {
-								comparator = new Comparator<ProcInfo>() {
-									@Override
-									public int compare(ProcInfo o1, ProcInfo o2) {
-										return Long.compare(o1.getReductions(), o2.getReductions());
-									}};
-							}
-							
-							if(comparator != null) {
-								if(procSort.getSortType() == SortType.DESCENDING) {
-									comparator = Collections.reverseOrder(comparator);
-								}
-								Collections.sort(processList, comparator);
-							}
-						}
-						processes.clear();
-						processes.addAll(processList);
-					}});
 
 				try {
 					synchronized (waiter) {

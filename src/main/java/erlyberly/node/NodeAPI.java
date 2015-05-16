@@ -7,12 +7,14 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -66,11 +68,17 @@ public class NodeAPI {
 
 	private OtpMbox mbox;
 	
+	private final AtomicBoolean connected = new AtomicBoolean();
+	
 	public NodeAPI() {
 		traceManager = new TraceManager();
 		
 		connectedProperty = new SimpleBooleanProperty();
-		
+		connectedProperty.addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> obv, Boolean o, Boolean n) {
+				connected.set(n);
+			}});
 		summary = new SimpleStringProperty("erlyberly not connected");
 		
 		appProcs = new SimpleObjectProperty<AppProcs>(new AppProcs(0, LocalDateTime.now()));
@@ -219,7 +227,7 @@ public class NodeAPI {
 				break;
 			}
 			catch(Exception e) {
-				int millis = 500;
+				int millis = 50;
 				mySleep(millis);
 				
 			}
@@ -378,5 +386,9 @@ public class NodeAPI {
 		OtpErlangList result = (OtpErlangList) receiveRPC();
 		
 		return OtpUtil.propsToMap(result);
+	}
+
+	public boolean isConnected() {
+		return connected.get();
 	}
 }

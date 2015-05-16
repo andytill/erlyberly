@@ -401,14 +401,13 @@ public class DbgView implements Initializable {
 		// disable buttons when not connected
 		seqTraceMenuItem.setDisable(!connected);
 		
-		if(!connected) {
-			treeModules.clear();
+		if(connected) {
+			refreshModules();
+			dbgController.reapplyTraces();
 		}
 		else {
-			refreshModules();
+			treeModules.clear();
 		}
-		
-		dbgController.reapplyTraces();
 	}
 
 	private void refreshModules() {

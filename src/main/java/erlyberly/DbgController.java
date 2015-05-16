@@ -84,7 +84,9 @@ public class DbgController implements Initializable {
 	}
 
 	public void reapplyTraces() {
-		for (ModFunc function : traces) {
+		ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
+		
+		for (ModFunc function : tracesCopy) {
 			try {
 				ErlyBerly.nodeAPI().startTrace(function);
 			} catch (Exception e) {
@@ -122,7 +124,7 @@ public class DbgController implements Initializable {
 		@Override
 		public void run() {
 			while (true) {
-				if(collectingTraces) {
+				if(collectingTraces && ErlyBerly.nodeAPI().isConnected()) {
 					try {
 						final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
 						
