@@ -289,7 +289,7 @@ public class NodeAPI {
 		OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
 	}
 
-	public ArrayList<TraceLog> collectTraceLogs() throws Exception {
+	public synchronized ArrayList<TraceLog> collectTraceLogs() throws Exception {
 		sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 		
 		OtpErlangObject prcResult = receiveRPC();
@@ -305,7 +305,7 @@ public class NodeAPI {
 		return traceManager.collateTraces(traceLogs);
 	}
 
-	public ArrayList<SeqTraceLog> collectSeqTraceLogs() throws Exception {
+	public synchronized ArrayList<SeqTraceLog> collectSeqTraceLogs() throws Exception {
 		sendRPC("erlyberly", "collect_seq_trace_logs", new OtpErlangList());
 		
 		OtpErlangObject prcResult = receiveRPC();
@@ -346,7 +346,7 @@ public class NodeAPI {
 		summary.set(summaryText);
 	}
 
-	public void seqTrace(ModFunc mf) throws IOException, OtpErlangException {
+	public synchronized void seqTrace(ModFunc mf) throws IOException, OtpErlangException {
 		sendRPC("erlyberly", "seq_trace", 
 			list(
 				tuple(OtpUtil.atom(self.node()), mbox.self()),
@@ -361,7 +361,7 @@ public class NodeAPI {
 		System.out.println(result);
 	}
 
-	public OtpErlangObject getProcessState(String pidString) throws IOException, OtpErlangException {
+	public synchronized OtpErlangObject getProcessState(String pidString) throws IOException, OtpErlangException {
 		sendRPC("erlyberly", "get_process_state", list(pidString));
 		
 		OtpErlangObject result = receiveRPC();
@@ -372,7 +372,7 @@ public class NodeAPI {
 		return null;
 	}
 
-	public HashMap<Object, Object> erlangMemory() throws IOException, OtpErlangException {
+	public synchronized HashMap<Object, Object> erlangMemory() throws IOException, OtpErlangException {
 		sendRPC("erlang", "memory", list());
 		
 		OtpErlangList result = (OtpErlangList) receiveRPC();
