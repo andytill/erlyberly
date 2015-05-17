@@ -156,7 +156,7 @@ public class DbgController implements Initializable {
 		@Override
 		public void run() {
 			while (true) {
-				if(collectingSeqTraces) {
+				if(collectingSeqTraces && ErlyBerly.nodeAPI().isConnected()) {
 					try {
 						final ArrayList<SeqTraceLog> seqTraceLogs = ErlyBerly.nodeAPI().collectSeqTraceLogs();
 

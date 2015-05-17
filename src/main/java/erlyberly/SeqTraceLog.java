@@ -3,23 +3,26 @@ package erlyberly;
 import java.util.HashMap;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangString;
 
 import erlyberly.node.OtpUtil;
 
 public class SeqTraceLog {
 
-	private Object msg_type;
-	private Object serial;
-	private Object from;
-	private Object to;
-	private Object message;
+	private final Object msgType;
+	private final Object serial;
+	private final String from;
+	private final String to;
+	private final Object message;
+	private final Object timestamp;
 
-	public SeqTraceLog(Object msg_type, Object serial, Object from, Object to, Object message) {
-		this.msg_type = msg_type;
+	public SeqTraceLog(Object msg_type, Object serial, Object from, Object to, Object message, Object timestamp) {
+		this.msgType = msg_type;
 		this.serial = serial;
-		this.from = from;
-		this.to = to;
+		this.from = stringValue(from);
+		this.to = stringValue(to);
 		this.message = message;
+		this.timestamp = timestamp;
 	}
 
 	public static SeqTraceLog build(HashMap<Object, Object> props) {
@@ -28,17 +31,44 @@ public class SeqTraceLog {
 		Object from = props.get(OtpUtil.atom("from"));
 		Object to = props.get(OtpUtil.atom("to"));
 		Object message = props.get(OtpUtil.atom("message"));
-		return new SeqTraceLog(msg_type, serial,  from, to, message);
+		Object timestamp = props.get(OtpUtil.atom("timestamp"));
+		return new SeqTraceLog(msg_type, serial,  from, to, message, timestamp);
+	}
+	
+	private String stringValue(Object obj) {
+		if(obj instanceof OtpErlangString)
+			return ((OtpErlangString) obj).stringValue();
+		return obj.toString();
 	}
 
 	@Override
 	public String toString() {
-		return "SeqTraceLog [msg_type=" + msg_type + ", serial=" + serial
+		return "SeqTraceLog [msg_type=" + msgType + ", serial=" + serial
 				+ ", from=" + from + ", to=" + to + ", message=" + message
 				+ "]";
 	}
 
 	public OtpErlangObject getMessage() {
 		return (OtpErlangObject) message;
+	}
+
+	public Object getMsgType() {
+		return msgType;
+	}
+
+	public Object getSerial() {
+		return serial;
+	}
+
+	public Object getFrom() {
+		return from;
+	}
+
+	public Object getTo() {
+		return to;
+	}
+
+	public Object getTimestamp() {
+		return timestamp;
 	}
 }

@@ -350,9 +350,8 @@ seq_trace_collector(Trace_logs) ->
         {nodedown, _Node} ->
             ok = dbg:stop_clear(),
             true = seq_trace:reset_trace();
-        {seq_trace, _Label, Trace_log} ->
-            Trace_props = seq_trace_to_props(Trace_log),
-            log_seq_trace(Trace_props),
+        {seq_trace, _Label, Trace_log, Timestamp} ->
+            Trace_props = seq_trace_to_props(Trace_log, Timestamp),
             seq_trace_collector([Trace_props | Trace_logs]);
         {take_seq_logs, Pid} ->
             Pid ! {seq_trace_logs, lists:reverse(Trace_logs)},
@@ -364,12 +363,13 @@ seq_trace_collector(Trace_logs) ->
     end.
 
 %%
-seq_trace_to_props({Msg_type, Serial, From, To, Message}) ->
+seq_trace_to_props({Msg_type, Serial, From, To, Message}, Timestamp) ->
     [ {msg_type, Msg_type},
       {serial, Serial},
       {from, format_pid(From)},
       {to, format_pid(To)},
-      {message, Message} ].
+      {message, Message},
+      {timestamp, Timestamp} ].
 
 %%
 format_pid(Pid) when is_pid(Pid) ->
@@ -401,6 +401,7 @@ format_utc_timestamp() ->
 -define(SET_SEQ_TOKEN, 
             set_seq_token(send, true),
             set_seq_token('receive', true),
+            set_seq_token(timestamp, true),
             set_seq_token(print, true)).
 
 -include_lib("stdlib/include/ms_transform.hrl").

@@ -4,8 +4,9 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
@@ -14,28 +15,54 @@ import javafx.stage.Stage;
 
 public class SeqTraceView extends VBox {
 
-	private final TreeItem<SeqTraceLog> rootItem;
-	private TreeView<SeqTraceLog> treeView;
+	private final TableView<SeqTraceLog> table;
 
 	public SeqTraceView(ObservableList<SeqTraceLog> seqTraceLogs) {
-		treeView = new TreeView<SeqTraceLog>(new TreeItem<>());
-		treeView.setShowRoot(false);
-		treeView.setOnMouseClicked(this::onTraceClicked);
+		table = new TableView<SeqTraceLog>();
+		table.setOnMouseClicked(this::onTraceClicked);
+		table.setMaxHeight(Integer.MAX_VALUE);
+		VBox.setVgrow(table, Priority.ALWAYS);
 		
-		rootItem = treeView.getRoot();
-
-		treeView.setMaxHeight(Integer.MAX_VALUE);
-		VBox.setVgrow(treeView, Priority.ALWAYS);
+		setupTableColumns();
 		
-		getChildren().add(treeView);
+		getChildren().add(table);
 		
 		seqTraceLogs.addListener(this::traceLogsChanged);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void setupTableColumns() {
+		TableColumn<SeqTraceLog, String> msgType, serial, from, to, message, timestamp;
+		
+		msgType = new TableColumn<>("Msg Type");
+		msgType.setCellValueFactory(new PropertyValueFactory<>("msgType"));
+		
+		timestamp = new TableColumn<>("Timestamp");
+		timestamp.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
+		timestamp.setPrefWidth(150d);
+
+		serial = new TableColumn<>("Serial");
+		serial.setCellValueFactory(new PropertyValueFactory<>("serial"));
+
+		from = new TableColumn<>("From");
+		from.setCellValueFactory(new PropertyValueFactory<>("from"));
+
+		to = new TableColumn<>("To");
+		to.setCellValueFactory(new PropertyValueFactory<>("to"));
+
+		// the message column should take the remaining space
+		// TODO http://stackoverflow.com/questions/30288558/make-the-last-column-in-a-javafx-tableview-take-the-remaining-space
+		message = new TableColumn<>("Message");
+		message.setCellValueFactory(new PropertyValueFactory<>("message"));
+		message.setPrefWidth(700d);
+		
+		table.getColumns().addAll(msgType, timestamp, serial, from, to, message);
 	}
 	
 	private void traceLogsChanged(ListChangeListener.Change<? extends SeqTraceLog> e) {
 		while(e.next()) {
 			for (SeqTraceLog trace : e.getAddedSubList()) {
-				rootItem.getChildren().add(new TreeItem<SeqTraceLog>(trace));
+				table.getItems().add(trace);
 			}
 		}
 	}
@@ -43,10 +70,10 @@ public class SeqTraceView extends VBox {
 	private void onTraceClicked(MouseEvent me) {
 		if(me.getButton().equals(MouseButton.PRIMARY)) {
             if(me.getClickCount() == 2) {
-            	TreeItem<SeqTraceLog> selectedItem = treeView.getSelectionModel().getSelectedItem();
+            	SeqTraceLog selectedItem = table.getSelectionModel().getSelectedItem();
             	
             	if(selectedItem != null) {
-                	showTraceTermView(selectedItem.getValue()); 
+                	showTraceTermView(selectedItem); 
             	}
         	}
         }
@@ -72,7 +99,7 @@ public class SeqTraceView extends VBox {
 		
 		CloseWindowOnEscape.apply(scene, termsStage);
 		
-		termsStage.setScene(scene);
+        termsStage.setScene(scene);
         termsStage.setWidth(800);
         termsStage.setHeight(600);
         termsStage.setTitle(sb.toString());
