@@ -74,9 +74,8 @@ public class DbgController implements Initializable {
 	
 	private void onRemoveTracer(ActionEvent e, ModFunc function) {
 		try {
-			ErlyBerly.nodeAPI().stopTrace(function);
-
-			traces.remove(function);
+                    ErlyBerly.nodeAPI().stopTrace(function);
+                    traces.remove(function);
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
