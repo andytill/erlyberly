@@ -185,6 +185,7 @@ public class ProcView implements Initializable {
 		termTreeView.populateFromTerm(obj); 
 
 		Scene scene  = new Scene(termTreeView);
+        ErlyBerly.applyCssToWIndow(scene);
 		
 		CloseWindowOnEscape.apply(scene, termsStage);
 		

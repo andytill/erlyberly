@@ -69,8 +69,7 @@ public class ErlyBerly extends Application {
         Scene scene;
         
 		scene = new Scene(rootView);
-		scene.getStylesheets().add(getClass().getResource("/floatyfield/floaty-field.css").toExternalForm());
-		scene.getStylesheets().add(getClass().getResource("/erlyberly/erlyberly.css").toString());  
+		applyCssToWIndow(scene);  
 
 		primaryStage.setScene(scene);
         primaryStage.titleProperty().bind(nodeAPI.summaryProperty());
@@ -79,6 +78,11 @@ public class ErlyBerly extends Application {
         primaryStage.show();
         
         displayConnectionPopup(primaryStage);
+    }
+
+    public static void applyCssToWIndow(Scene scene) {
+        scene.getStylesheets().add(ErlyBerly.class.getResource("/floatyfield/floaty-field.css").toExternalForm());
+		scene.getStylesheets().add(ErlyBerly.class.getResource("/erlyberly/erlyberly.css").toString());
     }
 
 	private void setupProcPaneHiding(FxmlLoadable topBarFxml, FxmlLoadable dbgFxml) {

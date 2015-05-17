@@ -31,6 +31,26 @@ Exceptions are highlighted.
 
 A call that hasn't returned yet is highlighted in yellow.
 
+##### Sequential Tracing of messages
+
+Sequential Tracing ([seq_trace](http://www.erlang.org/doc/man/seq_trace.html)) is message tracing from process to process, allowing you to see the message flow through the application.
+
+![you cannot see the beautiful screen shot](doc/seq-trace.png)
+
+To start a seq trace right click on a function and select **Seq Trace (experimental)**, a Window will pop up that will display the trace messages.  When the traced function is called, messages sent afterwards are shown in the window.
+
+This functionality is experimental and highly likely to bork the remote node under test and erlyberly.  Once a seq trace is set the only way to stop it is to terminate erlyberly or run `seq_trace:reset_trace()` in the shell of the remote node.
+
+##### Get the process state
+
+Get and display the state of a process. 
+
+![you cannot see the beautiful screen shot](doc/process-state.png)
+
+This uses [sys:get_state/1](http://www.erlang.org/doc/man/sys.html#get_state-1) under the hood and so has the same limitations. Processes that do not support the system message may not respond.
+
+If the value is a record that is compiled into the module of the processes initial call then the record name and field names will appear highlighted. Records that are not known by the module at compile time will not be highlighted.
+
 ##### Attach to any running system
 
 erlyberly connects as an erlang node to the node you want to trace. Once connected it can trace your application code, 3rd party modules and modules that are part of the erlang standard libary.
@@ -72,14 +92,6 @@ Right click on a process in the process table and click on *"Get process state"*
 ##### Cross platform
 
 Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
-
-##### Sequential Tracing of messages
-
-Sequential Tracing (seq_trace) is tracing of messages from process to process to see the message flow through the application.
-
-To start a seq trace right click on a function and select **Seq Trace (experimental)**, a Window will pop up that will crudely display the trace messages.  When the traced function is called, messages sent afterwards are shown in the window.
-
-This functionality is experimental and highly likely to bork the remote node under test and erlyberly.  Once a seq trace is set the only way to stop it is to terminate erlyberly or run `seq_trace:reset_trace()` in the shell of the remote node.
 
 ### Shortcuts
 

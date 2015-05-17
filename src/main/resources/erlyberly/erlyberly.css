@@ -98,3 +98,9 @@
 .menu-item:focused > .floaty-label .label {
     -fx-text-fill: white;
 }
+
+.record-label {
+    -fx-background-color: #039ED3;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+}

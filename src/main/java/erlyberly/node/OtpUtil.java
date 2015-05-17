@@ -1,7 +1,9 @@
 package erlyberly.node;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -10,6 +12,7 @@ import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangExit;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
+import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
@@ -108,6 +111,9 @@ public class OtpUtil {
 				otpObjectToString(elements[i], sb);
 			}
 			sb.append(brackets.charAt(1));
+		}
+		else if(obj instanceof OtpErlangString) {
+		    sb.append(obj.toString().replace("\n", "\\n"));
 		}
 		else {
 			sb.append(obj.toString());
@@ -251,5 +257,47 @@ public class OtpUtil {
 		else
 			throw new RuntimeException("" + obj + " cannot return OtpErlangObject[]");
 			
+	}
+	
+	public static HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
+        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
+    );
+	
+    /**
+     * A short term can be displayed on a single line and does not have to be
+     * broken down further.
+     */
+	public static boolean isLittleTerm(OtpErlangObject obj) {
+        OtpErlangObject[] elements;
+        
+	    if(LARGE_TERM_TYPES.contains(obj.getClass())) {
+            elements = iterableElements(obj);
+	    }
+	    else {
+	        return true;
+	    }
+	    
+        // short lists and tuples which do not contain other short lists or
+        // tuples are ok
+	    if(elements.length > 3)
+	        return false;
+	    
+	    for (OtpErlangObject e : elements) {
+            if(LARGE_TERM_TYPES.contains(e.getClass())) {
+                return false;
+            }
+            else if(e instanceof OtpErlangString) {
+                int stringLength = ((OtpErlangString) e).stringValue().length();
+                if(stringLength > 50)
+                    return true;
+            }
+            else if(e instanceof OtpErlangBinary) {
+                int binaryLength = ((OtpErlangBinary) e).size();
+                if(binaryLength > 50)
+                    return true;
+            }
+            
+        }
+	    return true;
 	}
 }

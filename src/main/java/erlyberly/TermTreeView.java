@@ -1,5 +1,6 @@
 package erlyberly;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -41,10 +42,12 @@ public class TermTreeView extends TreeView {
 				TreeItem tupleItem;
 				
 				if(isRecord(obj)) {
-					tupleItem = new TreeItem("#" + OtpUtil.tupleElement(1, obj) + " {");
+                    String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
+                    
+					tupleItem = new TreeItem("{");
+                    tupleItem.setGraphic(recordLabel(recordNameText));
 					parent.getChildren().add(tupleItem);
 					tupleItem.setExpanded(true);
-					
 					elements = OtpUtil.iterableElements(OtpUtil.tupleElement(2, obj));// ((OtpErlangList) OtpUtil.tupleElement(2, obj)).elements();
 					for (OtpErlangObject e : elements) {
 						addToTreeItem(tupleItem, e);
@@ -52,21 +55,36 @@ public class TermTreeView extends TreeView {
 					parent.getChildren().add(new TreeItem("}"));
 				}
 				else if(isRecordField(obj)) {
-					tupleItem = new TreeItem(OtpUtil.tupleElement(1, obj) + " = ");
-					parent.getChildren().add(tupleItem);
-					tupleItem.setExpanded(true);
+				    
+					tupleItem = new TreeItem(" ");
+					tupleItem.setGraphic(recordLabel(OtpUtil.tupleElement(1, obj) + " =  "));
+                    tupleItem.setExpanded(true);
 					
-					addToTreeItem(tupleItem, OtpUtil.tupleElement(2, obj));
+					parent.getChildren().add(tupleItem);
+					
+					OtpErlangObject value = OtpUtil.tupleElement(2, obj);
+					if(OtpUtil.isLittleTerm(value))
+					    tupleItem.setValue(value);
+					else
+					    addToTreeItem(tupleItem, value);
 					
 				}
 				else {
-					tupleItem = new TreeItem("{");
-					parent.getChildren().add(tupleItem);
+					tupleItem = new TreeItem();
 					tupleItem.setExpanded(true);
-					for (OtpErlangObject e : elements) {
-						addToTreeItem(tupleItem, e);
+					
+					if(OtpUtil.isLittleTerm(obj)) {
+					    tupleItem.setValue(obj);
 					}
-					parent.getChildren().add(new TreeItem("}"));
+					else {
+                        tupleItem.setValue("{");
+	                    for (OtpErlangObject e : elements) {
+	                        addToTreeItem(tupleItem, e);
+	                    }
+	                    parent.getChildren().add(new TreeItem("}"));
+					}
+					
+                    parent.getChildren().add(tupleItem);
 				}
 			}
 		}
@@ -82,13 +100,19 @@ public class TermTreeView extends TreeView {
 				listItem = new TreeItem("[");
 				listItem.setExpanded(true);
 				
+
+                if(OtpUtil.isLittleTerm(obj)) {
+                    listItem.setValue(obj);
+                }
+                else {
+                    listItem.setValue("[");
+                    for (OtpErlangObject e : elements) {
+                        addToTreeItem(listItem, e);
+                    }
+                    parent.getChildren().add(new TreeItem("]"));
+                }
+				
 				parent.getChildren().add(listItem);
-				
-				for (OtpErlangObject e : elements) {
-					addToTreeItem(listItem, e);
-				}
-				
-				parent.getChildren().add(new TreeItem("]"));
 			}
 		}
 		else {
@@ -97,6 +121,13 @@ public class TermTreeView extends TreeView {
 			parent.getChildren().add(new TreeItem(stringBuilder.toString()));
 		}
 	}
+
+    private Label recordLabel(String recordNameText) {
+        Label label;
+        label = new Label(recordNameText);
+        label.getStyleClass().add("record-label");
+        return label;
+    }
 
 	private boolean isRecordField(OtpErlangObject obj) {
 		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
