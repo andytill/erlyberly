@@ -98,6 +98,8 @@ public class DbgView implements Initializable {
 	private MenuItem seqTraceMenuItem;
 
 	private MenuItem functionTraceMenuItem;
+    
+	private MenuItem moduleTraceMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -115,6 +117,8 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
+		moduleTraceMenuItem = new MenuItem("Module Trace");
+		moduleTraceMenuItem.setOnAction(this::onModuleTrace);
 
 		functionTraceMenuItem = new MenuItem("Function Trace");
 		functionTraceMenuItem.setOnAction(this::onFunctionTrace);
@@ -136,7 +140,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(functionTraceMenuItem, seqTraceMenuItem));
+		modulesTree.setContextMenu(new ContextMenu(moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -311,6 +315,22 @@ public class DbgView implements Initializable {
     	}
 	}
 
+	private void onModuleTrace(ActionEvent e){
+		TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+        ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
+
+        if(selectedItem != null && selectedItem.getValue() != null){
+            ModFunc mf = (ModFunc) selectedItem.getValue();
+            if(mf.isModule()){
+                toggleTraceMod(moduleFunctions);
+            }else{
+                TreeItem<ModFunc> rootModule = modulesTree.getSelectionModel().getSelectedItem().getParent();
+                ObservableList<TreeItem<ModFunc>> rootModuleFunctions = rootModule.getChildren();
+                toggleTraceMod(rootModuleFunctions);
+            }
+        }
+    }
+
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
 			@Override
@@ -394,6 +414,17 @@ public class DbgView implements Initializable {
 	private void toggleTraceModFunc(ModFunc function) {
 		dbgController.toggleTraceModFunc(function);
 	}
+
+	 private void toggleTraceMod(ObservableList<TreeItem<ModFunc>> functions){
+        for (TreeItem func : functions) {
+            if(!func.getValue().toString().equals("module_info/0") &&
+               !func.getValue().toString().equals("module_info/1")){
+                ModFunc function = (ModFunc) func.getValue();
+                dbgController.toggleTraceModFunc(function);
+            }
+        }
+	}
+
 
 	private void onConnected(Observable o) {
 		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
