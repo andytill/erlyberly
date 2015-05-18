@@ -416,7 +416,7 @@ public class DbgView implements Initializable {
 	}
 
 	 private void toggleTraceMod(ObservableList<TreeItem<ModFunc>> functions){
-        for (TreeItem func : functions) {
+        for (TreeItem<ModFunc> func : functions) {
             if(!func.getValue().toString().equals("module_info/0") &&
                !func.getValue().toString().equals("module_info/1")){
                 ModFunc function = (ModFunc) func.getValue();

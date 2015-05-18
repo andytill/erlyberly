@@ -64,7 +64,7 @@ public class TermTreeView extends TreeView {
 					
 					OtpErlangObject value = OtpUtil.tupleElement(2, obj);
 					if(OtpUtil.isLittleTerm(value))
-					    tupleItem.setValue(value);
+					    tupleItem.setValue(otpObjectToString(value));
 					else
 					    addToTreeItem(tupleItem, value);
 					
@@ -74,17 +74,18 @@ public class TermTreeView extends TreeView {
 					tupleItem.setExpanded(true);
 					
 					if(OtpUtil.isLittleTerm(obj)) {
-					    tupleItem.setValue(obj);
+					    tupleItem.setValue(otpObjectToString(obj));
+	                    parent.getChildren().add(tupleItem);
 					}
 					else {
                         tupleItem.setValue("{");
 	                    for (OtpErlangObject e : elements) {
 	                        addToTreeItem(tupleItem, e);
 	                    }
+	                    parent.getChildren().add(tupleItem);
 	                    parent.getChildren().add(new TreeItem("}"));
 					}
 					
-                    parent.getChildren().add(tupleItem);
 				}
 			}
 		}
@@ -102,25 +103,30 @@ public class TermTreeView extends TreeView {
 				
 
                 if(OtpUtil.isLittleTerm(obj)) {
-                    listItem.setValue(obj);
+                    listItem.setValue(otpObjectToString(obj));
+                    parent.getChildren().add(listItem);
                 }
                 else {
                     listItem.setValue("[");
                     for (OtpErlangObject e : elements) {
                         addToTreeItem(listItem, e);
                     }
+                    parent.getChildren().add(listItem);
                     parent.getChildren().add(new TreeItem("]"));
                 }
-				
-				parent.getChildren().add(listItem);
 			}
 		}
 		else {
-			StringBuilder stringBuilder = new StringBuilder();
-			OtpUtil.otpObjectToString(obj, stringBuilder);
-			parent.getChildren().add(new TreeItem(stringBuilder.toString()));
+            parent.getChildren().add(new TreeItem(otpObjectToString(obj)));
 		}
 	}
+
+    private String otpObjectToString(OtpErlangObject obj) {
+        StringBuilder stringBuilder = new StringBuilder();
+        OtpUtil.otpObjectToString(obj, stringBuilder);
+        String string = stringBuilder.toString();
+        return string;
+    }
 
     private Label recordLabel(String recordNameText) {
         Label label;

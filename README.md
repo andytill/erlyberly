@@ -3,9 +3,9 @@
 
 [![Join the chat at https://gitter.im/andytill/erlyberly](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/andytill/erlyberly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-erlyberly is a debugger for erlang, and [elixir](https://twitter.com/andy_till/status/539566833515626497). Instead of setting break points in code, a trace is set on a function and calls to it are logged without blocking your processes.
+erlyberly is a debugger for erlang, and [elixir](https://twitter.com/andy_till/status/539566833515626497). Traces are applied to functions and calls to it are logged without blocking your processes.
 
-If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  There is no recompliation and no log statements need to be removed (or not!) afterwards.
+If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  There are no code changes and no recompliation required to see function calls.
 
 ### Features and How To
 
@@ -14,6 +14,8 @@ If you are using `io:format/2` or lager for debugging then erlyberly can save yo
 All the modules loaded by the VM appear in the module tree.  Expand one of modules to view the functions, double clicking the star toggles tracing on and off.  Any calls made to that function by any process will now be shown in the right hand list.  Press `ctrl+t` while a function is selected to toggle a trace without touching your mouse.
 
 ![you cannot see the beautiful screen shot](doc/erlyberly.png)
+
+Right click on a module and then click **Module Trace** to put a trace on all functions displayed under the module. If some functions are not displayed because of a filter, the trace will not be applied.
 
 ##### See calls to functions and their results
 
@@ -85,10 +87,6 @@ Open up the process table, next to the memory usage columns there is a pie chart
 
 ![you cannot see the beautiful screen shot](doc/heap-pie.png)
 
-##### See the state of a process
-
-Right click on a process in the process table and click on *"Get process state"*.  This is possible only if the process handles system messages, OTP behaviours do.
-
 ##### Cross platform
 
 Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
@@ -138,9 +136,15 @@ You'll also need the [floaty-field](https://github.com/andytill/floaty-field) li
 
 Some things that are important.
 
-1. Bug fixing and stability for current features is number one priority right now.  Help by contributing issue reports.
-2. seq_trace visualisation with graphs.
-3. More statistics on the running system, such as memory and CPU.
-4. Beat CAP.
+1. Bug fixing and stability for current features is number one priority right now. Help by contributing issue reports.
+2. seq_trace support.
+3. Beat CAP.
 
 erlyberly is meant to be a complementary to observer so there will be no attempt to implement features such as the supervisor hierarchy graph.
+
+### Special Thanks
+
+The following people have contributed code to erlyberly:
+
++ [@aboroska](https://github.com/aboroska)
++ [@ruanpienaar](https://github.com/ruanpienaar)
