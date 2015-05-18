@@ -99,7 +99,7 @@ public class DbgView implements Initializable {
 
 	private MenuItem functionTraceMenuItem;
     
-    private MenuItem moduleTraceMenuItem;
+	private MenuItem moduleTraceMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
