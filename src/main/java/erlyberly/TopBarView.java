@@ -240,6 +240,7 @@ public class TopBarView implements Initializable {
 				erlangMemory.remove(OtpUtil.atom("total"));
 				erlangMemory.remove(OtpUtil.atom("system"));
 				erlangMemory.remove(OtpUtil.atom("processes_used"));
+                erlangMemory.remove(OtpUtil.atom("atom_used"));
 				
 				Platform.runLater(() -> {					
 					populatePieData(erlangMemory);
