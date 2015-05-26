@@ -10,6 +10,8 @@
 -export([seq_trace/5]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
+-export([get_source_code/1]).
+-export([get_abstract_code/1]).
 
 
 %% ============================================================================
@@ -433,3 +435,72 @@ seq_trace_match_spec(12) ->
     dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
 seq_trace_match_spec(_) ->
     error(arity_too_large).
+
+
+
+-spec get_source_code(module() | {module(), function(), Arity :: non_neg_integer()}) -> {ok, string()} | {error, Reason :: any()}.
+get_source_code(What) ->
+    try
+        case What of
+            {M,F,A}               -> fun_src(M,F,A);
+            Mod when is_atom(Mod) -> mod_src(Mod)
+        end
+    catch
+        _:E ->
+            {error, list_to_binary(
+                lists:flatten(io_lib:format("E:~p stack:~p", [E,erlang:get_stacktrace()]))
+            )}
+    end.
+
+-spec get_abstract_code(module() | {module(), function(), Arity :: non_neg_integer()}) -> {ok,[erl_parse:abstract_form()]} | {ok, string()} | {error, Reason :: any()}.
+get_abstract_code(What) ->
+    try
+        case What of
+            {M,F,A}               -> fun_abst(M,F,A);
+            Mod when is_atom(Mod) -> mod_abst(Mod)
+        end
+    catch
+        _:_E ->
+            {error, list_to_binary(
+                lists:flatten(io_lib:format("~p", [erlang:get_stacktrace()]))
+            )}
+    end.
+
+mod_src(Module) ->
+    abstract_code(Module, fun(Forms) -> 
+        {ok, list_to_binary(
+            lists:flatten([[erl_pp:form(F),$\n] || F <- Forms, element(1,F) =:= attribute orelse element(1,F) =:= function])
+        )}
+    end).
+ 
+fun_src(Mod, Fun, Arity) ->
+    abstract_code(Mod, fun(Forms) -> 
+        [FF] = [FF || FF = {function, _Line, Fun2, Arity2, _} <- Forms, Fun2 =:= Fun, Arity2 =:= Arity],
+        {ok, list_to_binary(
+            lists:flatten(erl_pp:form(FF))
+        )}
+    end).
+
+mod_abst(Module) ->
+    abstract_code(Module, fun(Forms) -> 
+        {ok, list_to_binary(
+            lists:flatten(io_lib:format("~p", [Forms]))
+        )}
+    end).
+
+fun_abst(Mod, Fun, Arity) ->
+    abstract_code(Mod, fun(Forms) -> 
+        [FF] = [FF || FF = {function, _Line, Fun2, Arity2, _} <- Forms, Fun2 =:= Fun, Arity2 =:= Arity],
+        {ok, list_to_binary(
+            lists:flatten(io_lib:format("~p", [FF]))
+        )}
+    end).
+
+abstract_code(Module, ExecFun) ->
+        File = code:which(Module),
+        case beam_lib:chunks(File, [abstract_code]) of 
+            {ok,{_Mod,[{abstract_code,no_abstract_code}]}} ->
+                {ok,"no_abstract_code for Module "+atom_to_list(Module)+"."};
+            {ok,{_Mod,[{abstract_code,{_Version,Forms}}]}} ->
+                ExecFun(Forms)
+        end.
