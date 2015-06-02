@@ -56,7 +56,8 @@ get_process_state(Pid_string) when is_list(Pid_string) ->
         false ->
             {ok, State}
     end.
-
+format_record(Rec, Mod) when is_list(Rec) ->
+    [format_record(R, Mod) || R <- Rec];
 format_record(Rec, Mod) when is_atom(element(1, Rec)) ->
     try
         File = code:which(Mod),
