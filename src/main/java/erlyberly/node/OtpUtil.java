@@ -229,10 +229,10 @@ public class OtpUtil {
     	conn.send(m.self(), "rex", rpcMessage);
     }
     
-    public static OtpErlangObject receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
+    public static OtpErlangObject receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException  {
     	OtpErlangTuple receive = (OtpErlangTuple) mbox.receive(5000);
     	
-    	// FIXME handle timeouts
+    	// FIXME timeouts
     	if(receive == null)
     		return null;
     	if(!isTupleTagged(atom("rex"), receive))

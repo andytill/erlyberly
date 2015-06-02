@@ -10,6 +10,7 @@
 -export([seq_trace/5]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
+-export([xref_analysis/3]).
 
 
 %% ============================================================================
@@ -433,3 +434,39 @@ seq_trace_match_spec(12) ->
     dbg:fun2ms(fun([_,_,_,_,_,_,_,_,_,_,_,_]) -> ?SET_SEQ_TOKEN end);
 seq_trace_match_spec(_) ->
     error(arity_too_large).
+
+%%% ============================================================================
+%%% xref analysis
+%%% ============================================================================
+
+-define(erlyberly_xref, erlyberly_xref).
+
+%%
+xref_analysis(M,F,A) when is_integer(A) ->
+    % TODO monitor the node and stop the erlyberly xref
+    ensure_xref_started(),
+
+    xref_analysis2({M,F,A}, []).
+
+%%
+xref_analysis2(MFA, Call_stack) ->
+    {ok, Calls} = xref:analyze(?erlyberly_xref, {call, MFA}),
+    {MFA, [xref_analysis2(X_mfa, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa) andalso not lists:member(MFA, Call_stack)]}.
+
+%%
+is_xref_recursion({M,F,A}, {M,F,A}) ->
+    true;
+is_xref_recursion(_,_) ->
+    false.
+
+%%
+ensure_xref_started() ->
+    case whereis(?erlyberly_xref) of
+        undefined ->
+            {ok, _} = xref:start(?erlyberly_xref),
+            % timer:sleep(1000),
+            [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path()],
+            ok;
+        _ ->
+            ok
+    end.

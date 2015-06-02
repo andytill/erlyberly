@@ -1,6 +1,10 @@
 package erlyberly.node;
 
-import static erlyberly.node.OtpUtil.*;
+import static erlyberly.node.OtpUtil.OK_ATOM;
+import static erlyberly.node.OtpUtil.atom;
+import static erlyberly.node.OtpUtil.isTupleTagged;
+import static erlyberly.node.OtpUtil.list;
+import static erlyberly.node.OtpUtil.tuple;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +28,7 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -390,5 +395,15 @@ public class NodeAPI {
 
 	public boolean isConnected() {
 		return connected.get();
+	}
+	
+	public synchronized OtpErlangObject callGraph(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {
+        sendRPC("erlyberly", "xref_analysis", list(module, function, arity));
+        
+        OtpErlangObject result = (OtpErlangObject) receiveRPC();
+        
+        System.out.println(result);
+        
+	    return result;
 	}
 }

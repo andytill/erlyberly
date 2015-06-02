@@ -1,5 +1,6 @@
 package erlyberly;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,12 +46,15 @@ import javafx.util.Callback;
 import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
+import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 
 
@@ -100,6 +104,8 @@ public class DbgView implements Initializable {
 	private MenuItem functionTraceMenuItem;
     
 	private MenuItem moduleTraceMenuItem;
+    
+    private MenuItem callGraphMenuItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -126,6 +132,9 @@ public class DbgView implements Initializable {
 		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
 		seqTraceMenuItem.setOnAction(this::onSeqTrace);
 		
+		callGraphMenuItem = new MenuItem("View Call Graph");
+		callGraphMenuItem.setOnAction(this::onViewCallGraph);
+		
 		modulesTree.setCellFactory((tree) -> {
 			ModFuncGraphic mfg;
 			
@@ -140,7 +149,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem));
+		modulesTree.setContextMenu(new ContextMenu(moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem, callGraphMenuItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -161,6 +170,25 @@ public class DbgView implements Initializable {
 		dbgController.seqTrace(func.getValue());
 		
 		showWindow(new SeqTraceView(dbgController.getSeqTraceLogs()), "Seq Trace");
+	}
+	
+	private void onViewCallGraph(ActionEvent ae) {
+        TreeItem<ModFunc> funcItem = modulesTree.getSelectionModel().getSelectedItem();
+        if(funcItem == null)
+            return;
+        ModFunc func = funcItem.getValue();
+        if(func.isModule())
+            return;
+        
+	    try {
+            OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
+            CallGraphView callGraphView = new CallGraphView();
+            callGraphView.callGraph((OtpErlangTuple) callGraph);
+            showWindow(callGraphView, func + " call graph");
+        } 
+	    catch (OtpErlangException | IOException e) {
+            e.printStackTrace();
+        }
 	}
 	
 	/**
@@ -305,8 +333,6 @@ public class DbgView implements Initializable {
         }
 	}
 	
-
-	
 	private void onFunctionTrace(ActionEvent e) {
     	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
     	
@@ -330,6 +356,10 @@ public class DbgView implements Initializable {
             }
         }
     }
+	
+	public void onTraceDisplayedFunctions() {
+	    System.out.println("hello");
+	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
