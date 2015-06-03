@@ -29,7 +29,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TreeItem;
@@ -41,6 +43,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import ui.FXTreeCell;
@@ -56,6 +59,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
+
 
 
 public class DbgView implements Initializable {
@@ -99,6 +103,9 @@ public class DbgView implements Initializable {
 	
 	private double functionsDivPosition;
 
+    private final String VIEW_SOURCE_CODE = "View Source Code";
+    private final String VIEW_ABST_CODE = "View Abstract Code";
+    
 	private MenuItem seqTraceMenuItem;
 
 	private MenuItem functionTraceMenuItem;
@@ -106,6 +113,10 @@ public class DbgView implements Initializable {
 	private MenuItem moduleTraceMenuItem;
     
     private MenuItem callGraphMenuItem;
+
+    private MenuItem moduleSourceCodeItem;
+	
+	private MenuItem moduleAbstCodeItem;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
@@ -131,6 +142,12 @@ public class DbgView implements Initializable {
 		
 		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
 		seqTraceMenuItem.setOnAction(this::onSeqTrace);
+                
+		moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
+		moduleSourceCodeItem.setOnAction(this::onModuleCode);
+		
+		moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
+		moduleAbstCodeItem.setOnAction(this::onModuleCode);
 		
 		callGraphMenuItem = new MenuItem("View Call Graph");
 		callGraphMenuItem.setOnAction(this::onViewCallGraph);
@@ -149,7 +166,10 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem, callGraphMenuItem));
+		modulesTree.setContextMenu(new ContextMenu(
+                        moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem, callGraphMenuItem,
+                        new SeparatorMenuItem(),
+						moduleSourceCodeItem, moduleAbstCodeItem));
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -342,7 +362,7 @@ public class DbgView implements Initializable {
 	}
 
 	private void onModuleTrace(ActionEvent e){
-		TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+        TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
         ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
 
         if(selectedItem != null && selectedItem.getValue() != null){
@@ -356,10 +376,6 @@ public class DbgView implements Initializable {
             }
         }
     }
-	
-	public void onTraceDisplayedFunctions() {
-	    System.out.println("hello");
-	}
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
@@ -634,4 +650,73 @@ public class DbgView implements Initializable {
 			dbgSplitPane.getItems().remove(0);
 		}
 	}
+
+	private void onModuleCode(ActionEvent ae){
+		try{
+            MenuItem mi = (MenuItem) ae.getSource();
+            String menuItemClicked = mi.getText();
+			TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
+            
+			if(selectedItem != null && selectedItem.getValue() != null){
+				ModFunc mf = (ModFunc) selectedItem.getValue();
+                String moduleName = mf.getModuleName();
+                String modSrc;
+				if(mf.isModule()){
+                    modSrc = fetchModCode(menuItemClicked, moduleName);
+					showModuleSourceCode(moduleName + " Source code ", modSrc);
+				}else{
+                    TreeItem<ModFunc> fn = modulesTree.getSelectionModel().getSelectedItem();
+                    ModFunc function = (ModFunc) fn.getValue();
+                    String functionName = function.getFuncName();
+                    Integer arity = function.getArity();
+                    modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
+					showModuleSourceCode(moduleName + ":" + functionName + "/" + arity.toString() + " Source code "+moduleName, modSrc);
+				}   
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("failed to load the source code.", e);
+		}
+	}
+    
+    private String fetchModCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
+        switch (menuItemClicked){
+            case VIEW_SOURCE_CODE:
+                return dbgController.moduleFunctionSourceCode(moduleName);
+            case VIEW_ABST_CODE:
+                return dbgController.moduleFunctionAbstCode(moduleName);
+            default:
+                return "";
+        }
+    }
+    private String fetchModCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
+        switch (menuItemClicked){
+            case VIEW_SOURCE_CODE:
+                return dbgController.moduleFunctionSourceCode(moduleName, function, arity);
+            case VIEW_ABST_CODE:
+                return dbgController.moduleFunctionAbstCode(moduleName, function, arity);
+            default:
+                return "";
+        }
+    }
+
+	private void showModuleSourceCode(String title, String moduleSourceCode){
+		Stage primaryStage = new Stage();
+        
+		ScrollPane scrollPane = new ScrollPane();
+		scrollPane.getStyleClass().add("mod-src");
+
+		Scene scene = new Scene(scrollPane, 800, 800);
+		ErlyBerly.applyCssToWIndow(scene);
+
+		Text text = new Text(10, 10, moduleSourceCode);
+		text.wrappingWidthProperty().bind(scene.widthProperty());
+
+		scrollPane.setFitToWidth(true);
+		scrollPane.setContent(text);
+        
+		primaryStage.setTitle(title);
+		primaryStage.setScene(scene);
+		primaryStage.show();
+	}
+
 }

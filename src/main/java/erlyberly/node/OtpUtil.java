@@ -44,7 +44,6 @@ public class OtpUtil {
 		return new OtpErlangList(tuple);
 	}
 
-
 	private static OtpErlangObject[] toOtpElementArray(Object... elements) {
 		OtpErlangObject[] tuple = new OtpErlangObject[elements.length];
 		

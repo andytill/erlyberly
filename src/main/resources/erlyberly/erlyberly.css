@@ -104,3 +104,8 @@
     -fx-text-fill: white;
     -fx-background-radius: 5;
 }
+
+.mod-src{
+    -fx-font: 1.0em "monospace";
+    -fx-padding: 10;
+}

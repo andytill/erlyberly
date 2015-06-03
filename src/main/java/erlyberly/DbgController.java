@@ -198,4 +198,23 @@ public class DbgController implements Initializable {
 			}
 		}
 	}
+    
+    public String moduleFunctionSourceCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionSourceCode(module, function, arity);
+        return moduleCode;
+    }
+    public String moduleFunctionSourceCode(String module) throws IOException, OtpErlangException {
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionSourceCode(module);
+        return moduleCode;
+    }
+
+    public String moduleFunctionAbstCode(String module) throws IOException, OtpErlangException {
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstCode(module);
+		return moduleCode;
+    }
+    public String moduleFunctionAbstCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstCode(module, function, arity);
+		return moduleCode;
+    }
+    
 }
