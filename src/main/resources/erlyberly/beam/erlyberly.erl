@@ -389,10 +389,6 @@ format_pid(Port) when is_port(Port) ->
     erlang:port_to_list(Port).
 
 %%
-log_seq_trace(Seq_trace) ->
-    io:format("~s ~p~n", [format_utc_timestamp(), Seq_trace]).
-
-%%
 format_utc_timestamp() ->
     TS = {_,_,Micro} = os:timestamp(),
     {{Year,Month,Day},{Hour,Minute,Second}} = 

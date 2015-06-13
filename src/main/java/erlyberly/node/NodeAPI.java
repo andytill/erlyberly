@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -151,11 +152,13 @@ public class NodeAPI {
 
 	private void loadRemoteErlyberly() throws IOException, OtpErlangException {
 
-		sendRPC("code", "load_binary",
+		OtpErlangBinary otpErlangBinary = new OtpErlangBinary(loadBeamFile());
+		System.out.println("binary size=" + otpErlangBinary.size());
+        sendRPC("code", "load_binary",
 				list(
 						atom("erlyberly"),
 						new OtpErlangString(ERLYBERLY_BEAM_PATH),
-						new OtpErlangBinary(loadBeamFile())));
+						otpErlangBinary));
 
 		OtpErlangObject result = receiveRPC();
 
@@ -186,14 +189,21 @@ public class NodeAPI {
 
 	private static byte[] loadBeamFile() throws IOException {
 		InputStream resourceAsStream = OtpUtil.class.getResourceAsStream(ERLYBERLY_BEAM_PATH);
+		
 		byte[] b = new byte[BEAM_SIZE_LIMIT];
-		int read = resourceAsStream.read(b);
+		int total = 0;
+		int read = 0;
+		
+		do {
+            total += read;
+		    read = resourceAsStream.read(b, total, BEAM_SIZE_LIMIT - total);
+		} while (read != -1);
 
-		if(read >= BEAM_SIZE_LIMIT) {
+		if(total >= BEAM_SIZE_LIMIT) {
 			throw new RuntimeException("erlyberly.beam file is too big");
 		}
-
-		return b;
+		
+		return Arrays.copyOf(b, total);
 	}
 
 	public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
