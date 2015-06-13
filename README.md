@@ -87,6 +87,32 @@ Open up the process table, next to the memory usage columns there is a pie chart
 
 ![you cannot see the beautiful screen shot](doc/heap-pie.png)
 
+##### View the source code for modules and functions
+
+View the source code for a module by right clicking on a module and selecting `View Source Code`. If a function is selected then only source for that function will be shown.
+
+![you cannot see the beautiful screen shot](doc/view-source.png)
+
+The source code that is shown by erlyberly is decompiled from the beam file, not what was actually compiled so comments and code that was excluded with an `ifdef` will be ommitted.
+
+##### View the abstrace source code for modules and functions
+
+View the abstract source code for a module by right clicking on a module or function and selecting `View Abstract Code`. The beam file for the module must exist and it must have been compiled with `+debug_info` or the source code will not 
+
+![you cannot see the beautiful screen shot](doc/view-abstract-source.png)
+
+Abstract code is an erlang term representation of a beam file. You can use it to see how a module is compiled. One use case is to make sure that variables that you think will made constants in the beam code do actually get compiled that way.
+
+##### View a functions call graph
+
+See what functions another function calls by right clicking on it and clicking `View Call Graph`.  This is helpful to understand dependencies of functions.
+
+![you cannot see the beautiful screen shot](doc/call-graph.png)
+
+Traces can be applied to all functions in a call graph by right clicking and selecting `Recursive Trace`.  Traces will be applied recursively to all functions by the selected function in the graph.  This can be used to find a function that is throwing an exception when a stack trace is not  available. The function throwing the exception will appear in the trace list in red.
+
+The first time this is requested xref must be initialised. **Note:** if it doesn't work try restarting erlyberly. This can happen because the xref call can sometimes timeout, and is a known issue.
+
 ##### Cross platform
 
 Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
@@ -148,3 +174,4 @@ The following people have contributed code to erlyberly:
 
 + [@aboroska](https://github.com/aboroska)
 + [@ruanpienaar](https://github.com/ruanpienaar)
++ [@horvand ](https://github.com/horvand)
