@@ -95,7 +95,7 @@ View the source code for a module by right clicking on a module and selecting `V
 
 The source code that is shown by erlyberly is decompiled from the beam file, not what was actually compiled so comments and code that was excluded with an `ifdef` will be ommitted.
 
-##### View the abstrace source code for modules and functions
+##### View the abstract source code for modules and functions
 
 View the abstract source code for a module by right clicking on a module or function and selecting `View Abstract Code`. The beam file for the module must exist and it must have been compiled with `+debug_info` or the source code will not 
 
