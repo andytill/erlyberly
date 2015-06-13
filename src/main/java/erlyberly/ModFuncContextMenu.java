@@ -6,15 +6,13 @@ import java.util.HashSet;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import com.ericsson.otp.erlang.OtpErlangException;
@@ -74,79 +72,6 @@ public class ModFuncContextMenu extends ContextMenu {
             functionTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
             new SeparatorMenuItem(),
             callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem);
-    }
-    
-    class ViewCodeHandler implements EventHandler<ActionEvent> {
-
-        public void handle(ActionEvent ae) {
-            try{
-                MenuItem mi = (MenuItem) ae.getSource();
-                String menuItemClicked = mi.getText();
-                ModFunc mf = selectedItem.getValue();
-                
-                if(mf == null) 
-                    return;
-                
-                String moduleName = mf.getModuleName();
-                
-                if(mf.isModule()){
-                    String modSrc = fetchModCode(menuItemClicked, moduleName);
-                    showModuleSourceCode(moduleName + " Source code ", modSrc);
-                }
-                else {
-                    String functionName = mf.getFuncName();
-                    int arity = mf.getArity();
-                    String functionSrc = fetchFunctionCode(menuItemClicked, moduleName, functionName, arity);
-                    showModuleSourceCode(mf.toFullString() + " Source code ", functionSrc);
-                }   
-            } catch (Exception e) {
-                throw new RuntimeException("failed to load the source code.", e);
-            }
-        }
-        
-        private String fetchModCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
-            switch (menuItemClicked){
-                case VIEW_SOURCE_CODE:
-                    return dbgController.moduleFunctionSourceCode(moduleName);
-                case VIEW_ABST_CODE:
-                    return dbgController.moduleFunctionAbstCode(moduleName);
-                default:
-                    return "";
-            }
-        }
-        
-        private String fetchFunctionCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
-            switch (menuItemClicked){
-                case VIEW_SOURCE_CODE:
-                    return dbgController.moduleFunctionSourceCode(moduleName, function, arity);
-                case VIEW_ABST_CODE:
-                    return dbgController.moduleFunctionAbstCode(moduleName, function, arity);
-                default:
-                    return "";
-            }
-        }
-
-        private void showModuleSourceCode(String title, String moduleSourceCode){
-            Stage primaryStage = new Stage();
-            
-            ScrollPane scrollPane;
-            
-            scrollPane = new ScrollPane();
-            scrollPane.getStyleClass().add("mod-src");
-
-            Scene scene = new Scene(scrollPane, 800, 800);
-            ErlyBerly.applyCssToWIndow(scene);
-
-            Text text = new Text(10, 10, moduleSourceCode);
-            text.wrappingWidthProperty().bind(scene.widthProperty());
-
-            scrollPane.setFitToWidth(true);
-            scrollPane.setContent(text);
-            
-            primaryStage.setTitle(title);
-            primaryStage.setScene(scene);
-            primaryStage.show();
-        }
     }
     
     private void onSeqTrace(ActionEvent ae) {
@@ -281,23 +206,24 @@ public class ModFuncContextMenu extends ContextMenu {
         }
     }
 
-    private void showModuleSourceCode(String title, String moduleSourceCode){
-        Stage primaryStage = new Stage();
+    private void showModuleSourceCode(String title, String moduleSourceCode) {
+        TextArea textArea;
         
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.getStyleClass().add("mod-src");
-
-        Scene scene = new Scene(scrollPane, 800, 800);
+        textArea = new TextArea(moduleSourceCode);
+        textArea.getStyleClass().add("mod-src");
+        textArea.setEditable(false);
+        
+        Scene scene = new Scene(textArea, 800, 800);
         ErlyBerly.applyCssToWIndow(scene);
 
-        Text text = new Text(10, 10, moduleSourceCode);
-        text.wrappingWidthProperty().bind(scene.widthProperty());
-
-        scrollPane.setFitToWidth(true);
-        scrollPane.setContent(text);
+        Stage primaryStage;
         
+        primaryStage = new Stage();
         primaryStage.setTitle(title);
         primaryStage.setScene(scene);
+        primaryStage.sizeToScene();
         primaryStage.show();
+
+        CloseWindowOnEscape.apply(scene, primaryStage);
     }
 }
