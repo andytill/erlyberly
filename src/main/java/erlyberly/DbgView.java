@@ -1,6 +1,5 @@
 package erlyberly;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -9,7 +8,6 @@ import java.util.ResourceBundle;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -24,14 +22,10 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TreeItem;
@@ -43,21 +37,17 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
-import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 
 
@@ -103,23 +93,21 @@ public class DbgView implements Initializable {
 	
 	private double functionsDivPosition;
 
-    private final String VIEW_SOURCE_CODE = "View Source Code";
-    private final String VIEW_ABST_CODE = "View Abstract Code";
-    
-	private MenuItem seqTraceMenuItem;
-
-	private MenuItem functionTraceMenuItem;
-    
-	private MenuItem moduleTraceMenuItem;
-    
-    private MenuItem callGraphMenuItem;
-
-    private MenuItem moduleSourceCodeItem;
-	
-	private MenuItem moduleAbstCodeItem;
+    private ModFuncContextMenu modFuncContextMenu;
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+	    
+        modFuncContextMenu = new ModFuncContextMenu(dbgController);
+        modulesTree
+            .getSelectionModel()
+            .selectedItemProperty()
+            .addListener((o, old, newItem) -> { 
+                modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+                if(newItem != null)
+                    modFuncContextMenu.selectedItemProperty().set(newItem.getValue()); 
+            });
+        
 		sortedTreeModules.setComparator(treeItemModFuncComparator());
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
@@ -133,24 +121,6 @@ public class DbgView implements Initializable {
 		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
-		
-		moduleTraceMenuItem = new MenuItem("Module Trace");
-		moduleTraceMenuItem.setOnAction(this::onModuleTrace);
-
-		functionTraceMenuItem = new MenuItem("Function Trace");
-		functionTraceMenuItem.setOnAction(this::onFunctionTrace);
-		
-		seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
-		seqTraceMenuItem.setOnAction(this::onSeqTrace);
-                
-		moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
-		moduleSourceCodeItem.setOnAction(this::onModuleCode);
-		
-		moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
-		moduleAbstCodeItem.setOnAction(this::onModuleCode);
-		
-		callGraphMenuItem = new MenuItem("View Call Graph");
-		callGraphMenuItem.setOnAction(this::onViewCallGraph);
 		
 		modulesTree.setCellFactory((tree) -> {
 			ModFuncGraphic mfg;
@@ -166,10 +136,7 @@ public class DbgView implements Initializable {
 			return new FXTreeCell<ModFunc>(mfg, mfg);
 		});
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
-		modulesTree.setContextMenu(new ContextMenu(
-                        moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem, callGraphMenuItem,
-                        new SeparatorMenuItem(),
-						moduleSourceCodeItem, moduleAbstCodeItem));
+        modulesTree.setContextMenu(modFuncContextMenu);
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
@@ -178,37 +145,6 @@ public class DbgView implements Initializable {
 		addTraceLogFloatySearchControl();
 		
 		dbgController.initialize(url, r);
-	}
-	
-	private void onSeqTrace(ActionEvent ae) {
-		TreeItem<ModFunc> func = modulesTree.getSelectionModel().getSelectedItem();
-		if(func == null)
-			return;
-		if(func.getValue().isModule())
-			return;
-		
-		dbgController.seqTrace(func.getValue());
-		
-		showWindow(new SeqTraceView(dbgController.getSeqTraceLogs()), "Seq Trace");
-	}
-	
-	private void onViewCallGraph(ActionEvent ae) {
-        TreeItem<ModFunc> funcItem = modulesTree.getSelectionModel().getSelectedItem();
-        if(funcItem == null)
-            return;
-        ModFunc func = funcItem.getValue();
-        if(func.isModule())
-            return;
-        
-	    try {
-            OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
-            CallGraphView callGraphView = new CallGraphView();
-            callGraphView.callGraph((OtpErlangTuple) callGraph);
-            showWindow(callGraphView, func + " call graph");
-        } 
-	    catch (OtpErlangException | IOException e) {
-            e.printStackTrace();
-        }
 	}
 	
 	/**
@@ -352,30 +288,6 @@ public class DbgView implements Initializable {
         	}
         }
 	}
-	
-	private void onFunctionTrace(ActionEvent e) {
-    	TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-    	
-    	if(selectedItem != null && selectedItem.getValue() != null) {
-    		toggleTraceModFunc(selectedItem.getValue());
-    	}
-	}
-
-	private void onModuleTrace(ActionEvent e){
-        TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-        ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
-
-        if(selectedItem != null && selectedItem.getValue() != null){
-            ModFunc mf = (ModFunc) selectedItem.getValue();
-            if(mf.isModule()){
-                toggleTraceMod(moduleFunctions);
-            }else{
-                TreeItem<ModFunc> rootModule = modulesTree.getSelectionModel().getSelectedItem().getParent();
-                ObservableList<TreeItem<ModFunc>> rootModuleFunctions = rootModule.getChildren();
-                toggleTraceMod(rootModuleFunctions);
-            }
-        }
-    }
 
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
@@ -461,22 +373,12 @@ public class DbgView implements Initializable {
 		dbgController.toggleTraceModFunc(function);
 	}
 
-	 private void toggleTraceMod(ObservableList<TreeItem<ModFunc>> functions){
-        for (TreeItem<ModFunc> func : functions) {
-            if(!func.getValue().toString().equals("module_info/0") &&
-               !func.getValue().toString().equals("module_info/1")){
-                ModFunc function = (ModFunc) func.getValue();
-                dbgController.toggleTraceModFunc(function);
-            }
-        }
-	}
-
 
 	private void onConnected(Observable o) {
 		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
 		
 		// disable buttons when not connected
-		seqTraceMenuItem.setDisable(!connected);
+		/*seqTraceMenuItem.setDisable(!connected);*/
 		
 		if(connected) {
 			refreshModules();
@@ -577,63 +479,6 @@ public class DbgView implements Initializable {
 		}
 	}
 	
-	private final class TraceLogListCell extends ListCell<TraceLog> {
-		private ChangeListener<? super Boolean> listener;
-		
-		public TraceLogListCell() {
-			listener = (o, noldV, newV) -> {
-				TraceLog item = TraceLogListCell.this.getItem();
-				
-				removeCompletionListender(item);
-
-				getStyleClass().remove("not-completed");
-				
-				putCompletionStyle(item);
-			};
-		}
-
-		private void removeCompletionListender(TraceLog item) {
-			if(item != null) {
-				item.isCompleteProperty().removeListener(listener);
-			}
-		}
-		
-		@Override
-		protected void updateItem(TraceLog item, boolean empty) {
-
-			// clean up
-			getStyleClass().remove("exception");
-			getStyleClass().remove("not-completed");
-			
-			textProperty().unbind();
-			
-			removeCompletionListender(getItem());
-			
-			// setup
-			super.updateItem(item, empty);
-		    
-			// set new UI for item
-			if (item == null || empty) {
-		        setText(null);
-		    }
-			else {
-				textProperty().bind(item.summaryProperty());
-				
-				putCompletionStyle(item);
-				
-				if(!item.isComplete())
-					item.isCompleteProperty().addListener(listener);
-			}
-		}
-
-		private void putCompletionStyle(TraceLog item) {
-			if(item.isExceptionThrower())
-				getStyleClass().add("exception");
-			else if(!item.isComplete())
-				getStyleClass().add("not-completed");
-		}
-	}
-
 	public void setFunctionsVisibility(Boolean hidden) {
 		if(!hidden) {
 			dbgSplitPane.getItems().add(0, modulesBox);
@@ -649,74 +494,6 @@ public class DbgView implements Initializable {
 			div.setPosition(0d);
 			dbgSplitPane.getItems().remove(0);
 		}
-	}
-
-	private void onModuleCode(ActionEvent ae){
-		try{
-            MenuItem mi = (MenuItem) ae.getSource();
-            String menuItemClicked = mi.getText();
-			TreeItem<ModFunc> selectedItem = modulesTree.getSelectionModel().getSelectedItem();
-            
-			if(selectedItem != null && selectedItem.getValue() != null){
-				ModFunc mf = (ModFunc) selectedItem.getValue();
-                String moduleName = mf.getModuleName();
-                String modSrc;
-				if(mf.isModule()){
-                    modSrc = fetchModCode(menuItemClicked, moduleName);
-					showModuleSourceCode(moduleName + " Source code ", modSrc);
-				}else{
-                    TreeItem<ModFunc> fn = modulesTree.getSelectionModel().getSelectedItem();
-                    ModFunc function = (ModFunc) fn.getValue();
-                    String functionName = function.getFuncName();
-                    Integer arity = function.getArity();
-                    modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
-					showModuleSourceCode(moduleName + ":" + functionName + "/" + arity.toString() + " Source code "+moduleName, modSrc);
-				}   
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("failed to load the source code.", e);
-		}
-	}
-    
-    private String fetchModCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
-        switch (menuItemClicked){
-            case VIEW_SOURCE_CODE:
-                return dbgController.moduleFunctionSourceCode(moduleName);
-            case VIEW_ABST_CODE:
-                return dbgController.moduleFunctionAbstCode(moduleName);
-            default:
-                return "";
-        }
-    }
-    private String fetchModCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
-        switch (menuItemClicked){
-            case VIEW_SOURCE_CODE:
-                return dbgController.moduleFunctionSourceCode(moduleName, function, arity);
-            case VIEW_ABST_CODE:
-                return dbgController.moduleFunctionAbstCode(moduleName, function, arity);
-            default:
-                return "";
-        }
-    }
-
-	private void showModuleSourceCode(String title, String moduleSourceCode){
-		Stage primaryStage = new Stage();
-        
-		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.getStyleClass().add("mod-src");
-
-		Scene scene = new Scene(scrollPane, 800, 800);
-		ErlyBerly.applyCssToWIndow(scene);
-
-		Text text = new Text(10, 10, moduleSourceCode);
-		text.wrappingWidthProperty().bind(scene.widthProperty());
-
-		scrollPane.setFitToWidth(true);
-		scrollPane.setContent(text);
-        
-		primaryStage.setTitle(title);
-		primaryStage.setScene(scene);
-		primaryStage.show();
 	}
 
 }
