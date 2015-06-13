@@ -39,7 +39,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import ui.FXTreeCell;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -122,19 +121,7 @@ public class DbgView implements Initializable {
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
-		modulesTree.setCellFactory((tree) -> {
-			ModFuncGraphic mfg;
-			
-			mfg = new ModFuncGraphic(
-				dbgController::toggleTraceModFunc, 
-				dbgController::isTraced
-			);
-			dbgController.addTraceListener((Observable o) -> { 
-				mfg.onTracesChange(); 
-			});
-			
-			return new FXTreeCell<ModFunc>(mfg, mfg);
-		});
+		modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
 		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
         modulesTree.setContextMenu(modFuncContextMenu);
 		
@@ -472,7 +459,7 @@ public class DbgView implements Initializable {
 		return mfs;
 	}
 	
-	private final class TraceLogListCellFactory implements Callback<ListView<TraceLog>, ListCell<TraceLog>> {
+	private static class TraceLogListCellFactory implements Callback<ListView<TraceLog>, ListCell<TraceLog>> {
 		@Override
 		public ListCell<TraceLog> call(ListView<TraceLog> view) {
 			return new TraceLogListCell();

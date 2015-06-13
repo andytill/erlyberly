@@ -34,8 +34,10 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 	private final TraceFn traceFn;
 
 	private final IsTracedFn isTracedFn;
+    
+    private boolean showModuleName;
 
-	private ModFunc modFunc;
+    private ModFunc modFunc;
 	
 	public ModFuncGraphic(TraceFn aTraceFn, IsTracedFn isTracedFn) {
 		traceFn = aTraceFn;
@@ -98,7 +100,11 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 			text.set(null);
 	    }
 		else {
-			text.set(item.toString());
+		    if(isShowModuleName())
+		        text.set(item.toFullString());
+		    else
+                text.set(item.toString());
+		    
 			updateExportIcon(item);
 			
 			// no tracing of the whole module for now!
@@ -136,4 +142,12 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		else
 			tracedIconText.set(AwesomeIcon.STAR_ALT.toString());
 	}
+
+    public boolean isShowModuleName() {
+        return showModuleName;
+    }
+
+    public void setShowModuleName(boolean showModuleName) {
+        this.showModuleName = showModuleName;
+    }
 }

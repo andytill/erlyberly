@@ -102,45 +102,41 @@ public class ModFunc implements Comparable<ModFunc> {
 		return (funcName == null);
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + arity;
-		result = prime * result + (exported ? 1231 : 1237);
-		result = prime * result
-				+ ((funcName == null) ? 0 : funcName.hashCode());
-		result = prime * result
-				+ ((moduleName == null) ? 0 : moduleName.hashCode());
-		result = prime * result + (synthetic ? 1231 : 1237);
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + arity;
+        result = prime * result
+                + ((funcName == null) ? 0 : funcName.hashCode());
+        result = prime * result
+                + ((moduleName == null) ? 0 : moduleName.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ModFunc other = (ModFunc) obj;
-		if (arity != other.arity)
-			return false;
-		if (exported != other.exported)
-			return false;
-		if (funcName == null) {
-			if (other.funcName != null)
-				return false;
-		} else if (!funcName.equals(other.funcName))
-			return false;
-		if (moduleName == null) {
-			if (other.moduleName != null)
-				return false;
-		} else if (!moduleName.equals(other.moduleName))
-			return false;
-		if (synthetic != other.synthetic)
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ModFunc other = (ModFunc) obj;
+        if (arity != other.arity)
+            return false;
+        if (funcName == null) {
+            if (other.funcName != null)
+                return false;
+        } else if (!funcName.equals(other.funcName))
+            return false;
+        if (moduleName == null) {
+            if (other.moduleName != null)
+                return false;
+        } else if (!moduleName.equals(other.moduleName))
+            return false;
+        return true;
+    }
+	
+	
 }

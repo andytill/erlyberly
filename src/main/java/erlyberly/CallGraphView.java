@@ -10,15 +10,36 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import erlyberly.CallGraphView.CGModFunc;
 import erlyberly.node.OtpUtil;
 
 
-public class CallGraphView extends TreeView<CGModFunc> {
-    
-    public CallGraphView() {
-        setRoot(new TreeItem<CGModFunc>());
+public class CallGraphView extends TreeView<ModFunc> {
+
+    private ModFuncContextMenu modFuncContextMenu;
+
+    public CallGraphView(DbgController aDbgController) {
+        assert aDbgController != null;
+        
+        modFuncContextMenu = new ModFuncContextMenu(aDbgController);
+        
+        getSelectionModel()
+            .selectedItemProperty()
+            .addListener((o, old, newItem) -> { 
+                modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+                if(newItem != null)
+                    modFuncContextMenu.selectedItemProperty().set(newItem.getValue()); 
+            });
+        
+
+        ModFuncTreeCellFactory modFuncTreeCellFactory;
+        
+        modFuncTreeCellFactory = new ModFuncTreeCellFactory(aDbgController);
+        modFuncTreeCellFactory.setShowModuleName(true);
+        
+        setRoot(new TreeItem<>());
         setShowRoot(false);
+        setContextMenu(modFuncContextMenu);
+        setCellFactory(modFuncTreeCellFactory);
     }
 
     public void callGraph(OtpErlangTuple callStack) {
@@ -31,7 +52,7 @@ public class CallGraphView extends TreeView<CGModFunc> {
      * {{M::atom(), F::atom(), A::integer()}, [{M,F,A}]}
      * </code>
      */
-    private void populateCallGraph(TreeItem<CGModFunc> parentModFuncItem, OtpErlangTuple callGraph) {
+    private void populateCallGraph(TreeItem<ModFunc> parentModFuncItem, OtpErlangTuple callGraph) {
         OtpErlangTuple mfaTuple = (OtpErlangTuple) OtpUtil.tupleElement(0, callGraph);
         OtpErlangList calls = (OtpErlangList) OtpUtil.tupleElement(1, callGraph);
 
@@ -46,9 +67,9 @@ public class CallGraphView extends TreeView<CGModFunc> {
             
             ModFunc modFunc = new ModFunc(module.atomValue(), function.atomValue(), arity.intValue(), exported, synthetic);
             
-            TreeItem<CGModFunc> modFuncItem;
+            TreeItem<ModFunc> modFuncItem;
             
-            modFuncItem = new TreeItem<>(new CGModFunc(modFunc));
+            modFuncItem = new TreeItem<>(modFunc);
             modFuncItem.setExpanded(true);
             
             parentModFuncItem.getChildren().add(modFuncItem);

@@ -1,10 +1,10 @@
 package erlyberly;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
 
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -25,10 +25,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.node.OtpUtil;
 
 public class ModFuncContextMenu extends ContextMenu {
-    
-    public interface FindModFuncChildren {
-        List<ModFunc> find(ModFunc mf);
-    }
 
     private final String VIEW_SOURCE_CODE = "View Source Code";
     
@@ -54,12 +50,12 @@ public class ModFuncContextMenu extends ContextMenu {
         selectedTreeItem = new SimpleObjectProperty<>();
         
         MenuItem seqTraceMenuItem, functionTraceMenuItem, moduleTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
-        
-        moduleTraceMenuItem = new MenuItem("Module Trace");
-        moduleTraceMenuItem.setOnAction(this::onModuleTrace);
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
+        
+        moduleTraceMenuItem = new MenuItem("Recursive Trace");
+        moduleTraceMenuItem.setOnAction(this::onModuleTrace);
         
         seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
         seqTraceMenuItem.setOnAction(this::onSeqTrace);
@@ -75,7 +71,7 @@ public class ModFuncContextMenu extends ContextMenu {
         
 
         getItems().addAll(
-            moduleTraceMenuItem, functionTraceMenuItem, seqTraceMenuItem,
+            functionTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
             new SeparatorMenuItem(),
             callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem);
     }
@@ -172,7 +168,7 @@ public class ModFuncContextMenu extends ContextMenu {
         
         try {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
-            CallGraphView callGraphView = new CallGraphView();
+            CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
             showWindow(callGraphView, func.toFullString() + " call graph");
         } 
@@ -202,31 +198,39 @@ public class ModFuncContextMenu extends ContextMenu {
         dbgController.toggleTraceModFunc(mf);
     }
 
-    private void onModuleTrace(ActionEvent e){
+    private void onModuleTrace(ActionEvent e) {
         TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
-        ObservableList<TreeItem<ModFunc>> moduleFunctions = selectedItem.getChildren();
-
-        if(selectedItem != null && selectedItem.getValue() != null) {
-            ModFunc mf = (ModFunc) selectedItem.getValue();
-            if(mf.isModule()){
-                toggleTraceMod(moduleFunctions);
-            }
-            else{
-                TreeItem<ModFunc> rootModule = selectedTreeItemProperty().get().getParent();
-                ObservableList<TreeItem<ModFunc>> rootModuleFunctions = rootModule.getChildren();
-                toggleTraceMod(rootModuleFunctions);
-            }
+        
+        if(selectedItem == null)
+            return;
+        
+        HashSet<ModFunc> funcs = new HashSet<ModFunc>();
+        recurseModFuncItems(selectedItem, funcs);
+        
+        toggleTraceMod(funcs);
+    }
+    
+    private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {
+        if(item == null)
+            return;
+        if(item.getValue() == null || !item.getValue().isModule())
+            funcs.add(item.getValue());
+        
+        for (TreeItem<ModFunc> childItem : item.getChildren()) {
+            recurseModFuncItems(childItem, funcs);
         }
     }
 
-    private void toggleTraceMod(ObservableList<TreeItem<ModFunc>> functions){
-       for (TreeItem<ModFunc> func : functions) {
-           if(!func.getValue().toString().equals("module_info/0") &&
-              !func.getValue().toString().equals("module_info/1")){
-               ModFunc function = (ModFunc) func.getValue();
-               dbgController.toggleTraceModFunc(function);
+    private void toggleTraceMod(Collection<ModFunc> functions){
+       for (ModFunc func : functions) {
+           if(!isModuleInfo(func)){
+               dbgController.toggleTraceModFunc(func);
            }
        }
+    }
+
+    private boolean isModuleInfo(ModFunc func) {
+        return func.toString().equals("module_info/0") && !func.toString().equals("module_info/1");
     }
     
    private void onModuleCode(ActionEvent ae){
