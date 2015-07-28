@@ -25,13 +25,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -94,8 +93,15 @@ public class DbgView implements Initializable {
 
     private ModFuncContextMenu modFuncContextMenu;
 	
+    /**
+     * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
+     * make traces be inserted at the top of the list.
+     */
+	private boolean insertTracesAtTop;
+	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+		insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
 	    
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
         modulesTree
@@ -122,7 +128,7 @@ public class DbgView implements Initializable {
 		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
 		modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
-		modulesTree.setOnKeyReleased(this::onKeyReleaseInModuleTree);
+		/*modulesTree.setOnKeyPressed(this::onKeyPressInModuleTree);*/
         modulesTree.setContextMenu(modFuncContextMenu);
 		
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
@@ -132,26 +138,14 @@ public class DbgView implements Initializable {
 		addTraceLogFloatySearchControl();
 		
 		dbgController.initialize(url, r);
-	}
-	
-	/**
-	 * if <code>ctrl+t</code> is released while focus is on the tree view, then check the 
-	 * selected item is a function and toggle tracing for it. 
-	 */
-	private void onKeyReleaseInModuleTree(KeyEvent e) {
 		
-		TreeItem<ModFunc> item = modulesTree.getSelectionModel().getSelectedItem();
+		TraceContextMenu traceContextMenu = new TraceContextMenu();
+		traceContextMenu.setItems(traceLogs);
+		traceContextMenu
+				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 		
-		if(!e.isControlDown()) 
-			return;
-		if(e.getCode() != KeyCode.T)
-			return;
-		if(item == null || item.getValue() == null)
-			return;
-		if(item.getValue().isModule())
-			return;
-		
-		toggleTraceModFunc(item.getValue());
+		tracesBox.setContextMenu(traceContextMenu);
+		tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
 	}
 
 	private FxmlLoadable addModulesFloatySearchControl() {
@@ -199,7 +193,10 @@ public class DbgView implements Initializable {
 	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
 		while(e.next()) {
 			for (TraceLog trace : e.getAddedSubList()) {
-				traceLogs.add(0, trace);
+				if(insertTracesAtTop)
+					traceLogs.add(0, trace);
+				else
+					traceLogs.add(trace);
 			}
 		}
 	}
@@ -318,7 +315,8 @@ public class DbgView implements Initializable {
 		
 		StringBuilder sb = new StringBuilder(traceLog.getPidString());
 		sb.append(" ");
-		traceLog.appendFunctionToString(sb);
+		boolean appendArity = false;
+		traceLog.appendFunctionToString(sb, appendArity);
 		
 		showWindow(splitPane, sb);
 	}
@@ -355,11 +353,6 @@ public class DbgView implements Initializable {
 			return true;
 		return t.getValue().toString().contains(searchText);
 	}
-	
-	private void toggleTraceModFunc(ModFunc function) {
-		dbgController.toggleTraceModFunc(function);
-	}
-
 
 	private void onConnected(Observable o) {
 		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();

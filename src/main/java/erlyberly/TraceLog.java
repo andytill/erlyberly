@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -23,6 +24,8 @@ public class TraceLog implements Comparable<TraceLog> {
 	public static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
 	public static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
 	public static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
+	private static final Object TIMESTAMP_CALL_ATOM = new OtpErlangAtom("timetamp_call_us");
+	private static final Object TIMESTAMP_RETURN_ATOM = new OtpErlangAtom("timetamp_return_us");
 	
 	private static final AtomicLong instanceCounter = new AtomicLong();
 
@@ -34,6 +37,7 @@ public class TraceLog implements Comparable<TraceLog> {
 	
 	private final SimpleBooleanProperty complete = new SimpleBooleanProperty(false);
 	
+	private String tracePropsToString;
 
 	public TraceLog(HashMap<Object, Object> map) {
 		this.map = map;
@@ -49,24 +53,16 @@ public class TraceLog implements Comparable<TraceLog> {
 	
 	@Override
 	public String toString() {
-		return tracePropsToString();
+		if(tracePropsToString == null)
+			tracePropsToString = tracePropsToString();
+		return tracePropsToString;
 	}
 	
 	private String tracePropsToString() {
 		StringBuilder sb = new StringBuilder(1024);
-		
-		OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
-		
-		if(!ATOM_UNDEFINED.equals(regName)) {
-			sb.append(regName.atomValue());
-		}
-		else {
-			OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-			sb.append(pidString.stringValue());
-		}
-		sb.append(" ");
-		
-		appendFunctionToString(sb);
+
+		boolean appendArity = false;
+		toCallString(sb, appendArity);
 		
 		sb.append(" => ");
 		
@@ -85,6 +81,39 @@ public class TraceLog implements Comparable<TraceLog> {
 		return sb.toString();
 	}
 
+	private StringBuilder toCallString(StringBuilder sb, boolean appendArity) {
+		OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
+		
+		if(!ATOM_UNDEFINED.equals(regName)) {
+			sb.append(regName.atomValue());
+		}
+		else {
+			OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
+			sb.append(pidString.stringValue());
+		}
+		sb.append(" ");
+		
+		appendTimeStampToString(sb);
+		
+		appendFunctionToString(sb, appendArity);
+		
+		return sb;
+	}
+
+	private void appendTimeStampToString(StringBuilder sb) {
+		Object tsCall = map.get(TIMESTAMP_CALL_ATOM);
+		Object tsReturn = map.get(TIMESTAMP_RETURN_ATOM);
+		
+		if(tsCall == null|| tsReturn == null)
+			return;
+		
+		long us = ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
+		
+		sb.append("+")
+		  .append(us)
+		  .append("us ");
+	}
+
 	private OtpErlangTuple getFunction() {
 		return (OtpErlangTuple)map.get(new OtpErlangAtom("fn"));
 	}
@@ -93,7 +122,7 @@ public class TraceLog implements Comparable<TraceLog> {
 		return map.containsKey(EXCEPTION_FROM_ATOM);
 	}
 	
-	public void appendFunctionToString(StringBuilder sb) {
+	public void appendFunctionToString(StringBuilder sb, boolean appendArity) {
 		OtpErlangTuple tuple = getFunction();
 		OtpErlangAtom mod = (OtpErlangAtom) tuple.elementAt(0);
 		OtpErlangAtom func = (OtpErlangAtom) tuple.elementAt(1);
@@ -105,19 +134,27 @@ public class TraceLog implements Comparable<TraceLog> {
 		sb
 			.append(mod.atomValue())
 			.append(":")
-			.append(func.atomValue())
-			.append("(");
+			.append(func.atomValue());
 		
-		OtpErlangObject[] elements = args.elements();
-		if(elements.length > 0)
-			OtpUtil.otpObjectToString(elements[0], sb);
-		
-		for(int i=1; i<elements.length; i++) {
-			sb.append(", ");
-			OtpUtil.otpObjectToString(elements[i], sb);
+		if(appendArity) {
+			sb
+				.append("/")
+				.append(args.arity());
 		}
+		else {
+			sb.append("(");
 		
-		sb.append(")");
+			OtpErlangObject[] elements = args.elements();
+			if(elements.length > 0)
+				OtpUtil.otpObjectToString(elements[0], sb);
+			
+			for(int i=1; i<elements.length; i++) {
+				sb.append(", ");
+				OtpUtil.otpObjectToString(elements[i], sb);
+			}
+			
+			sb.append(")");
+		}
 	}
 
 	public OtpErlangObject getArgs() {
@@ -150,13 +187,18 @@ public class TraceLog implements Comparable<TraceLog> {
 	}
 
 	public void complete(HashMap<Object, Object> resultMap) {
+		tracePropsToString = null;
+		
 		Object e = resultMap.get(EXCEPTION_FROM_ATOM);
 		Object r = resultMap.get(RESULT_ATOM);
+		Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
 		
 		if(e != null)
 			map.put(EXCEPTION_FROM_ATOM, e);
 		if(r != null)
 			map.put(RESULT_ATOM, r);
+		if(ts != null)
+			map.put(TIMESTAMP_RETURN_ATOM, ts);
 		
 		Platform.runLater(() -> { summary.set(toString()); complete.set(true); });
 	}
@@ -167,5 +209,11 @@ public class TraceLog implements Comparable<TraceLog> {
 
 	public boolean isComplete() {
 		return complete.get();
+	}
+
+	public String toCallString() {
+		StringBuilder sb = new StringBuilder(255);
+		boolean appendArity = true;
+		return toCallString(sb, appendArity).toString();
 	}
 }

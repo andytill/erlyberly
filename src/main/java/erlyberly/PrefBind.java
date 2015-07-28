@@ -30,7 +30,7 @@ public class PrefBind {
 	private static File erlyberlyConfig;
 	
 	private static boolean awaitingStore;
-	
+
 	public static void bind(final String propName, StringProperty stringProp) {
 		if(props == null) {
 			return;
@@ -87,5 +87,13 @@ public class PrefBind {
 		properties.load(new FileInputStream(erlyberlyConfig));
 		
 		props = properties;
+	}
+	
+	public static Object get(Object key) {
+		return props.get(key);
+	}
+
+	public static Object getOrDefault(String key, Object theDefault) {
+		return props.getOrDefault(key, theDefault);
 	}
 }

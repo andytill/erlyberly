@@ -2,8 +2,7 @@ package erlyberly.node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Stack;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -21,7 +20,7 @@ public class TraceManager {
 
 	private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
 	
-	private final HashMap<String, Queue<TraceLog>> unfinishedCalls = new HashMap<String, Queue<TraceLog>>();
+	private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
 
 	public ArrayList<TraceLog> collateTraces(OtpErlangList traceLogs) {
 		ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
@@ -33,14 +32,14 @@ public class TraceManager {
 			if(CALL_ATOM.equals(traceType)) {
 				TraceLog trace = proplistToTraceLog(tup);
 
-				Queue<TraceLog> queue = unfinishedCalls.get(trace.getPidString());
+				Stack<TraceLog> stack = unfinishedCalls.get(trace.getPidString());
 				
-				if(queue == null)
-					queue = new LinkedList<TraceLog>();
+				if(stack == null)
+					stack = new Stack<TraceLog>();
 				
-				queue.add(trace);
+				stack.add(trace);
 				
-				unfinishedCalls.put(trace.getPidString(), queue);
+				unfinishedCalls.put(trace.getPidString(), stack);
 				
 				traceList.add(trace);
 			}
@@ -52,15 +51,19 @@ public class TraceManager {
 				if(object != null) {
 					OtpErlangString pidString = (OtpErlangString) object;
 					
-					Queue<TraceLog> queue = unfinishedCalls.get(pidString.stringValue());
-					TraceLog traceLog = queue.poll();
+					Stack<TraceLog> stack = unfinishedCalls.get(pidString.stringValue());
+					if(stack == null)
+						continue;
+					
+					TraceLog traceLog = stack.pop();
 					traceLog.complete(map);
 					
-					if(queue.isEmpty())
+					if(stack.isEmpty())
 						unfinishedCalls.remove(pidString.stringValue());
 				}
 				
 			}
+				
 		}
 		
 		return traceList;

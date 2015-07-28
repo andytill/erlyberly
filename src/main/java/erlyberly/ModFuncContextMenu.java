@@ -13,6 +13,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 
 import com.ericsson.otp.erlang.OtpErlangException;
@@ -47,10 +48,15 @@ public class ModFuncContextMenu extends ContextMenu {
         selectedItem = new SimpleObjectProperty<>();
         selectedTreeItem = new SimpleObjectProperty<>();
         
-        MenuItem seqTraceMenuItem, functionTraceMenuItem, moduleTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
+        MenuItem functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
+        functionTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+t"));
+
+        exportsTraceMenuItem = new MenuItem("Exported Function Trace");
+        exportsTraceMenuItem.setOnAction(this::onExportedFunctionTrace);
+        exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
         
         moduleTraceMenuItem = new MenuItem("Recursive Trace");
         moduleTraceMenuItem.setOnAction(this::onModuleTrace);
@@ -66,10 +72,9 @@ public class ModFuncContextMenu extends ContextMenu {
         
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
-        
 
         getItems().addAll(
-            functionTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
+            functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
             new SeparatorMenuItem(),
             callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem);
     }
@@ -133,6 +138,28 @@ public class ModFuncContextMenu extends ContextMenu {
         recurseModFuncItems(selectedItem, funcs);
         
         toggleTraceMod(funcs);
+    }
+
+    private void onExportedFunctionTrace(ActionEvent e) {
+        TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
+        
+        if(selectedItem == null)
+            return;
+        
+        // get all the functions we may trace
+        HashSet<ModFunc> funcs = new HashSet<ModFunc>();
+        recurseModFuncItems(selectedItem, funcs);
+
+        // filter the exported ones
+        HashSet<ModFunc> exported = new HashSet<ModFunc>();
+        for (ModFunc modFunc : funcs) {
+			if(modFunc.isExported()) {
+				exported.add(modFunc);
+			}
+		}
+        
+        // trace 'em
+        toggleTraceMod(exported);
     }
     
     private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {

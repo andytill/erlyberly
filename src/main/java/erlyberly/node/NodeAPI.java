@@ -153,7 +153,7 @@ public class NodeAPI {
 	private void loadRemoteErlyberly() throws IOException, OtpErlangException {
 
 		OtpErlangBinary otpErlangBinary = new OtpErlangBinary(loadBeamFile());
-		System.out.println("binary size=" + otpErlangBinary.size());
+
         sendRPC("code", "load_binary",
 				list(
 						atom("erlyberly"),
@@ -412,8 +412,6 @@ public class NodeAPI {
         
         OtpErlangObject result = (OtpErlangObject) receiveRPC();
         
-        System.out.println(result);
-        
 	    return result;
 	}
     
@@ -423,6 +421,7 @@ public class NodeAPI {
 		OtpErlangObject result = receiveRPC();
 		return returnCode(result, "Failed to get source code for " + module + ":" + function + "/" + arity.toString() + ".");
 	}
+    
     public synchronized String moduleFunctionSourceCode(String module) throws IOException, OtpErlangException {
 		sendRPC("erlyberly", "get_source_code", list( atom(module) ));
 		OtpErlangObject result = receiveRPC();

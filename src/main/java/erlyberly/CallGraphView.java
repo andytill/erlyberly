@@ -1,5 +1,8 @@
 package erlyberly;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -14,6 +17,14 @@ import erlyberly.node.OtpUtil;
 
 
 public class CallGraphView extends TreeView<ModFunc> {
+    
+    /**
+     * A list of module names that will not be expanded in the call graph tree, since
+     * they have lots of sub-calls, cluttering up the tree and it is assumed most usage
+     * will be for application calls, not for the standard libs.
+     */
+    private static List<String> UNEXPANDED_MODULES = Arrays.asList(
+            "erlang", "gen_server", "io", "io_lib",  "lists", "rpc", "unicode");
 
     private ModFuncContextMenu modFuncContextMenu;
 
@@ -70,7 +81,9 @@ public class CallGraphView extends TreeView<ModFunc> {
             TreeItem<ModFunc> modFuncItem;
             
             modFuncItem = new TreeItem<>(modFunc);
-            modFuncItem.setExpanded(true);
+            String atomString = module.atomValue();
+            boolean value = !UNEXPANDED_MODULES.contains(atomString);
+            modFuncItem.setExpanded(value);
             
             parentModFuncItem.getChildren().add(modFuncItem);
             
@@ -80,19 +93,6 @@ public class CallGraphView extends TreeView<ModFunc> {
         } 
         catch (OtpErlangRangeException e) {
             e.printStackTrace();
-        }
-    }
-    
-    class CGModFunc {
-        private final ModFunc modFunc;
-
-        public CGModFunc(ModFunc aModFunc) {
-            modFunc = aModFunc;
-        }
-
-        @Override
-        public String toString() {
-            return modFunc.toFullString();
         }
     }
 }
