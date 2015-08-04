@@ -8,36 +8,21 @@ import java.util.ResourceBundle;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.util.Callback;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -61,13 +46,7 @@ public class DbgView implements Initializable {
 	private final SortedList<TreeItem<ModFunc>> sortedTreeModules = new SortedList<TreeItem<ModFunc>>(treeModules);
 	
 	private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
-	
-	private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
-	
-	private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traceLogs);
-	
-	private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
-	
+
 	/**
 	 * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
 	 * the predicate property does not seem to work.
@@ -77,8 +56,6 @@ public class DbgView implements Initializable {
 	@FXML
 	private TreeView<ModFunc> modulesTree;
 	@FXML
-	private ListView<TraceLog> tracesBox;
-	@FXML
 	private VBox modulesBox;
 	@FXML
 	private Label noTracesLabel;
@@ -86,23 +63,13 @@ public class DbgView implements Initializable {
 	private SplitPane dbgSplitPane;
 	@FXML
 	private HBox traceLogSearchBox;
-	@FXML
-	private Button clearTraceLogsButton;
 	
 	private double functionsDivPosition;
 
     private ModFuncContextMenu modFuncContextMenu;
 	
-    /**
-     * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
-     * make traces be inserted at the top of the list.
-     */
-	private boolean insertTracesAtTop;
-	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
-		insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
-	    
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
         modulesTree
             .getSelectionModel()
@@ -117,35 +84,18 @@ public class DbgView implements Initializable {
 		
 		SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
 		
-		clearTraceLogsButton.setGraphic(Icon.create().icon(AwesomeIcon.FILE_ALT));
-		clearTraceLogsButton.setGraphicTextGap(8d);
-		clearTraceLogsButton.setOnAction((e) -> { onTraceLogClear(); });
-		
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
-		
-		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
-		tracesBox.setOnMouseClicked(this::onTraceClicked);
-		tracesBox.setCellFactory(new TraceLogListCellFactory());
 		
 		modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
 		/*modulesTree.setOnKeyPressed(this::onKeyPressInModuleTree);*/
         modulesTree.setContextMenu(modFuncContextMenu);
 		
-		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
 		
 		addModulesFloatySearchControl();
 		
-		addTraceLogFloatySearchControl();
-		
 		dbgController.initialize(url, r);
 		
-		TraceContextMenu traceContextMenu = new TraceContextMenu();
-		traceContextMenu.setItems(traceLogs);
-		traceContextMenu
-				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
-		
-		tracesBox.setContextMenu(traceContextMenu);
-		tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
+		dbgSplitPane.getItems().add(new DbgTraceView(dbgController));
 	}
 
 	private FxmlLoadable addModulesFloatySearchControl() {
@@ -169,55 +119,10 @@ public class DbgView implements Initializable {
 		return loader;
 	}
 
-	private FxmlLoadable addTraceLogFloatySearchControl() {
-		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
-		
-		loader.load();
-
-		FloatyFieldView ffView;
-		
-		ffView = (FloatyFieldView) loader.controller;
-		ffView.promptTextProperty().set("Search trace logs");
-		
-		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
-		
-		traceLogSearchBox.getChildren().add(0, new Separator(Orientation.VERTICAL));
-		traceLogSearchBox.getChildren().add(0, loader.fxmlNode);
-
-		ffView.textProperty().addListener((o, ov, nv) -> { onTraceFilterChange(nv); });
-		
-		return loader;
-	}
-	
-
-	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
-		while(e.next()) {
-			for (TraceLog trace : e.getAddedSubList()) {
-				if(insertTracesAtTop)
-					traceLogs.add(0, trace);
-				else
-					traceLogs.add(trace);
-			}
-		}
-	}
-
 	public void onRefreshModules(ActionEvent e) {
 		treeModules.clear();
 		
 		refreshModules();
-	}
-
-	private void onTraceLogClear() {
-		traceLogs.clear();
-		tracesBox.getItems().clear();
-	}
-	
-	private void onTraceFilterChange(String searchText) {
-		BasicSearch basicSearch = new BasicSearch(searchText);
-		filteredTraces.setPredicate((t) -> {
-			String logText = t.toString();
-			return basicSearch.matches(logText); 
-		});
 	}
 	
 	public void onFunctionSearchChange(Observable o, String oldValue, String search) {
@@ -261,91 +166,12 @@ public class DbgView implements Initializable {
 		filteredTreeModules.setPredicate((t) -> { return !t.getChildren().isEmpty(); });
 	}
 
-	private void onTraceClicked(MouseEvent me) {
-		if(me.getButton().equals(MouseButton.PRIMARY)) {
-            if(me.getClickCount() == 2) {
-            	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-            	
-            	if(selectedItem != null) {
-                	showTraceTermView(selectedItem); 
-            	}
-        	}
-        }
-	}
-
 	private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
 		return new Comparator<TreeItem<ModFunc>>() {
 			@Override
 			public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
 				return o1.getValue().compareTo(o2.getValue());
 			}};
-	}
-
-
-	private void showTraceTermView(final TraceLog traceLog) {
-		OtpErlangObject args = traceLog.getArgs(); 
-		OtpErlangObject result = traceLog.getResult();
-		
-		TermTreeView resultTermsTreeView, argTermsTreeView;
-		
-		resultTermsTreeView = newTermTreeView();
-		
-		if(result != null) {
-			resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
-		}
-		else {
-			WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
-				if(newV)
-					resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
-			});
-
-			traceLog.isCompleteProperty().addListener(listener);
-		}
-		
-		argTermsTreeView = newTermTreeView();
-		argTermsTreeView.populateFromListContents((OtpErlangList)args);
-		
-		SplitPane splitPane;
-		
-		splitPane = new SplitPane();
-		splitPane.getItems().addAll(
-			labelledTreeView("Function arguments", argTermsTreeView), 
-			labelledTreeView("Result", resultTermsTreeView)
-		);
-		
-		StringBuilder sb = new StringBuilder(traceLog.getPidString());
-		sb.append(" ");
-		boolean appendArity = false;
-		traceLog.appendFunctionToString(sb, appendArity);
-		
-		showWindow(splitPane, sb);
-	}
-
-	private void showWindow(Parent parent, CharSequence sb) {
-		Stage termsStage = new Stage();
-		Scene scene  = new Scene(parent);
-		
-		CloseWindowOnEscape.apply(scene, termsStage);
-		
-		termsStage.setScene(scene);
-        termsStage.setWidth(800);
-        termsStage.setHeight(600);
-        termsStage.setTitle(sb.toString());
-        termsStage.show();
-	}
-
-	private TermTreeView newTermTreeView() {
-		TermTreeView termTreeView;
-		
-		termTreeView = new TermTreeView();
-		termTreeView.setMaxHeight(Integer.MAX_VALUE);
-		VBox.setVgrow(termTreeView, Priority.ALWAYS);
-		
-		return termTreeView;
-	}
-	
-	private Node labelledTreeView(String label, TermTreeView node) {		
-		return new VBox(new Label(label), node);
 	}
 
 	private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
@@ -450,13 +276,6 @@ public class DbgView implements Initializable {
 			mfs.add(modFunc);
 		}
 		return mfs;
-	}
-	
-	private static class TraceLogListCellFactory implements Callback<ListView<TraceLog>, ListCell<TraceLog>> {
-		@Override
-		public ListCell<TraceLog> call(ListView<TraceLog> view) {
-			return new TraceLogListCell();
-		}
 	}
 	
 	public void setFunctionsVisibility(Boolean hidden) {
