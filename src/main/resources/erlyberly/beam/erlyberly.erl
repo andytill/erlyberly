@@ -198,32 +198,29 @@ tcollector_start_trace({start_trace, Mod, Func, Arity, IsExported}, #tcollector{
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
-collect_log({trace_ts, _, return_from, {code, ensure_loaded, _}, _, _Timestamp}, TC) ->
+collect_log({trace, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
     % ensure loaded can be called many times for one reload so just skip it
     TC;
-collect_log({trace_ts, _, return_from, {code, _, _}, {module, Loaded_module}, _Timestamp}, TC) ->
+collect_log({trace, _, return_from, {code, _, _}, {module, Loaded_module}}, TC) ->
     % if we trace that a module is reloaded then reapply traces to it
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
     TC;
-collect_log({trace_ts, _, _, {code, _, _}, _}, TC) ->
+collect_log({trace, _, _, {code, _, _}, _}, TC) ->
     TC;
-collect_log({trace_ts, _, _, {code, _, _}}, TC) ->
+collect_log({trace, _, _, {code, _, _}}, TC) ->
     TC;
-collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace_ts ->
+collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace_ts orelse element(1, Trace) == trace ->
     Logs_1 = maybe_add_log(trace_to_props(Trace), Logs),
     TC#tcollector{ logs = Logs_1 };
 collect_log(U, TC) ->
     io:format("unknown trace ~p~n", [U]),
     TC.
+
 %%
 maybe_add_log(skip, Logs) -> Logs;
 maybe_add_log(Log, Logs)  -> [Log | Logs].
+
 %%
-% trace_to_props({trace_ts, Pid, call, Func}) ->
-%     {call, 
-%         [ {pid, pid_to_list(Pid)},
-%           {reg_name, get_registered_name(Pid)},
-%           {fn, Func} ]};
 trace_to_props({trace_ts, Pid, call, Func, _, Timestamp}) ->
     {call, 
         [ {pid, pid_to_list(Pid)},
@@ -244,9 +241,25 @@ trace_to_props({trace_ts, Pid, return_from, Func, Result, Timestamp}) ->
           {fn, Func},
           {result, Result},
           {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
+trace_to_props({trace, Pid, call, Func, _}) ->
+    {call, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func} ]};
+trace_to_props({trace, Pid, exception_from, Func, {Class, Value}}) ->
+    {exception_from, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func},
+          {exception_from, {Class, Value}} ]};
+trace_to_props({trace, Pid, return_from, Func, Result}) ->
+    {return_from, 
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {fn, Func},
+          {result, Result} ]};
 trace_to_props(U) ->
     io:format("skipped trace_ts ~p~n", [U]),
-
     skip.                     
 
 %%
@@ -384,14 +397,15 @@ seq_trace_to_props({Msg_type, Serial, From, To, Message}, Timestamp) ->
 
 %%
 format_pid(Pid) when is_pid(Pid) ->
-    case process_info(Pid, registered_name) of
-        {registered_name, Reg_name} ->
+    Proc_info = (catch process_info(Pid, registered_name)),
+    case Proc_info of
+        {registered_name, Reg_name} when is_atom(Reg_name) ->
             atom_to_list(Reg_name);
-        undefined ->
-            pid_to_list(Pid);
-        [] ->
+        _ ->
             pid_to_list(Pid)
     end;
+format_pid(Reg_name) when is_atom(Reg_name) ->
+    atom_to_list(Reg_name);
 format_pid(Port) when is_port(Port) ->
     erlang:port_to_list(Port).
 
