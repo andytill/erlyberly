@@ -3,19 +3,27 @@
  * used to show trace logs for functions that returned errors.
  */
 
-.exception {
+.table-row-cell:exception {
     -fx-background-color: #F9F2F4;
-    -fx-text-fill: #C7254E;
 }
-.exception:odd {
-    /* make the background a little darker for alternate cells */
-    -fx-background-color: #F1E0E4;
+.table-row-cell:exception > .table-cell {
     -fx-text-fill: #C7254E;
 }
 
-.exception:selected {
+.table-row-cell:exception:odd {
+    /* make the background a little darker for alternate cells */
+    -fx-background-color: #F1E0E4;
+}
+.table-row-cell:exception:odd > .table-cell {
+    -fx-text-fill: #C7254E;
+}
+
+.table-row-cell:exception:selected {
     /* invert the colours when the cell is selected */
     -fx-background-color: #C7254E;
+}
+.table-row-cell:exception:selected > .table-cell {
+    /* invert the colours when the cell is selected */
     -fx-text-fill: white;
 }
 
@@ -24,23 +32,26 @@
  * brown text.
  */
 
-.not-completed {
+.table-row-cell:not-completed {
     -fx-background-color: #FFEB9C;
-
+}
+.table-row-cell:not-completed > .table-cell {
     -fx-text-fill: #9C6500;
 }
 
-.not-completed:odd {
+.table-row-cell:not-completed:odd {
     /* make the background a little darker for alternate cells */
     -fx-background-color: #FFD93E;
-
+}
+.table-row-cell:not-completed:odd > .table-cell {
     -fx-text-fill: #9C6500;
 }
 
-.not-completed:selected {
+.table-row-cell:not-completed:selected {
     /* invert the colours when the cell is selected */
     -fx-background-color: #9C6500;
-
+}
+.table-row-cell:not-completed:selected > .table-cell {
     -fx-text-fill: #FFEB9C;
 }
 

@@ -1,12 +1,14 @@
 package erlyberly;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -14,11 +16,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -42,7 +47,7 @@ public class DbgTraceView extends VBox {
 	
 	private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
 
-	private ListView<TraceLog> tracesBox;
+	private final TableView<TraceLog> tracesBox;
 	
     /**
      * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
@@ -53,15 +58,18 @@ public class DbgTraceView extends VBox {
 	public DbgTraceView(DbgController dbgController) {
 		setSpacing(5d);
 		setStyle("-fx-background-insets: 5;");
-		insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
-	    
-		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
+		setMaxHeight(Double.MAX_VALUE);
 		
-		tracesBox = new ListView<TraceLog>();
+		insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
+		
+		tracesBox = new TableView<TraceLog>();
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
-		tracesBox.setCellFactory(new TraceLogListCellFactory());
+		tracesBox.setMaxHeight(Double.MAX_VALUE);
+		VBox.setVgrow(tracesBox, Priority.ALWAYS);
+		
+		putTableColumns();
+
 		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
-		HBox.setHgrow(tracesBox, Priority.ALWAYS);
 		
 		putTraceContextMenu();
 		
@@ -81,13 +89,87 @@ public class DbgTraceView extends VBox {
 		hBox.getChildren().add(clearTraceLogsButton);
 		
 		getChildren().addAll(hBox, tracesBox);
+	    
+		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
 	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+    private void putTableColumns() {
+	    TableColumn<TraceLog,String> pidColumn;
+		pidColumn = new TableColumn<TraceLog,String>("Pid");
+		pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
+
+		TableColumn<TraceLog,String> regNameColumn;
+		regNameColumn = new TableColumn<TraceLog,String>("Reg. Name");
+		regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
+
+		TableColumn<TraceLog,String> durationNameColumn;
+		durationNameColumn = new TableColumn<TraceLog,String>("Duration");
+		durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
+
+		TableColumn<TraceLog,String> functionnNameColumn;
+		functionnNameColumn = new TableColumn<TraceLog,String>("Function");
+		functionnNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
+
+		TableColumn<TraceLog,String> argsColumn;
+		argsColumn = new TableColumn<TraceLog,String>("Args");
+		argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
+		
+		TableColumn<TraceLog,String> resultColumn;
+		resultColumn = new TableColumn<TraceLog,String>("Result");
+		resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
+		
+		tracesBox.getColumns().setAll(
+			pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
+		);
+
+		// based on http://stackoverflow.com/questions/27015961/tableview-row-style
+		PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
+		PseudoClass notCompletedClass = PseudoClass.getPseudoClass("not-completed");
+		tracesBox.setRowFactory(tv -> {
+		    TableRow<TraceLog> row = new TableRow<>();
+		    row.itemProperty().addListener((obs, oldTl, tl) -> {
+		        if (tl != null) {
+		            row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
+		            row.pseudoClassStateChanged(notCompletedClass, !tl.isComplete());
+		        }
+		        else {
+		            row.pseudoClassStateChanged(exceptionClass, false);
+		            row.pseudoClassStateChanged(notCompletedClass, false);
+		        }
+		    });
+		    return row ;
+		});
+		
+		tracesBox.setRowFactory(tv -> {  
+		    TableRow<TraceLog> row = new TableRow<>();
+		    ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
+	            row.pseudoClassStateChanged(exceptionClass, row.getItem().isExceptionThrower());
+	            row.pseudoClassStateChanged(notCompletedClass, !row.getItem().isComplete());
+		    };
+		    row.itemProperty().addListener((obs, oldTl, tl) -> {
+		    	if (oldTl != null) {
+		    		oldTl.isCompleteProperty().removeListener(completeListener);
+		        }
+		        if (tl != null) {
+		    		tl.isCompleteProperty().addListener(completeListener);
+		            row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
+		            row.pseudoClassStateChanged(notCompletedClass, !tl.isComplete());
+		        }
+		        else {
+		            row.pseudoClassStateChanged(exceptionClass, false);
+		            row.pseudoClassStateChanged(notCompletedClass, false);
+		        }
+		    });
+		    return row ;
+		});
+    }
 
 	private void putTraceContextMenu() {
 		TraceContextMenu traceContextMenu = new TraceContextMenu();
 		traceContextMenu.setItems(traceLogs);
 		traceContextMenu
-				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
+				.setSelectedItems(tracesBox.getItems());
 		
 		tracesBox.setContextMenu(traceContextMenu);
 		tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
@@ -103,7 +185,7 @@ public class DbgTraceView extends VBox {
             if(me.getClickCount() == 2) {
             	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
             	
-            	if(selectedItem != null) {
+            	if(selectedItem != null && selectedItem != null) {
                 	showTraceTermView(selectedItem); 
             	}
         	}
@@ -135,20 +217,20 @@ public class DbgTraceView extends VBox {
 
 
 	private void showTraceTermView(final TraceLog traceLog) {
-		OtpErlangObject args = traceLog.getArgs(); 
-		OtpErlangObject result = traceLog.getResult();
+		OtpErlangObject args = traceLog.getArgsList(); 
+		OtpErlangObject result = traceLog.getResultFromMap();
 		
 		TermTreeView resultTermsTreeView, argTermsTreeView;
 		
 		resultTermsTreeView = newTermTreeView();
 		
 		if(result != null) {
-			resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
+			resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap()); 
 		}
 		else {
 			WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
 				if(newV)
-					resultTermsTreeView.populateFromTerm(traceLog.getResult()); 
+					resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap()); 
 			});
 
 			traceLog.isCompleteProperty().addListener(listener);

@@ -90,7 +90,7 @@ public class OtpUtil {
 		return map;
 	}
 	
-	public static void otpObjectToString(OtpErlangObject obj, StringBuilder sb) {
+	public static StringBuilder otpObjectToString(OtpErlangObject obj, StringBuilder sb) {
 		if(obj instanceof OtpErlangBinary) {
 			sb.append(binaryToString((OtpErlangBinary) obj));
 		}
@@ -117,6 +117,7 @@ public class OtpUtil {
 		else {
 			sb.append(obj.toString());
 		}
+		return sb;
 	}
 	
 	public static String bracketsForTerm(OtpErlangObject obj) {
