@@ -125,11 +125,11 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 		}
 		else if(item.isExported()) {
 			tooltipText = "Exported function";
-			icon = AwesomeIcon.SQUARE;
+			icon = AwesomeIcon.UNLOCK_ALT;
 		}
 		else {
 			tooltipText = "Unexported function";
-			icon = AwesomeIcon.SQUARE_ALT;
+			icon = AwesomeIcon.LOCK;
 		}
 
 		exportToolTipText.set(tooltipText);
@@ -138,9 +138,9 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
 	public void onTracesChange() {
 		if(modFunc != null && isTracedFn.isTraced(modFunc))
-			tracedIconText.set(AwesomeIcon.STAR.toString());
+			tracedIconText.set(AwesomeIcon.CHECK_SQUARE_ALT.toString());
 		else
-			tracedIconText.set(AwesomeIcon.STAR_ALT.toString());
+			tracedIconText.set(AwesomeIcon.SQUARE_ALT.toString());
 	}
 
     public boolean isShowModuleName() {
