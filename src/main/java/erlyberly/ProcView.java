@@ -3,6 +3,7 @@ package erlyberly;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.BooleanBinding;
@@ -17,6 +18,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Control;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
@@ -158,6 +160,10 @@ public class ProcView implements Initializable {
 		headerBox.getChildren().add(0, loader.fxmlNode);
 		
 		procController.filterProperty().bind(ffView.textProperty());
+		
+		Platform.runLater(() -> {
+		    FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 0);
+		});
 		
 		return loader;
 	}

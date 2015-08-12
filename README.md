@@ -119,11 +119,12 @@ Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
 
 ### Shortcuts
 
-|   Keys   |                            Action                            |
-| -------- | :----------------------------------------------------------: |
-| `ctrl+m` |         Toggle visibility of modules and functions.          |
-| `ctrl+p` |               Toggle visibility of processes.                |
-| `ctrl+t` | Toggle tracing for the selected function in the module tree. |
+|   Keys   |                                     Action                                     |
+| -------- | :----------------------------------------------------------------------------: |
+| `ctrl+f` | Focus on the last focused filter field, or the next if one is already focused. |
+| `ctrl+m` |                  Toggle visibility of modules and functions.                   |
+| `ctrl+p` |                        Toggle visibility of processes.                         |
+| `ctrl+t` |          Toggle tracing for the selected function in the module tree.          |
 
 
 ### How to get it
@@ -142,7 +143,7 @@ erlyberly must have epmd running on the machine as it is running.  Otherwise it 
 
 You will need JDK 8 and Maven to compile.  erlyberly loads an erlang module to the remote node and then uses RPC to run traces and collect stats.  For convenience I have bundled the beam code in the source as well as the original erlang source.  If you want to recompile the beam code for yourself run the following command from the project directory:
 
-    erlc -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
+    erlc +debug_info -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
 
 Install Maven dependencies that are not in Maven Central.
 

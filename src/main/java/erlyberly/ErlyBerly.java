@@ -78,6 +78,8 @@ public class ErlyBerly extends Application {
         primaryStage.show();
         
         displayConnectionPopup(primaryStage);
+        
+        FilterFocusManager.init(scene);
     }
 
     public static void applyCssToWIndow(Scene scene) {

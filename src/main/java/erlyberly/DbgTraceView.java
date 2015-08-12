@@ -1,5 +1,6 @@
 package erlyberly;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
@@ -15,6 +16,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.SelectionMode;
@@ -283,6 +285,10 @@ public class DbgTraceView extends VBox {
 		traceLogSearchBox.getChildren().add(0, loader.fxmlNode);
 
 		ffView.textProperty().addListener((o, ov, nv) -> { onTraceFilterChange(nv); });
+		
+		Platform.runLater(() -> {
+            FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 2);
+        });
 		
 		return loader;
 	}
