@@ -229,16 +229,12 @@ public class OtpUtil {
     	conn.send(m.self(), "rex", rpcMessage);
     }
     
-    public static OtpErlangObject receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException  {
-    	OtpErlangTuple receive = (OtpErlangTuple) mbox.receive(5000);
-    	
-    	// FIXME timeouts
-    	if(receive == null)
-    		return null;
-    	if(!isTupleTagged(atom("rex"), receive))
-    		throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
-    	
-    	return receive.elementAt(1);
+    public static OtpErlangTuple receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException  {
+    	return receiveRPC(mbox,5000);
+    }
+    
+    public static OtpErlangTuple receiveRPC(OtpMbox mbox ,long timeout) throws OtpErlangExit, OtpErlangDecodeException {
+        return (OtpErlangTuple) mbox.receive(timeout);
     }
 
 	public static OtpErlangObject tupleElement(int i, OtpErlangObject obj) {

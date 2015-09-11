@@ -9,20 +9,26 @@ import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
@@ -30,7 +36,12 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+
+import com.ericsson.otp.erlang.OtpErlangObject;
+
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.fontawesome.Icon;
 import erlyberly.node.AppProcs;
@@ -44,6 +55,8 @@ public class TopBarView implements Initializable {
 	
 	private static final KeyCodeCombination REFRESH_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
 	
+	private final SimpleIntegerProperty unreadCrashReportsProperty = new SimpleIntegerProperty(0);
+	
 	@FXML
 	private ToggleButton hideProcessesButton;
 	@FXML
@@ -52,9 +65,11 @@ public class TopBarView implements Initializable {
 	private Button refreshModulesButton;
 	@FXML
 	private Button erlangMemoryButton;
+    @FXML
+    private Button crashReportsButton;
   	@FXML
 	private ToolBar topBox;
-
+    
 	private EventHandler<ActionEvent> refreshModulesAction;
 	
 	@Override
@@ -79,8 +94,14 @@ public class TopBarView implements Initializable {
 		erlangMemoryButton.setContentDisplay(ContentDisplay.TOP);
 		erlangMemoryButton.setGraphicTextGap(0d);
 		erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
-		erlangMemoryButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());		
-		
+		erlangMemoryButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+
+		crashReportsButton.setGraphic(crashReportsGraphic());
+		crashReportsButton.setContentDisplay(ContentDisplay.TOP);
+		crashReportsButton.setGraphicTextGap(0d);
+		crashReportsButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
+		crashReportsButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+		crashReportsButton.setOnAction((e) -> { showCrashReportWindow(); });
 		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
 		hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
 		erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
@@ -92,7 +113,48 @@ public class TopBarView implements Initializable {
 		
 		toggleHideProcsText();
 		toggleHideFuncsText();
+		
+		ErlyBerly.nodeAPI()
+		    .getCrashReports()
+		    .addListener(this::traceLogsChanged);
 	}
+
+
+    public void traceLogsChanged(ListChangeListener.Change<? extends OtpErlangObject> e) {
+        while(e.next()) {
+            int size = e.getAddedSubList().size();
+            unreadCrashReportsProperty.set(unreadCrashReportsProperty.get() + size);
+        }
+    }
+    private void showCrashReportWindow() {
+        unreadCrashReportsProperty.set(0);
+        
+        ListView<OtpErlangObject> crashReportListView;
+        
+        crashReportListView = new ListView<OtpErlangObject>(ErlyBerly.nodeAPI().getCrashReports());
+        showWindow("Crash Reports", crashReportListView);
+    }
+
+    private Parent crashReportsGraphic() {
+        Icon icon;
+        
+        icon = Icon.create().icon(AwesomeIcon.WARNING);
+        icon.setPadding(new Insets(0, 5, 0, 5));
+        
+        Label reportCountLabel;
+        
+        reportCountLabel = new Label("122");
+        reportCountLabel.setStyle("-fx-background-color:red; -fx-font-size:9; -fx-padding: 0 2 0 2; -fx-opacity:0.7");
+        reportCountLabel.setTextFill(Color.WHITE);
+        
+        reportCountLabel.setText(unreadCrashReportsProperty.getValue().toString());
+        unreadCrashReportsProperty.addListener((o, oldv, newv) -> { reportCountLabel.setText(newv.toString()); });
+        reportCountLabel.visibleProperty().bind(unreadCrashReportsProperty.greaterThan(0));
+        
+        StackPane stackPane = new StackPane(icon, reportCountLabel);
+        StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);
+        return stackPane;
+    }
 
 	private void showErlangMemory() {
 		ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
@@ -112,18 +174,22 @@ public class TopBarView implements Initializable {
 		pieChart = new PieChart(data);
         pieChart.setTitle(title);
         
-		Stage pieStage = new Stage();
+		showWindow(title, pieChart);
+	}
+
+    private void showWindow(String title, Parent pieChart) {
+        Stage stage = new Stage();
 		Scene scene = new Scene(pieChart);
     
-		CloseWindowOnEscape.apply(scene, pieStage);
+		CloseWindowOnEscape.apply(scene, stage);
 		
-		pieStage.setScene(scene);
-        pieStage.setWidth(800);
-        pieStage.setHeight(600);
-        pieStage.setTitle(title);
+		stage.setScene(scene);
+        stage.setWidth(800);
+        stage.setHeight(600);
+        stage.setTitle(title);
         
-        pieStage.show();
-	}
+        stage.show();
+    }
 
 	/**
 	 * these have to be run after initialisation is complete or an exception occurs

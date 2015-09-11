@@ -21,12 +21,16 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangExit;
 import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
@@ -43,8 +47,11 @@ import erlyberly.SeqTraceLog;
 import erlyberly.TraceLog;
 
 public class NodeAPI {
+    private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom("erlyberly");
 
-	public interface RpcCallback<T> {
+    private static final OtpErlangAtom BET_SERVICES_MSG_ATOM = new OtpErlangAtom("add_locator");
+
+    public interface RpcCallback<T> {
 		void callback(T result);
 	}
 
@@ -75,6 +82,8 @@ public class NodeAPI {
 	private OtpMbox mbox;
 
 	private final AtomicBoolean connected = new AtomicBoolean();
+	
+    private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
 
 	public NodeAPI() {
 		traceManager = new TraceManager();
@@ -99,7 +108,11 @@ public class NodeAPI {
 		return this;
 	}
 
-	public SimpleObjectProperty<AppProcs> appProcsProperty() {
+	public ObservableList<OtpErlangObject> getCrashReports() {
+        return crashReports;
+    }
+
+    public SimpleObjectProperty<AppProcs> appProcsProperty() {
 		return appProcs;
 	}
 
@@ -124,6 +137,8 @@ public class NodeAPI {
 		mbox = self.createMbox();
 
 		loadRemoteErlyberly();
+		
+		addErrorLoggerHandler();
 
 		Platform.runLater(() -> { connectedProperty.set(true); });
 
@@ -134,7 +149,18 @@ public class NodeAPI {
 		checkAliveThread.start();
 	}
 
-	class CheckAliveThread extends Thread {
+	private void addErrorLoggerHandler() throws IOException, OtpErlangException {
+        OtpErlangList args = OtpUtil.list(mbox.self());
+        sendRPC(
+            "error_logger", "add_report_handler",
+            OtpUtil.list(ERLYBERLY_ATOM, args)
+        );
+        
+        // flush the return value
+        receiveRPC();
+    }
+
+    class CheckAliveThread extends Thread {
 		public CheckAliveThread() {
 			setDaemon(true);
 			setName("Erlyberly Check Alive");
@@ -175,17 +201,36 @@ public class NodeAPI {
 	}
 
 	private OtpErlangObject receiveRPC() throws IOException, OtpErlangException {
-		OtpErlangObject result = OtpUtil.receiveRPC(mbox);
+		int timeout = 5000;
+        return receiveRPC(timeout);
+	}
 
-		// hack to support certain projects, don't ask...
-		if(result instanceof OtpErlangTuple) {
-			if(new OtpErlangAtom("add_locator").equals(((OtpErlangTuple) result).elementAt(0))) {
-				result = receiveRPC();
-			}
+    private OtpErlangObject receiveRPC(int timeout) throws OtpErlangExit,
+            OtpErlangDecodeException, IOException, OtpErlangException {
+        OtpErlangTuple receive = OtpUtil.receiveRPC(mbox, timeout);
+        
+        if(receive == null)
+            return null;
+        
+		if(isTupleTagged(atom("erlyberly_error_report"), receive)) {
+		    Platform.runLater(() -> {
+		        crashReports.add(receive.elementAt(1));
+		    });
+		    return receiveRPC();
+		}
+		
+        if(!isTupleTagged(atom("rex"), receive))
+            throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
+        
+        OtpErlangObject result = receive.elementAt(1);
+        
+        // hack to support certain projects, don't ask...
+		if(isTupleTagged(BET_SERVICES_MSG_ATOM, result)) {
+            result = receiveRPC();
 		}
 
 		return result;
-	}
+    }
 
 	private static byte[] loadBeamFile() throws IOException {
 		InputStream resourceAsStream = OtpUtil.class.getResourceAsStream(ERLYBERLY_BEAM_PATH);
@@ -231,23 +276,23 @@ public class NodeAPI {
 	}
 
 	private boolean ensureAlive() {
-		if(connection.isAlive())
-			return true;
+		try {
+            receiveRPC(0);
+        } catch (OtpErlangException | IOException e1) {
+            Platform.runLater(() -> { connectedProperty.set(false); });
+            while(true) {
+                try {
+                    connect();
+                    break;
+                }
+                catch(Exception e) {
+                    int millis = 50;
+                    mySleep(millis);
 
-		Platform.runLater(() -> { connectedProperty.set(false); });
-
-		while(true) {
-			try {
-				connect();
-				break;
-			}
-			catch(Exception e) {
-				int millis = 50;
-				mySleep(millis);
-
-			}
-		}
-		return true;
+                }
+            }
+        }
+        return true;
 	}
 
 	private void mySleep(int millis) {

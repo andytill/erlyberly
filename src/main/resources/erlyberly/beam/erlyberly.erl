@@ -14,10 +14,20 @@
 -export([stop_trace/4]).
 -export([xref_analysis/3]).
 
+%%% ============================================================================
+%%% gen_event function exports
+%%% ============================================================================
 
-%% ============================================================================
-%% process info
-%% ============================================================================
+-export([init/1]).
+-export([handle_event/2]).
+-export([handle_call/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
+
+%%% ============================================================================
+%%% process info
+%%% ============================================================================
 
 process_info() ->
     process_info2(erlang:processes(), []).
@@ -561,3 +571,33 @@ abstract_code(Module, ExecFun) ->
             {ok,{_Mod,[{abstract_code,{_Version,Forms}}]}} ->
                 ExecFun(Forms)
         end.
+
+
+%%% ============================================================================
+%%% error_logger gen_event handler
+%%% ============================================================================
+
+
+
+-record(err_state, { node }).
+
+init([Node]) ->
+    {ok, #err_state{ node = Node}}.
+
+handle_event({error_report,_,_} = Error_report, State) ->
+    Node = (State#err_state.node),
+    Node ! {erlyberly_error_report, Error_report},
+    % io:format("error: ~p~n", [Error_report]), 
+    {ok, State};
+handle_event(_, State) ->
+    % io:format("error: ~p ~p~n", [element(1,E), tuple_size(E) ]), 
+
+    {ok, State}.
+
+handle_call(_Request, State) -> {ok, ok, State}.
+
+handle_info(_Info, State) -> {ok, State}.
+
+terminate(_Reason, _State) -> ok.
+
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
