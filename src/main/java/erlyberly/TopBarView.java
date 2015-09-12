@@ -134,19 +134,25 @@ public class TopBarView implements Initializable {
         ListView<OtpErlangObject> crashReportListView;
         
         crashReportListView = new ListView<OtpErlangObject>(ErlyBerly.nodeAPI().getCrashReports());
+        crashReportListView.setTooltip(new Tooltip("Double click on the crash report to see it in more detail."));
         crashReportListView.setOnMouseClicked((me) -> {
             if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
                 OtpErlangObject obj = crashReportListView.getSelectionModel().getSelectedItem();
                 
                 if(obj != null && obj != null) {
-                    CrashReportView crashReportView;
-                    crashReportView = new CrashReportView();
-                    crashReportView.setCrashReport(obj);
-                    showWindow("Crash Report", crashReportView);
+                    showWindow("Crash Report", crashReportView(obj));
                 }
             }
         });
         showWindow("Crash Reports", crashReportListView);
+    }
+
+
+    private CrashReportView crashReportView(OtpErlangObject obj) {
+        CrashReportView crashReportView;
+        crashReportView = new CrashReportView();
+        crashReportView.setCrashReport(obj);
+        return crashReportView;
     }
 
     private Parent crashReportsGraphic() {
