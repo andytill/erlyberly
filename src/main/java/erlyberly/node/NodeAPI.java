@@ -275,25 +275,30 @@ public class NodeAPI {
 		}
 	}
 
-	private boolean ensureAlive() {
-		try {
-            receiveRPC(0);
+    private boolean ensureAlive() {
+        try {
+           receiveRPC(0);
+           if(connection.isAlive())
+               return true;
         } catch (OtpErlangException | IOException e1) {
-            Platform.runLater(() -> { connectedProperty.set(false); });
-            while(true) {
-                try {
-                    connect();
-                    break;
-                }
-                catch(Exception e) {
-                    int millis = 50;
-                    mySleep(millis);
+            e1.printStackTrace();
+        }
 
-                }
+        Platform.runLater(() -> { connectedProperty.set(false); });
+
+        while(true) {
+            try {
+                connect();
+                break;
+            }
+            catch(Exception e) {
+                int millis = 50;
+                mySleep(millis);
+
             }
         }
         return true;
-	}
+    }
 
 	private void mySleep(int millis) {
 		try {

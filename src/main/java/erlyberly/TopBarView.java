@@ -36,6 +36,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -126,12 +127,25 @@ public class TopBarView implements Initializable {
             unreadCrashReportsProperty.set(unreadCrashReportsProperty.get() + size);
         }
     }
+    
     private void showCrashReportWindow() {
         unreadCrashReportsProperty.set(0);
         
         ListView<OtpErlangObject> crashReportListView;
         
         crashReportListView = new ListView<OtpErlangObject>(ErlyBerly.nodeAPI().getCrashReports());
+        crashReportListView.setOnMouseClicked((me) -> {
+            if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
+                OtpErlangObject obj = crashReportListView.getSelectionModel().getSelectedItem();
+                
+                if(obj != null && obj != null) {
+                    CrashReportView crashReportView;
+                    crashReportView = new CrashReportView();
+                    crashReportView.setCrashReport(obj);
+                    showWindow("Crash Report", crashReportView);
+                }
+            }
+        });
         showWindow("Crash Reports", crashReportListView);
     }
 

@@ -183,13 +183,11 @@ public class DbgTraceView extends VBox {
 	}
 
 	private void onTraceClicked(MouseEvent me) {
-		if(me.getButton().equals(MouseButton.PRIMARY)) {
-            if(me.getClickCount() == 2) {
-            	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-            	
-            	if(selectedItem != null && selectedItem != null) {
-                	showTraceTermView(selectedItem); 
-            	}
+		if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
+        	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
+        	
+        	if(selectedItem != null && selectedItem != null) {
+            	showTraceTermView(selectedItem); 
         	}
         }
 	}
