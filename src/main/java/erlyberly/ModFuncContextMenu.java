@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
@@ -37,6 +38,8 @@ public class ModFuncContextMenu extends ContextMenu {
 
     private final SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItem;
     
+    private final SimpleBooleanProperty isSelectionModule, isSelectionFunction;
+    
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
         return selectedTreeItem;
     }
@@ -46,42 +49,65 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     public ModFuncContextMenu(DbgController aDbgController) {
+        isSelectionModule = new SimpleBooleanProperty();
+        isSelectionFunction = new SimpleBooleanProperty();
+        
         dbgController = aDbgController;
         selectedItem = new SimpleObjectProperty<>();
         selectedTreeItem = new SimpleObjectProperty<>();
+        
+        selectedItem.addListener((o, oldv, newv) -> {
+            if(newv == null) {
+                isSelectionModule.set(false);
+                isSelectionFunction.set(false);
+            }
+            else {
+                boolean module = newv.isModule();
+                isSelectionModule.set(module);
+                isSelectionFunction.set(!module);
+            }
+        });
         
         MenuItem functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
         functionTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+t"));
-
+        functionTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
+        
         exportsTraceMenuItem = new MenuItem("Exported Function Trace");
         exportsTraceMenuItem.setOnAction(this::onExportedFunctionTrace);
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
+        exportsTraceMenuItem.disableProperty().bind(isSelectionModule.not());
         
         moduleTraceMenuItem = new MenuItem("Recursive Trace");
         moduleTraceMenuItem.setOnAction(this::onModuleTrace);
+        moduleTraceMenuItem.disableProperty().bind(isSelectionModule.not());
         
         seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
         seqTraceMenuItem.setOnAction(this::onSeqTrace);
-                
+        seqTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
+        
+        BooleanBinding any = isSelectionFunction.or(isSelectionModule);
+        
         moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
         moduleSourceCodeItem.setOnAction(this::onModuleCode);
+        moduleSourceCodeItem.disableProperty().bind(any.not());
         
         moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
         moduleAbstCodeItem.setOnAction(this::onModuleCode);
+        moduleAbstCodeItem.disableProperty().bind(any.not());
 
         NodeAPI nodeAPI = ErlyBerly.nodeAPI();
         SimpleBooleanProperty connectedProperty = nodeAPI.connectedProperty();
         
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
-        callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()));
+        callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(isSelectionFunction.not()));
         getItems().addAll(
             functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
-            new SeparatorMenuItem(),
-            callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem);
+            new SeparatorMenuItem(), callGraphMenuItem, 
+            new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
     }
     
     private void onSeqTrace(ActionEvent ae) {
