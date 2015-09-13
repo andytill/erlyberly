@@ -103,15 +103,23 @@ View the abstract source code for a module by right clicking on a module or func
 
 Abstract code is an erlang term representation of a beam file. You can use it to see how a module is compiled. One use case is to make sure that variables that you think will made constants in the beam code do actually get compiled that way.
 
-##### View a functions call graph
+##### View the call graph for a function
 
 See what functions another function calls by right clicking on it and clicking `View Call Graph`.  This is helpful to understand dependencies of functions.
 
 ![you cannot see the beautiful screen shot](doc/call-graph.png)
 
+The `View Call Graph` option is disabled until the you have clicked the `xref Analysis' button at the top of the window and it shows **ok** in green. This is because xref must analyse all of the modules loaded by the VM which can take a while. You may see xref output in the console while xref performs analysis.
+
 Traces can be applied to all functions in a call graph by right clicking and selecting `Recursive Trace`.  Traces will be applied recursively to all functions by the selected function in the graph.  This can be used to find a function that is throwing an exception when a stack trace is not  available. The function throwing the exception will appear in the trace list in red.
 
-The first time this is requested xref must be initialised. **Note:** if it doesn't work try restarting erlyberly. This can happen because the xref call can sometimes timeout, and is a known issue.
+##### Get notified of crash reports
+
+When an OTP process dies it generates a crash report which is typically logged to a file by lager or sasl. Erlyberly acts as another crash report handler and displays the number in red  of crash reports next to the `Crash Report` button.
+
+![you cannot see the beautiful screen shot](doc/crash-report-button.png)
+
+Click the button to view the crash reports and clear the notifications displayed in the button.  Double click on them to view in more detail.
 
 ##### Cross platform
 
@@ -125,6 +133,8 @@ Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
 | `ctrl+m` |                  Toggle visibility of modules and functions.                   |
 | `ctrl+p` |                        Toggle visibility of processes.                         |
 | `ctrl+t` |          Toggle tracing for the selected function in the module tree.          |
+| `escape` |                               Close sub windows.                               |
+
 
 
 ### How to get it
