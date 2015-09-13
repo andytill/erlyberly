@@ -3,6 +3,7 @@
 
 -export([collect_seq_trace_logs/0]).
 -export([collect_trace_logs/0]).
+-export([ensure_xref_started/0]).
 -export([erlyberly_tcollector/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
@@ -496,9 +497,9 @@ ensure_xref_started() ->
             {ok, _} = xref:start(?erlyberly_xref),
             % timer:sleep(1000),
             [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path()],
-            ok;
+            {erlyberly_xref_started};
         _ ->
-            ok
+            {erlyberly_xref_started}
     end.
 
 %%% ============================================================================

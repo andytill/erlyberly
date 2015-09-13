@@ -27,6 +27,11 @@
             <Font size="10.0" />
          </font>
       </Button>
+      <Button fx:id="xrefAnalysisButton" mnemonicParsing="false" text="xref Analysis">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Button>
       <Button fx:id="crashReportsButton" mnemonicParsing="false" text="Crash Reports">
          <font>
             <Font size="10.0" />

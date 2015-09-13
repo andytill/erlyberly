@@ -47,6 +47,10 @@ import erlyberly.SeqTraceLog;
 import erlyberly.TraceLog;
 
 public class NodeAPI {
+    private static final OtpErlangAtom ERLYBERLY_XREF_STARTED_ATOM = atom("erlyberly_xref_started");
+
+    private static final OtpErlangAtom ERLYBERLY_ERROR_REPORT_ATOM = atom("erlyberly_error_report");
+
     private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom("erlyberly");
 
     private static final OtpErlangAtom BET_SERVICES_MSG_ATOM = new OtpErlangAtom("add_locator");
@@ -64,6 +68,8 @@ public class NodeAPI {
 	private final TraceManager traceManager;
 
 	private final SimpleBooleanProperty connectedProperty;
+	
+    private final SimpleBooleanProperty xrefStartedProperty;
 
 	private final SimpleStringProperty summary;
 
@@ -99,6 +105,8 @@ public class NodeAPI {
 		appProcs = new SimpleObjectProperty<AppProcs>(new AppProcs(0, LocalDateTime.now()));
 
 		connectedProperty.addListener(this::summaryUpdater);
+		
+		xrefStartedProperty = new SimpleBooleanProperty(false);
 	}
 
 	public NodeAPI connectionInfo(String remoteNodeName, String cookie) {
@@ -209,25 +217,26 @@ public class NodeAPI {
             OtpErlangDecodeException, IOException, OtpErlangException {
         OtpErlangTuple receive = OtpUtil.receiveRPC(mbox, timeout);
         
-        if(receive == null)
+        if(receive == null) {
             return null;
-        
-		if(isTupleTagged(atom("erlyberly_error_report"), receive)) {
-		    Platform.runLater(() -> {
-		        crashReports.add(receive.elementAt(1));
-		    });
+        }
+        else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, receive)) {
+		    Platform.runLater(() -> { crashReports.add(receive.elementAt(1)); });
 		    return receiveRPC();
 		}
-		
-        if(!isTupleTagged(atom("rex"), receive))
+		else if(!isTupleTagged(atom("rex"), receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
-        
+		}
         OtpErlangObject result = receive.elementAt(1);
         
         // hack to support certain projects, don't ask...
 		if(isTupleTagged(BET_SERVICES_MSG_ATOM, result)) {
             result = receiveRPC();
 		}
+        else if(isTupleTagged(ERLYBERLY_XREF_STARTED_ATOM, result)) {
+            Platform.runLater(() -> { xrefStartedProperty.set(true); });
+            return receiveRPC();
+        }
 
 		return result;
     }
@@ -357,6 +366,10 @@ public class NodeAPI {
 	public SimpleBooleanProperty connectedProperty() {
 		return connectedProperty;
 	}
+	
+	public SimpleBooleanProperty xrefStartedProperty() {
+	    return xrefStartedProperty;
+	}
 
 	private void sendRPC(String module, String function, OtpErlangList args) throws IOException {
 		OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
@@ -463,6 +476,13 @@ public class NodeAPI {
         OtpErlangObject result = (OtpErlangObject) receiveRPC();
         
 	    return result;
+	}
+	
+	/**
+	 * Start xref but  
+	 */
+	public synchronized void asyncEnsureXRefStarted() throws IOException {
+	    sendRPC("erlyberly", "ensure_xref_started", list());
 	}
     
     public synchronized String moduleFunctionSourceCode(String module, String function, Integer arity) throws IOException, OtpErlangException {

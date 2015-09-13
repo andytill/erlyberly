@@ -68,6 +68,8 @@ public class TopBarView implements Initializable {
 	private Button erlangMemoryButton;
     @FXML
     private Button crashReportsButton;
+    @FXML
+    private Button xrefAnalysisButton;
   	@FXML
 	private ToolBar topBox;
     
@@ -100,13 +102,27 @@ public class TopBarView implements Initializable {
 		crashReportsButton.setGraphic(crashReportsGraphic());
 		crashReportsButton.setContentDisplay(ContentDisplay.TOP);
 		crashReportsButton.setGraphicTextGap(0d);
-		crashReportsButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
+		crashReportsButton.setTooltip(new Tooltip("View crash reports received from the connected node."));
 		crashReportsButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 		crashReportsButton.setOnAction((e) -> { showCrashReportWindow(); });
-		hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
-		hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
-		erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
+
+		xrefAnalysisButton.setGraphic(xrefAnalysisGraphic());
+		xrefAnalysisButton.setContentDisplay(ContentDisplay.TOP);
+		xrefAnalysisButton.setGraphicTextGap(0d);
+		xrefAnalysisButton.setTooltip(new Tooltip("Start xref analysis. This may take a while, an ok is displayed when complete."));
+		xrefAnalysisButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+		xrefAnalysisButton.setOnAction((e) -> {
+		    try {
+                ErlyBerly.nodeAPI().asyncEnsureXRefStarted();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+		});
 		
+        hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
+        hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
+        erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
+        
 		FxmlLoadable loader = processCountStat();	
 		
 		topBox.getItems().add(new Separator(Orientation.VERTICAL));
@@ -170,6 +186,27 @@ public class TopBarView implements Initializable {
         reportCountLabel.setText(unreadCrashReportsProperty.getValue().toString());
         unreadCrashReportsProperty.addListener((o, oldv, newv) -> { reportCountLabel.setText(newv.toString()); });
         reportCountLabel.visibleProperty().bind(unreadCrashReportsProperty.greaterThan(0));
+        
+        StackPane stackPane = new StackPane(icon, reportCountLabel);
+        StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);
+        return stackPane;
+    }
+    
+
+
+    private Parent xrefAnalysisGraphic() {
+        Icon icon;
+        
+        icon = Icon.create().icon(AwesomeIcon.WARNING);
+        icon.setPadding(new Insets(0, 5, 0, 5));
+        
+        Label reportCountLabel;
+        
+        reportCountLabel = new Label("ok");
+        reportCountLabel.setStyle("-fx-background-color:green; -fx-font-size:9; -fx-padding: 0 2 0 2; -fx-opacity:0.9");
+        reportCountLabel.setTextFill(Color.WHITE);
+        
+        reportCountLabel.visibleProperty().bind(ErlyBerly.nodeAPI().xrefStartedProperty());
         
         StackPane stackPane = new StackPane(icon, reportCountLabel);
         StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);

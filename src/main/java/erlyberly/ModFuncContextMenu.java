@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.scene.Parent;
@@ -21,6 +22,7 @@ import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+import erlyberly.node.NodeAPI;
 import erlyberly.node.OtpUtil;
 
 public class ModFuncContextMenu extends ContextMenu {
@@ -69,10 +71,13 @@ public class ModFuncContextMenu extends ContextMenu {
         
         moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
         moduleAbstCodeItem.setOnAction(this::onModuleCode);
+
+        NodeAPI nodeAPI = ErlyBerly.nodeAPI();
+        SimpleBooleanProperty connectedProperty = nodeAPI.connectedProperty();
         
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
-
+        callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()));
         getItems().addAll(
             functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
             new SeparatorMenuItem(),
