@@ -197,7 +197,7 @@ public class TopBarView implements Initializable {
     private Parent xrefAnalysisGraphic() {
         Icon icon;
         
-        icon = Icon.create().icon(AwesomeIcon.WARNING);
+        icon = Icon.create().icon(AwesomeIcon.TH_LARGE);
         icon.setPadding(new Insets(0, 5, 0, 5));
         
         Label reportCountLabel;
