@@ -172,6 +172,7 @@ erlyberly_tcollector(Node) ->
     % apply a trace on the returns of the code module, so we can listen for 
     % code reloads, a code reload removes all traces on that module so when we
     % receive this message, reapply all traces for that module
+    dbg:p(all, [c, timestamp]),
     dbg:tp(code, x),
 
     erlyberly_tcollector2(#tcollector{}).
@@ -209,16 +210,16 @@ tcollector_start_trace({start_trace, Mod, Func, Arity, IsExported}, #tcollector{
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
-collect_log({trace, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
+collect_log({trace_ts, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
     % ensure loaded can be called many times for one reload so just skip it
     TC;
-collect_log({trace, _, return_from, {code, _, _}, {module, Loaded_module}}, TC) ->
+collect_log({trace_ts, _, return_from, {code, _, _}, {module, Loaded_module}, _}, TC) ->
     % if we trace that a module is reloaded then reapply traces to it
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
     TC;
-collect_log({trace, _, _, {code, _, _}, _}, TC) ->
+collect_log({trace_ts, _, _, {code, _, _}, _}, TC) ->
     TC;
-collect_log({trace, _, _, {code, _, _}}, TC) ->
+collect_log({trace_ts, _, _, {code, _, _}}, TC) ->
     TC;
 collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace_ts orelse element(1, Trace) == trace ->
     Logs_1 = maybe_add_log(trace_to_props(Trace), Logs),
