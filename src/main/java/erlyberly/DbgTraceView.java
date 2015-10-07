@@ -97,6 +97,10 @@ public class DbgTraceView extends VBox {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void putTableColumns() {
+        TableColumn<TraceLog,Long> seqColumn;
+        seqColumn = new TableColumn<TraceLog,Long>("Seq.");
+        seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
+        
 	    TableColumn<TraceLog,String> pidColumn;
 		pidColumn = new TableColumn<TraceLog,String>("Pid");
 		pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
@@ -122,7 +126,7 @@ public class DbgTraceView extends VBox {
 		resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
 		
 		tracesBox.getColumns().setAll(
-			pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
+		    seqColumn, pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
 		);
 
 		// based on http://stackoverflow.com/questions/27015961/tableview-row-style

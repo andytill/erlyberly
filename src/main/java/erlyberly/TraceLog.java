@@ -32,8 +32,8 @@ public class TraceLog implements Comparable<TraceLog> {
 	private final HashMap<Object, Object> map;
 	
 	private final long instanceNum;
-	
-	private final SimpleStringProperty summary = new SimpleStringProperty("");
+
+    private final SimpleStringProperty summary = new SimpleStringProperty("");
 	
 	private final SimpleStringProperty duration = new SimpleStringProperty("");
 	
@@ -53,6 +53,10 @@ public class TraceLog implements Comparable<TraceLog> {
 		function =  appendFunctionToString(new StringBuilder(), true).toString().intern();
 		argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
 	}
+    
+    public long getInstanceNum() {
+        return instanceNum;
+    }
 
 	private String regNameString() {
 	    Object object = map.get(ATOM_REG_NAME);
