@@ -1,11 +1,11 @@
 
 # erlyberly
 
-[![Join the chat at https://gitter.im/andytill/erlyberly](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/andytill/erlyberly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+**erlyberly** is a debugger for erlang and [elixir](https://twitter.com/andy_till/status/539566833515626497) using erlang tracing. It is probably the easiest and quickest way to start debugging your erlang nodes.
 
-erlyberly is a debugger for erlang, and [elixir](https://twitter.com/andy_till/status/539566833515626497). Traces are applied to functions and calls to it are logged without blocking your processes.
+If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts. 
 
-If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  There are no code changes and no recompliation required to see function calls.
+Download the latest runnable releases [here](https://github.com/andytill/erlyberly/releases).
 
 ### Features and How To
 
@@ -127,13 +127,14 @@ Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
 
 ### Shortcuts
 
-|   Keys   |                                     Action                                     |
-| -------- | :----------------------------------------------------------------------------: |
-| `ctrl+f` | Focus on the last focused filter field, or the next if one is already focused. |
-| `ctrl+m` |                  Toggle visibility of modules and functions.                   |
-| `ctrl+p` |                        Toggle visibility of processes.                         |
-| `ctrl+t` |          Toggle tracing for the selected function in the module tree.          |
-| `escape` |                               Close sub windows.                               |
+|      Keys      |                                           Action                                           |
+| -------------- | :----------------------------------------------------------------------------------------: |
+| `ctrl+f`       |       Focus on the last focused filter field, or the next if one is already focused.       |
+| `ctrl+m`       |                        Toggle visibility of modules and functions.                         |
+| `ctrl+p`       |                              Toggle visibility of processes.                               |
+| `ctrl+t`       |                Toggle tracing for the selected function in the module tree.                |
+| `escape`       |                                     Close sub windows.                                     |
+| `ctrl+shift+t` | Press in the module/function filter field to apply traces to all functions that have not been filtered. |
 
 
 
@@ -141,13 +142,18 @@ Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
 
 Go to the github [releases section](https://github.com/andytill/erlyberly/releases) and download the runnable jar.  In Windows you can double click to run it or from the console in any OS `java -jar erlyberly-runnable.jar`.
 
-You will need Java 8 run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  There are no other dependencies.
+You will need Java 8u20 or higher to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  There are no other dependencies.
 
 If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.
 
 ### Trouble Shooting
 
+
+##### Cannot connect or Name server errors on connection
 erlyberly must have epmd running on the machine as it is running.  Otherwise it will not be able to connect to the remote node with an error about Name Servers.  The easiest way to run epmd is to run the following command in the shell `erl -sname hi`, this requires erlang to be installed and on the `PATH`.
+
+##### Cannot start, `NoSuchMethodException` is thrown
+This happens when java version 8 is installed but the update is less than 20. Please update your version of java. See issue [#39](https://github.com/andytill/erlyberly/issues/39).
 
 ### Compiling
 
