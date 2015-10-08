@@ -16,12 +16,14 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -117,13 +119,67 @@ public class DbgView implements Initializable {
 		
 		ffView.textProperty().addListener(this::onFunctionSearchChange);
 		
+
+        TextField filterTextView;
+        filterTextView = floatyFieldTextField(loader);
+        filterTextView.addEventFilter(KeyEvent.ANY, (e) -> {
+            onToggleAllTraces(e);
+        });
+        
+		
 		Platform.runLater(() -> {
-            FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 1);
+            FilterFocusManager.addFilter(filterTextView, 1);
         });
 		
 		return loader;
 	}
 
+    /**
+     * Flag for when the shortcut for applying traces to all visisble functions
+     * is pressed down, used for only executing it once per press, not once per
+     * event which can be many.
+     */
+    static boolean toggleAllTracesDown = false;
+    
+    /**
+     * ctrl+shift+t toggles tracing on all unfiltered functions in the module
+     * tree. Check if this pattern is down and has not already been acted on.
+     */
+    private void onToggleAllTraces(KeyEvent e) {
+        if(e.getEventType() == KeyEvent.KEY_RELEASED) {
+            toggleAllTracesDown = false;
+            return;
+        }
+        else if(e.getEventType() == KeyEvent.KEY_PRESSED && toggleAllTracesDown) {
+            return;
+        }
+        else if(e.getEventType() == KeyEvent.KEY_PRESSED &&  KeyCode.T == e.getCode() && e.isControlDown() && e.isShiftDown()) {
+            toggleAllTracesDown = true;
+            toggleTracesToAllFunctions();
+        }
+    }
+
+    /**
+     * Toggle tracing on all unfiltered (visible, even unexpanded) functions.
+     */
+    private void toggleTracesToAllFunctions() {
+        ArrayList<ModFunc> funs = new ArrayList<>();
+        for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
+            for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
+                funs.add(modFunc.getValue());
+            }
+        }
+        for (ModFunc func : funs) {
+            dbgController.toggleTraceModFunc(func);
+        }
+    }
+
+    private TextField floatyFieldTextField(FxmlLoadable loader) {
+        // FIXME floaty field should allow access to the text field
+        return (TextField) loader.fxmlNode.getChildrenUnmodifiable().get(1);
+    }
+    
+	
 	public void onRefreshModules(ActionEvent e) {
 		treeModules.clear();
 		
