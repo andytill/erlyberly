@@ -165,7 +165,7 @@ This will install dependencies locally and build the runnable jar in the target 
 
 To recompile the erlyberly.erl file after modifications:
 
-    erlc +debug_info -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
+    mvn compile
 
 To rebuild the runnable jar after modifying the java or erlang code:
 
