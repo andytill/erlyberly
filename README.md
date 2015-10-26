@@ -157,31 +157,28 @@ This happens when java version 8 is installed but the update is less than 20. Pl
 
 ### Compiling
 
-You will need JDK 8 and Maven to compile.  erlyberly loads an erlang module to the remote node and then uses RPC to run traces and collect stats.  For convenience I have bundled the beam code in the source as well as the original erlang source.  If you want to recompile the beam code for yourself run the following command from the project directory:
+You will need **JDK 8u20** or higher and **Maven** to compile. Once these are installed, run:
+
+    ./setup.sh
+
+This will install dependencies locally and build the runnable jar in the target directory i.e. `target/erlyberly-0.6.7-jar-with-dependencies.jar` and the `erlyberly.beam` file.
+
+To recompile the erlyberly.erl file after modifications:
 
     erlc +debug_info -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
 
-Install Maven dependencies that are not in Maven Central.
+To rebuild the runnable jar after modifying the java or erlang code:
 
-    mvn install:install-file -Dfile=OtpErlang.jar -DgroupId=org.erlang.otp -DartifactId=jinterface -Dversion=1.5.12 -Dpackaging=jar
-
-To build the jar:
-
-    mvn clean install assembly:single
-
-This creates a runnable jar in the target directory.  Either double click it if your OS supports that or run a terminal:
-
-    java -jar erlyberly-n.n.n-jar-with-dependencies.jar
-
-You'll also need the [floaty-field](https://github.com/andytill/floaty-field) library installed in your local Maven cache.
+    mvn install assembly:single
 
 ### Roadmap
 
 Some things that are important.
 
 1. Bug fixing and stability for current features is number one priority right now. Help by contributing issue reports.
-2. seq_trace support.
-3. Beat CAP.
+2. Improved elixir support.
+3. Better seq_trace support.
+4. Beat CAP.
 
 erlyberly is meant to be a complementary to observer so there will be no attempt to implement features such as the supervisor hierarchy graph.
 
