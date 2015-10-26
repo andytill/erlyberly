@@ -44,6 +44,8 @@ public class ProcController {
 	
 	private final SortedList<ProcInfo> sortedProcesses = new SortedList<ProcInfo>(filteredProcesses);
 	
+	private volatile boolean temporarilySuspendPolling;
+	
 	public ProcController() {
 		polling = new SimpleBooleanProperty();
 		
@@ -118,6 +120,14 @@ public class ProcController {
 		return ErlyBerly.nodeAPI().connectedProperty();
 	}
 
+	public boolean isTemporarilySuspendPolling() {
+		return temporarilySuspendPolling;
+	}
+
+	public void setTemporarilySuspendPolling(boolean temporarilySuspendPolling) {
+		this.temporarilySuspendPolling = temporarilySuspendPolling;
+	}
+
 	private final class ProcPollerThread extends Thread {
 		public ProcPollerThread() {
 			// make sure we don't hang the VM on close because of this thread
@@ -136,45 +146,17 @@ public class ProcController {
 		    	
 		    	final ArrayList<ProcInfo> processList = new ArrayList<>();
 		    	
-				try {
-					ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
-					
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							ProcSort procSort = procSortProperty.get();
-							if(procSort != null) {
-								Comparator<ProcInfo> comparator = null;
-								
-								if("proc".equals(procSort.getSortField())) {
-									comparator = new Comparator<ProcInfo>() {
-										@Override
-										public int compare(ProcInfo o1, ProcInfo o2) {
-											return o1.getProcessName().compareTo(o2.getProcessName());
-										}};
-								}
-								else if("reduc".equals(procSort.getSortField())) {
-									comparator = new Comparator<ProcInfo>() {
-										@Override
-										public int compare(ProcInfo o1, ProcInfo o2) {
-											return Long.compare(o1.getReductions(), o2.getReductions());
-										}};
-								}
-								
-								if(comparator != null) {
-									if(procSort.getSortType() == SortType.DESCENDING) {
-										comparator = Collections.reverseOrder(comparator);
-									}
-									Collections.sort(processList, comparator);
-								}
-							}
-							processes.clear();
-							processes.addAll(processList);
-						}});
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				if (!temporarilySuspendPolling) {
+					try {
+						ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
 
+						updateProcessList(processList);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					} 
+				}
+				
 				try {
 					synchronized (waiter) {
 						if(timeout > 0)
@@ -182,10 +164,46 @@ public class ProcController {
 						else
 							waiter.wait();
 					}
-				} catch (InterruptedException e1) {
+				} 
+				catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
 			}
+		}
+
+		private void updateProcessList(final ArrayList<ProcInfo> processList) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					ProcSort procSort = procSortProperty.get();
+					if(procSort != null) {
+						Comparator<ProcInfo> comparator = null;
+						
+						if("proc".equals(procSort.getSortField())) {
+							comparator = new Comparator<ProcInfo>() {
+								@Override
+								public int compare(ProcInfo o1, ProcInfo o2) {
+									return o1.getProcessName().compareTo(o2.getProcessName());
+								}};
+						}
+						else if("reduc".equals(procSort.getSortField())) {
+							comparator = new Comparator<ProcInfo>() {
+								@Override
+								public int compare(ProcInfo o1, ProcInfo o2) {
+									return Long.compare(o1.getReductions(), o2.getReductions());
+								}};
+						}
+						
+						if(comparator != null) {
+							if(procSort.getSortType() == SortType.DESCENDING) {
+								comparator = Collections.reverseOrder(comparator);
+							}
+							Collections.sort(processList, comparator);
+						}
+					}
+					processes.clear();
+					processes.addAll(processList);
+				}});
 		}
 	}
 

@@ -76,6 +76,14 @@ public class ProcView implements Initializable {
 		
 		processView.setContextMenu(new ContextMenu(menuItem));
 		
+		// #23 when the context menu is showing, temporarily suspend polling, polling
+		// loses selection making the right click context menu no longer enabled since
+		// no process is selected
+		processView
+			.getContextMenu()
+			.showingProperty()
+			.addListener((o, oldv, newv) -> { procController.setTemporarilySuspendPolling(newv); });
+		
 		final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
