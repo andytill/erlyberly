@@ -18,9 +18,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.erlang.otp</groupId>
+      <groupId>andytill</groupId>
       <artifactId>jinterface</artifactId>
-      <version>1.5.12</version>
+      <version>1.6</version>
     </dependency>
     <dependency>
 	    <groupId>junit</groupId>
