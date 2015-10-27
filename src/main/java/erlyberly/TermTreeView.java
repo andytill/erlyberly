@@ -1,22 +1,32 @@
 package erlyberly;
 
-import javafx.scene.control.Label;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
+import javafx.event.ActionEvent;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCombination;
 
 @SuppressWarnings("rawtypes")
-public class TermTreeView extends TreeView {
+public class TermTreeView extends TreeView<OtpErlangObject> {
 	
 	@SuppressWarnings("unchecked")
 	public TermTreeView() {
 		setRoot(new TreeItem());
+
+		MenuItem copyMenuItem = new MenuItem("Copy");
+		copyMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+c"));
+		copyMenuItem.setOnAction(this::onCopyCalls);
+		setContextMenu(new ContextMenu(copyMenuItem));
 	}
 	
 	public void populateFromTerm(OtpErlangObject obj) {
@@ -143,10 +153,26 @@ public class TermTreeView extends TreeView {
 		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record"), obj);
 	}
 
-	public void populateFromListContents(OtpErlangList list) {
-		for (OtpErlangObject a : list) {
-			populateFromTerm(a);
-		}
-	}
+    public void populateFromListContents(OtpErlangList list) {
+        for (OtpErlangObject a : list) {
+            populateFromTerm(a);
+            }
+    }
 
+    private void onCopyCalls(ActionEvent e) {
+        StringBuilder sbuilder = new StringBuilder();
+
+        for (TreeItem obj : getSelectionModel().getSelectedItems()) {
+            sbuilder.append(obj.getValue()).append("\n");
+            }
+
+        copyToClipboard(sbuilder);
+    }
+
+    private void copyToClipboard(StringBuilder sbuilder) {
+        final Clipboard clipboard = Clipboard.getSystemClipboard();
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(sbuilder.toString());
+        clipboard.setContent(content);
+    }
 }
