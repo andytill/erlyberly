@@ -153,7 +153,7 @@ public class DbgView implements Initializable {
         else if(e.getEventType() == KeyEvent.KEY_PRESSED && toggleAllTracesDown) {
             return;
         }
-        else if(e.getEventType() == KeyEvent.KEY_PRESSED &&  KeyCode.T == e.getCode() && e.isControlDown() && e.isShiftDown()) {
+        else if(e.getEventType() == KeyEvent.KEY_PRESSED &&  KeyCode.T == e.getCode() && e.isShortcutDown() && e.isShiftDown()) {
             toggleAllTracesDown = true;
             toggleTracesToAllFunctions();
         }
