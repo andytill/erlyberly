@@ -1,7 +1,12 @@
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangObject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
+import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
@@ -32,13 +37,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangObject;
-
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
-import floatyfield.FloatyFieldView;
 
 
 public class DbgTraceView extends VBox {
@@ -71,10 +69,16 @@ public class DbgTraceView extends VBox {
 		
 		putTableColumns();
 
-		Bindings.bindContentBidirectional(tracesBox.getItems(), filteredTraces);
-		
+        // #47 double wrapping the filtered list in another sorted list, otherwise
+        // the table cannot be sorted on columns. Binding the items will throw exceptions
+        // when sorting on columns.
+        // see http://code.makery.ch/blog/javafx-8-tableview-sorting-filtering/
+        SortedList<TraceLog> sortedData = new SortedList<>(filteredTraces);
+        sortedData.comparatorProperty().bind(tracesBox.comparatorProperty());
+        tracesBox.setItems(sortedData);
+
 		putTraceContextMenu();
-		
+
 		Button clearTraceLogsButton;
 		clearTraceLogsButton = new Button("Clear");
 		clearTraceLogsButton.setTextOverrun(OverrunStyle.CLIP);
