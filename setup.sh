@@ -8,15 +8,18 @@ erlc +debug_info -o src/main/resources/erlyberly/beam/ src/main/resources/erlybe
 
 # install floaty field
 git clone https://github.com/andytill/floaty-field.git
+cp -r .mvn floaty-field/
+cp mvnw floaty-field/
 cd floaty-field
-mvn install
+./mvnw install
 cd ..
 
 # install jinterface
 git clone https://github.com/andytill/jinterface.git
-
+cp -r .mvn jinterface/
+cp mvnw jinterface/
 cd jinterface
-mvn install
+./mvnw install
 cd ..
 
-mvn clean install assembly:single
+./mvnw clean install assembly:single

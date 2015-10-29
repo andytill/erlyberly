@@ -157,7 +157,7 @@ This happens when java version 8 is installed but the update is less than 20. Pl
 
 ### Compiling
 
-You will need **JDK 8u20** or higher and **Maven** to compile. Once these are installed, run:
+You will need **JDK 8u20** or higher. Once installed, run:
 
     ./setup.sh
 
@@ -165,11 +165,13 @@ This will install dependencies locally and build the runnable jar in the target 
 
 To recompile the erlyberly.erl file after modifications:
 
-    mvn compile
+    ./mvnw compile
 
 To rebuild the runnable jar after modifying the java or erlang code:
 
-    mvn install assembly:single
+    ./mvnw install assembly:single
+
+Note usage of `./mvnw`. erlyberly uses [maven-wrapper](https://github.com/takari/maven-wrapper) so that maven does not need to be installed to compile.
 
 ### Roadmap
 
