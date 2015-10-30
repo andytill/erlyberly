@@ -1,12 +1,14 @@
 package erlyberly;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -39,6 +41,11 @@ public class ModFuncContextMenu extends ContextMenu {
     private final SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItem;
     
     private final SimpleBooleanProperty isSelectionModule, isSelectionFunction;
+
+    /**
+     * Root tree item of the module tree.
+     */
+    private final SimpleObjectProperty<TreeItem<ModFunc>> rootProperty;
     
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
         return selectedTreeItem;
@@ -48,9 +55,14 @@ public class ModFuncContextMenu extends ContextMenu {
         return selectedItem;
     }
 
+    public SimpleObjectProperty<TreeItem<ModFunc>> rootProperty() {
+        return rootProperty;
+    }
+
     public ModFuncContextMenu(DbgController aDbgController) {
         isSelectionModule = new SimpleBooleanProperty();
         isSelectionFunction = new SimpleBooleanProperty();
+        rootProperty = new SimpleObjectProperty<>();
         
         dbgController = aDbgController;
         selectedItem = new SimpleObjectProperty<>();
@@ -68,7 +80,7 @@ public class ModFuncContextMenu extends ContextMenu {
             }
         });
         
-        MenuItem functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
+        MenuItem functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
@@ -80,6 +92,11 @@ public class ModFuncContextMenu extends ContextMenu {
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
         exportsTraceMenuItem.disableProperty().bind(isSelectionModule.not());
         
+        traceAllMenuItem = new MenuItem("Trace All");
+        traceAllMenuItem.setOnAction((e) -> { toggleTracesToAllFunctions(); });
+        traceAllMenuItem.disableProperty().bind(rootProperty.isNull());
+        traceAllMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+shift+t"));
+
         moduleTraceMenuItem = new MenuItem("Recursive Trace");
         moduleTraceMenuItem.setOnAction(this::onModuleTrace);
         moduleTraceMenuItem.disableProperty().bind(isSelectionModule.not());
@@ -105,7 +122,7 @@ public class ModFuncContextMenu extends ContextMenu {
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
         callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(isSelectionFunction.not()));
         getItems().addAll(
-            functionTraceMenuItem, exportsTraceMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
+            functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
             new SeparatorMenuItem(), callGraphMenuItem, 
             new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
     }
@@ -282,5 +299,26 @@ public class ModFuncContextMenu extends ContextMenu {
         primaryStage.show();
 
         CloseWindowOnEscape.apply(scene, primaryStage);
+    }
+
+    /**
+     * Toggle tracing on all unfiltered (visible, even unexpanded) functions.
+     */
+    public void toggleTracesToAllFunctions() {
+        ArrayList<ModFunc> funs = findUnfilteredFunctions();
+        for (ModFunc func : funs) {
+            dbgController.toggleTraceModFunc(func);
+        }
+    }
+
+    private ArrayList<ModFunc> findUnfilteredFunctions() {
+        ObservableList<TreeItem<ModFunc>> filteredTreeModules = rootProperty.get().getChildren();
+        ArrayList<ModFunc> funs = new ArrayList<>();
+        for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
+            for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
+                funs.add(modFunc.getValue());
+            }
+        }
+        return funs;
     }
 }

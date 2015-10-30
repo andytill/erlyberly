@@ -6,6 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangTuple;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
+import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -23,20 +31,9 @@ import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
-import floatyfield.FloatyFieldView;
 
 
 
@@ -76,6 +73,7 @@ public class DbgView implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
+        modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
         modulesTree
             .getSelectionModel()
             .selectedItemProperty()
@@ -120,15 +118,10 @@ public class DbgView implements Initializable {
 		
 		filterTextProperty = ffView.textProperty();
         filterTextProperty.addListener(this::onFunctionSearchChange);
-		
 
         TextField filterTextView;
         filterTextView = floatyFieldTextField(loader);
-        filterTextView.addEventFilter(KeyEvent.ANY, (e) -> {
-            onToggleAllTraces(e);
-        });
-        
-		
+
 		Platform.runLater(() -> {
             FilterFocusManager.addFilter(filterTextView, 1);
         });
@@ -144,39 +137,6 @@ public class DbgView implements Initializable {
     static boolean toggleAllTracesDown = false;
 
     private StringProperty filterTextProperty;
-    
-    /**
-     * ctrl+shift+t toggles tracing on all unfiltered functions in the module
-     * tree. Check if this pattern is down and has not already been acted on.
-     */
-    private void onToggleAllTraces(KeyEvent e) {
-        if(e.getEventType() == KeyEvent.KEY_RELEASED) {
-            toggleAllTracesDown = false;
-            return;
-        }
-        else if(e.getEventType() == KeyEvent.KEY_PRESSED && toggleAllTracesDown) {
-            return;
-        }
-        else if(e.getEventType() == KeyEvent.KEY_PRESSED &&  KeyCode.T == e.getCode() && e.isShortcutDown() && e.isShiftDown()) {
-            toggleAllTracesDown = true;
-            toggleTracesToAllFunctions();
-        }
-    }
-
-    /**
-     * Toggle tracing on all unfiltered (visible, even unexpanded) functions.
-     */
-    private void toggleTracesToAllFunctions() {
-        ArrayList<ModFunc> funs = new ArrayList<>();
-        for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
-            for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
-                funs.add(modFunc.getValue());
-            }
-        }
-        for (ModFunc func : funs) {
-            dbgController.toggleTraceModFunc(func);
-        }
-    }
 
     private TextField floatyFieldTextField(FxmlLoadable loader) {
         // FIXME floaty field should allow access to the text field
