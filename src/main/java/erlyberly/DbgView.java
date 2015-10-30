@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -117,7 +118,8 @@ public class DbgView implements Initializable {
 		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 		modulesBox.getChildren().add(0, loader.fxmlNode);
 		
-		ffView.textProperty().addListener(this::onFunctionSearchChange);
+		filterTextProperty = ffView.textProperty();
+        filterTextProperty.addListener(this::onFunctionSearchChange);
 		
 
         TextField filterTextView;
@@ -140,6 +142,8 @@ public class DbgView implements Initializable {
      * event which can be many.
      */
     static boolean toggleAllTracesDown = false;
+
+    private StringProperty filterTextProperty;
     
     /**
      * ctrl+shift+t toggles tracing on all unfiltered functions in the module
@@ -309,6 +313,9 @@ public class DbgView implements Initializable {
 		Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
 
 		modulesTree.setRoot(root);
+
+        // set predicates on the function tree items so that they filter correctly
+        filterForFunctionTextMatch(filterTextProperty.get());
 	}
 	
 	private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
