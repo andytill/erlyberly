@@ -279,7 +279,6 @@ public class ModFuncContextMenu extends ContextMenu {
         primaryStage = new Stage();
         primaryStage.setTitle(title);
         primaryStage.setScene(scene);
-        primaryStage.sizeToScene();
         primaryStage.show();
 
         CloseWindowOnEscape.apply(scene, primaryStage);
