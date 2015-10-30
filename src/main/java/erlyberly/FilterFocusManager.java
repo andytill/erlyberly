@@ -50,9 +50,17 @@ public class FilterFocusManager {
             focused = 0;
         }
         else {
-            focused++;
-            if(focused >= filters.size()) {
-                focused = 0;
+            // iterate the filters until we find one that is part of the scene or we run out of filters
+            int iterations = 0;
+            while(iterations < filters.size()) {
+                iterations++;
+                focused++;
+                if(focused >= filters.size()) {
+                    focused = 0;
+                }
+                boolean isFocusable = filters.get(focused).getScene() != null;
+                if(isFocusable)
+                    break;
             }
         }
         
