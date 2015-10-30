@@ -124,10 +124,13 @@ public class NodeAPI {
 		return appProcs;
 	}
 
-	public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
-		assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
+    public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
+        assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 
-		self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
+        // clear previous connections and threads if any, before we reconnect
+        disconnect();
+
+        self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
 		if(!cookie.isEmpty()) {
 			self.setCookie(cookie);
 		}
@@ -156,6 +159,25 @@ public class NodeAPI {
 		checkAliveThread = new CheckAliveThread();
 		checkAliveThread.start();
 	}
+
+    private void disconnect() {
+        try {
+            if (connection != null)
+                connection.close();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+        try {
+            if (self != null)
+                self.close();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+        connection = null;
+        self = null;
+    }
 
 	private void addErrorLoggerHandler() throws IOException, OtpErlangException {
         OtpErlangList args = OtpUtil.list(mbox.self());
