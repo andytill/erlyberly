@@ -17,83 +17,102 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
 
 @SuppressWarnings("rawtypes")
-public class TermTreeView extends TreeView<OtpErlangObject> {
-	
-	@SuppressWarnings("unchecked")
+public class TermTreeView extends TreeView<TermTreeItem> {
+
 	public TermTreeView() {
-		setRoot(new TreeItem());
+		setRoot(new TreeItem<TermTreeItem>());
 
 		MenuItem copyMenuItem = new MenuItem("Copy");
 		copyMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+c"));
 		copyMenuItem.setOnAction(this::onCopyCalls);
-		setContextMenu(new ContextMenu(copyMenuItem));
-	}
-	
+
+        MenuItem dictMenuItem = new MenuItem("Dict to List");
+        dictMenuItem.setOnAction(this::onViewDict);
+
+        setContextMenu(new ContextMenu(copyMenuItem, dictMenuItem));
+}
+
+    public void onViewDict(ActionEvent e) {
+        TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
+        if(item == null)
+            return;
+        if(item.getValue() == null || !OtpUtil.atom("dict").equals(item.getValue().getObject()))
+            return;
+        if(item.getParent() == null || !(item.getParent().getValue().getObject() instanceof OtpErlangTuple))
+            return;
+
+        OtpErlangObject dict = item.getParent().getValue().getObject();
+
+        try {
+            OtpErlangList props = ErlyBerly.nodeAPI().dictToPropslist(dict);
+            TermTreeView parentControl = new TermTreeView();
+            parentControl.populateFromTerm(props);
+            ErlyBerly.subWindow("dict_to_list", parentControl);
+        }
+        catch (Exception e1) {
+            e1.printStackTrace();
+        }
+    }
+
 	public void populateFromTerm(OtpErlangObject obj) {
 		setShowRoot(false);
-		
 		addToTreeItem(getRoot(), obj);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private void addToTreeItem(TreeItem parent, OtpErlangObject obj) {
-		
+	private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
 		if(obj instanceof OtpErlangBinary) {
-			TreeItem item = new TreeItem(OtpUtil.binaryToString((OtpErlangBinary) obj));
+			TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, OtpUtil.binaryToString((OtpErlangBinary) obj)));
 			parent.getChildren().add(item);
 		}
 		else if(obj instanceof OtpErlangTuple) {
 			OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
 			
 			if(elements.length == 0) {
-				parent.getChildren().add(new TreeItem("{ }"));
+				parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "{ }")));
 			}
 			else {
-				TreeItem tupleItem;
-				
-				if(isRecord(obj)) {
+                TreeItem<TermTreeItem> tupleItem;
+                if(isRecord(obj)) {
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
                     
-					tupleItem = new TreeItem("{");
+                    tupleItem = new TreeItem<>(new TermTreeItem(obj, "{"));
                     tupleItem.setGraphic(recordLabel(recordNameText));
-					parent.getChildren().add(tupleItem);
-					tupleItem.setExpanded(true);
-					elements = OtpUtil.iterableElements(OtpUtil.tupleElement(2, obj));// ((OtpErlangList) OtpUtil.tupleElement(2, obj)).elements();
-					for (OtpErlangObject e : elements) {
-						addToTreeItem(tupleItem, e);
-					}
-					parent.getChildren().add(new TreeItem("}"));
-				}
-				else if(isRecordField(obj)) {
-				    
-					tupleItem = new TreeItem(" ");
-					tupleItem.setGraphic(recordLabel(OtpUtil.tupleElement(1, obj) + " =  "));
+                    parent.getChildren().add(tupleItem);
                     tupleItem.setExpanded(true);
-					
-					parent.getChildren().add(tupleItem);
-					
-					OtpErlangObject value = OtpUtil.tupleElement(2, obj);
-					if(OtpUtil.isLittleTerm(value))
-					    tupleItem.setValue(otpObjectToString(value));
-					else
-					    addToTreeItem(tupleItem, value);
-					
+                    elements = OtpUtil.iterableElements(OtpUtil.tupleElement(2, obj));
+                    for (OtpErlangObject e : elements) {
+                        addToTreeItem(tupleItem, e);
+                    }
+                    parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "}")));
+                }
+                else if(isRecordField(obj)) {
+                    tupleItem = new TreeItem<>(new TermTreeItem(obj, " "));
+                    tupleItem.setGraphic(recordLabel(OtpUtil.tupleElement(1, obj) + " =  "));
+                    tupleItem.setExpanded(true);
+
+                    parent.getChildren().add(tupleItem);
+
+                    OtpErlangObject value = OtpUtil.tupleElement(2, obj);
+                    if(OtpUtil.isLittleTerm(value))
+                        tupleItem.setValue(new TermTreeItem(value, otpObjectToString(value)));
+                    else
+                        addToTreeItem(tupleItem, value);
 				}
 				else {
-					tupleItem = new TreeItem();
+					tupleItem = new TreeItem<>();
 					tupleItem.setExpanded(true);
 					
 					if(OtpUtil.isLittleTerm(obj)) {
-					    tupleItem.setValue(otpObjectToString(obj));
+					    tupleItem.setValue(new TermTreeItem(obj, otpObjectToString(obj)));
 	                    parent.getChildren().add(tupleItem);
 					}
 					else {
-                        tupleItem.setValue("{");
+                        tupleItem.setValue(new TermTreeItem(obj, "{"));
 	                    for (OtpErlangObject e : elements) {
 	                        addToTreeItem(tupleItem, e);
 	                    }
 	                    parent.getChildren().add(tupleItem);
-	                    parent.getChildren().add(new TreeItem("}"));
+	                    parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "}")));
 					}
 					
 				}
@@ -103,31 +122,31 @@ public class TermTreeView extends TreeView<OtpErlangObject> {
 			OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
 			
 			if(elements.length == 0) {
-				parent.getChildren().add(new TreeItem("[ ]"));
+                parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "[ ]")));
 			}
 			else {
-				TreeItem listItem;
+				TreeItem<TermTreeItem> listItem;
 				
-				listItem = new TreeItem("[");
+				listItem = new TreeItem<>(new TermTreeItem(obj, "["));
 				listItem.setExpanded(true);
 				
 
                 if(OtpUtil.isLittleTerm(obj)) {
-                    listItem.setValue(otpObjectToString(obj));
+                    listItem.setValue(new TermTreeItem(obj, otpObjectToString(obj)));
                     parent.getChildren().add(listItem);
                 }
                 else {
-                    listItem.setValue("[");
+                    listItem.setValue(new TermTreeItem(obj, "["));
                     for (OtpErlangObject e : elements) {
                         addToTreeItem(listItem, e);
                     }
                     parent.getChildren().add(listItem);
-                    parent.getChildren().add(new TreeItem("]"));
+                    parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "]")));
                 }
 			}
 		}
 		else {
-            parent.getChildren().add(new TreeItem(otpObjectToString(obj)));
+            parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, otpObjectToString(obj))));
 		}
 	}
 
@@ -156,7 +175,7 @@ public class TermTreeView extends TreeView<OtpErlangObject> {
     public void populateFromListContents(OtpErlangList list) {
         for (OtpErlangObject a : list) {
             populateFromTerm(a);
-            }
+        }
     }
 
     private void onCopyCalls(ActionEvent e) {
@@ -164,8 +183,7 @@ public class TermTreeView extends TreeView<OtpErlangObject> {
 
         for (TreeItem obj : getSelectionModel().getSelectedItems()) {
             sbuilder.append(obj.getValue()).append("\n");
-            }
-
+        }
         copyToClipboard(sbuilder);
     }
 

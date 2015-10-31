@@ -14,16 +14,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javafx.application.Platform;
-import javafx.beans.Observable;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -45,6 +35,15 @@ import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
 import erlyberly.SeqTraceLog;
 import erlyberly.TraceLog;
+import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class NodeAPI {
     private static final OtpErlangAtom ERLYBERLY_XREF_STARTED_ATOM = atom("erlyberly_xref_started");
@@ -544,4 +543,9 @@ public class NodeAPI {
 			return errorResponse;
 		}
 	}
+
+    public OtpErlangList dictToPropslist(OtpErlangObject dict) throws IOException, OtpErlangException {
+        sendRPC("dict", "to_list", list(dict));
+        return (OtpErlangList) receiveRPC(5000);
+    }
 }

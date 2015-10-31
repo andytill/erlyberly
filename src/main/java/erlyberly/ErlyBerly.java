@@ -156,4 +156,19 @@ public class ErlyBerly extends Application {
 	public static NodeAPI nodeAPI() {
 		return nodeAPI;
 	}
+
+
+    public static void subWindow(String title, Parent parentControl) {
+        Stage stage = new Stage();
+        Scene scene = new Scene(parentControl);
+
+        CloseWindowOnEscape.apply(scene, stage);
+
+        stage.setScene(scene);
+        stage.setWidth(800);
+        stage.setHeight(600);
+        stage.setTitle(title);
+
+        stage.show();
+    }
 }
