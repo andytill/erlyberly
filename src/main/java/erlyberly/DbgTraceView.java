@@ -3,8 +3,6 @@ package erlyberly;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -20,10 +18,8 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
@@ -78,21 +74,12 @@ public class DbgTraceView extends VBox {
         tracesBox.setItems(sortedData);
 
 		putTraceContextMenu();
-
-		Button clearTraceLogsButton;
-		clearTraceLogsButton = new Button("Clear");
-		clearTraceLogsButton.setTextOverrun(OverrunStyle.CLIP);
-		clearTraceLogsButton.setGraphic(Icon.create().icon(AwesomeIcon.FILE_ALT));
-		clearTraceLogsButton.setGraphicTextGap(8d);
-		clearTraceLogsButton.setOnAction((e) -> { onTraceLogClear(); });
-		HBox.setHgrow(clearTraceLogsButton, Priority.ALWAYS);
 		
 		HBox hBox;
 		hBox = new HBox();
 		hBox.setSpacing(5d);
 		hBox.setPadding(new Insets(5, 5, 0, 5));
 		addTraceLogFloatySearchControl(hBox);
-		hBox.getChildren().add(clearTraceLogsButton);
 		
 		getChildren().addAll(hBox, tracesBox);
 	    
@@ -183,11 +170,6 @@ public class DbgTraceView extends VBox {
 		
 		tracesBox.setContextMenu(traceContextMenu);
 		tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
-	}
-
-	private void onTraceLogClear() {
-		traceLogs.clear();
-		tracesBox.getItems().clear();
 	}
 
 	private void onTraceClicked(MouseEvent me) {

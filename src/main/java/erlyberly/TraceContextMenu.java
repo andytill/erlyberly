@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
@@ -16,10 +17,12 @@ public class TraceContextMenu extends ContextMenu {
 	
 	private ObservableList<TraceLog> items, selectedItems;
 
-	public TraceContextMenu() {
-		getItems().add(menuItem("Copy All", "shortcut+c", this::onCopy));
-		getItems().add(menuItem("Copy Function Call", null, this::onCopyCalls));
-		getItems().add(menuItem("Delete", "delete", this::onDelete));
+    public TraceContextMenu() {
+        getItems().add(menuItem("Copy All", "shortcut+c", this::onCopy));
+        getItems().add(menuItem("Copy Function Call", null, this::onCopyCalls));
+        getItems().add(new SeparatorMenuItem());
+        getItems().add(menuItem("Delete", "delete", this::onDelete));
+        getItems().add(menuItem("Delete All", "shortcut+n", this::onDeleteAll));
 	}
 
 	private MenuItem menuItem(String text, String accelerator, EventHandler<ActionEvent> e) {
@@ -70,6 +73,9 @@ public class TraceContextMenu extends ContextMenu {
 		}
 	}
 
+    private void onDeleteAll(ActionEvent e) {
+        items.clear();
+    }
 
 	public void setSelectedItems(ObservableList<TraceLog> selectedItems2) {
 		selectedItems = selectedItems2;
