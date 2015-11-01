@@ -14,14 +14,12 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -31,6 +29,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -74,15 +73,11 @@ public class DbgTraceView extends VBox {
         tracesBox.setItems(sortedData);
 
 		putTraceContextMenu();
-		
-		HBox hBox;
-		hBox = new HBox();
-		hBox.setSpacing(5d);
-		hBox.setPadding(new Insets(5, 5, 0, 5));
-		addTraceLogFloatySearchControl(hBox);
-		
-		getChildren().addAll(hBox, tracesBox);
-	    
+
+        Parent p = traceLogFloatySearchControl();
+
+        getChildren().addAll(p, tracesBox);
+
 		dbgController.getTraceLogs().addListener(this::traceLogsChanged);
 	}
 
@@ -257,30 +252,28 @@ public class DbgTraceView extends VBox {
 		});
 	}
 
-	private FxmlLoadable addTraceLogFloatySearchControl(HBox traceLogSearchBox) {
+    private Region traceLogFloatySearchControl() {
 		FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
-		
+
 		loader.load();
 
 		FloatyFieldView ffView;
-		
+
 		ffView = (FloatyFieldView) loader.controller;
 		ffView.promptTextProperty().set("Search trace logs");
-		
+
 		HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
-		
-		traceLogSearchBox.getChildren().add(0, new Separator(Orientation.VERTICAL));
-		traceLogSearchBox.getChildren().add(0, loader.fxmlNode);
 
 		ffView.textProperty().addListener((o, ov, nv) -> { onTraceFilterChange(nv); });
-		
-		Platform.runLater(() -> {
+
+        Region fxmlNode = (Region) loader.fxmlNode;
+        fxmlNode.setPadding(new Insets(5, 5, 0, 5));
+        Platform.runLater(() -> {
             FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 2);
         });
-		
-		return loader;
-	}
-	
+
+        return fxmlNode;
+    }
 
 	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
 		while(e.next()) {
