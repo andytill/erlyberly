@@ -179,7 +179,7 @@ public class DbgTraceView extends VBox {
 		TraceContextMenu traceContextMenu = new TraceContextMenu();
 		traceContextMenu.setItems(traceLogs);
 		traceContextMenu
-				.setSelectedItems(tracesBox.getItems());
+				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 		
 		tracesBox.setContextMenu(traceContextMenu);
 		tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
