@@ -3,9 +3,35 @@
 
 **erlyberly** is a debugger for erlang and [elixir](https://twitter.com/andy_till/status/539566833515626497) using erlang tracing. It is probably the easiest and quickest way to start debugging your erlang nodes.
 
-If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts. 
+If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts.
 
-Download the latest runnable releases [here](https://github.com/andytill/erlyberly/releases).
+### Compiling
+
+Tags will no longer have binary releases, compile from master to get the latest features and bug fixes. This is easy with the one step build.  You will need **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+
+Now, git clone the repo:
+
+    git clone https://github.com/andytill/erlyberly.git
+
+`cd` into the erlyberly repo directory and run:
+
+    ./setup.sh
+
+This will install dependencies locally and build the runnable jar, run erlyberly:
+
+    java -jar target/erlyberly-0.6.7-jar-with-dependencies.jar
+
+### Compiling for dev work
+
+To recompile the erlyberly.erl or java source after modifications:
+
+    ./mvnw compile
+
+To rebuild the runnable jar after modifying the java or erlang code:
+
+    ./mvnw install assembly:single
+
+Note usage of `./mvnw`. erlyberly uses [maven-wrapper](https://github.com/takari/maven-wrapper) so that maven does not need to be installed to compile.
 
 ### Features and How To
 
@@ -123,28 +149,21 @@ Click the button to view the crash reports and clear the notifications displayed
 
 ##### Cross platform
 
-Tested on Ubuntu and Windows 7/8.  Also seen on [OS X](http://t.co/kzXppo5GEt).
+Tested on OSX, Linux Ubuntu, RHEL and CentOS and Windows 7/8.
 
 ### Shortcuts
 
+On OSX all shortcuts use `cmd` instead of `ctrl`.
+
 |      Keys      |                                           Action                                           |
 | -------------- | :----------------------------------------------------------------------------------------: |
+| `escape`       |                                     Close sub windows.                                     |
 | `ctrl+f`       |       Focus on the last focused filter field, or the next if one is already focused.       |
 | `ctrl+m`       |                        Toggle visibility of modules and functions.                         |
+| `ctrl+n`       |                                     Clear trace logs                                       |
 | `ctrl+p`       |                              Toggle visibility of processes.                               |
 | `ctrl+t`       |                Toggle tracing for the selected function in the module tree.                |
-| `escape`       |                                     Close sub windows.                                     |
 | `ctrl+shift+t` | Press in the module/function filter field to apply traces to all functions that have not been filtered. |
-
-
-
-### How to get it
-
-Go to the github [releases section](https://github.com/andytill/erlyberly/releases) and download the runnable jar.  In Windows you can double click to run it or from the console in any OS `java -jar erlyberly-runnable.jar`.
-
-You will need Java 8u20 or higher to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  There are no other dependencies.
-
-If you are having issues try compiling the erlyberly beam against the erlang/OTP version it is being run against and building the jar again, instructions below.
 
 ### Trouble Shooting
 
@@ -154,24 +173,6 @@ erlyberly must have epmd running on the machine as it is running.  Otherwise it 
 
 ##### Cannot start, `NoSuchMethodException` is thrown
 This happens when java version 8 is installed but the update is less than 20. Please update your version of java. See issue [#39](https://github.com/andytill/erlyberly/issues/39).
-
-### Compiling
-
-You will need **JDK 8u20** or higher. Once installed, run:
-
-    ./setup.sh
-
-This will install dependencies locally and build the runnable jar in the target directory i.e. `target/erlyberly-0.6.7-jar-with-dependencies.jar` and the `erlyberly.beam` file.
-
-To recompile the erlyberly.erl file after modifications:
-
-    ./mvnw compile
-
-To rebuild the runnable jar after modifying the java or erlang code:
-
-    ./mvnw install assembly:single
-
-Note usage of `./mvnw`. erlyberly uses [maven-wrapper](https://github.com/takari/maven-wrapper) so that maven does not need to be installed to compile.
 
 ### Roadmap
 
