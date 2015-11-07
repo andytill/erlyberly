@@ -1,10 +1,5 @@
 language: java
-sudo: false
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-before_script:
-  - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+jdk:
+  - oraclejdk8
 after_success:
   - ./mvnw assembly:single
