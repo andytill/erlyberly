@@ -112,6 +112,7 @@ public class OtpUtil {
                 }
                 otpObjectToString(fields.elementAt(i), sb);
             }
+            sb.append("}");
         }
         else if(isErlyberlyRecordField(obj)) {
             OtpErlangObject fieldObj = ((OtpErlangTuple)obj).elementAt(2);
