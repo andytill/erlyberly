@@ -1,6 +1,8 @@
 
 # erlyberly
 
+[![Build Status](https://travis-ci.org/andytill/erlyberly.svg?branch=master)](https://travis-ci.org/andytill/erlyberly)
+
 **erlyberly** is a debugger for erlang and [elixir](https://twitter.com/andy_till/status/539566833515626497) using erlang tracing. It is probably the easiest and quickest way to start debugging your erlang nodes.
 
 If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts.
@@ -121,7 +123,7 @@ View the source code for a module by right clicking on a module and selecting `V
 
 The source code that is shown by erlyberly is decompiled from the beam file, not what was actually compiled so comments and code that was excluded with an `ifdef` will be ommitted.
 
-##### View the abstrace source code for modules and functions
+##### View the abstract source code for modules and functions
 
 View the abstract source code for a module by right clicking on a module or function and selecting `View Abstract Code`. The beam file for the module must exist and it must have been compiled with `+debug_info` or the source code will not 
 
