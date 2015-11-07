@@ -10,6 +10,13 @@
   <name>erlyberly</name>
   <url>http://maven.apache.org</url>
 
+  <repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -18,9 +25,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>andytill</groupId>
+      <groupId>com.github.andytill</groupId>
       <artifactId>jinterface</artifactId>
-      <version>1.6</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
 	    <groupId>junit</groupId>
@@ -34,10 +41,11 @@
       <version>8.0.10</version>
     </dependency>
     <dependency>
-      <groupId>andytill</groupId>
+      <groupId>com.github.andytill</groupId>
       <artifactId>floaty-field</artifactId>
       <version>1.0.1</version>
-    </dependency>
+  </dependency>
+
   </dependencies>
 
   <build>
