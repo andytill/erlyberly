@@ -1,6 +1,8 @@
 
 # erlyberly
 
+[![Build Status](https://travis-ci.org/andytill/erlyberly.svg?branch=master)](https://travis-ci.org/andytill/erlyberly)
+
 **erlyberly** is a debugger for erlang and [elixir](https://twitter.com/andy_till/status/539566833515626497) using erlang tracing. It is probably the easiest and quickest way to start debugging your erlang nodes.
 
 If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts. 

@@ -7,7 +7,7 @@ rm -rf jinterface floaty-field src/main/resources/erlyberly/beam/*.beam
 erlc +debug_info -o src/main/resources/erlyberly/beam/ src/main/resources/erlyberly/beam/erlyberly.erl
 
 # install floaty field
-git clone https://github.com/andytill/floaty-field.git
+git clone -b "1.0.1" https://github.com/andytill/floaty-field.git
 cp -r .mvn floaty-field/
 cp mvnw floaty-field/
 cd floaty-field
@@ -15,7 +15,7 @@ cd floaty-field
 cd ..
 
 # install jinterface
-git clone https://github.com/andytill/jinterface.git
+git clone -b "1.6.0" https://github.com/andytill/jinterface.git
 cp -r .mvn jinterface/
 cp mvnw jinterface/
 cd jinterface

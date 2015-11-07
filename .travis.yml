@@ -1,0 +1,8 @@
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+before_script:
+  - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+script: ./setup.sh
