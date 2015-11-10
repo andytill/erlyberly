@@ -180,7 +180,7 @@ public class DbgTraceView extends VBox {
 	private void showWindow(Parent parent, CharSequence sb) {
 		Stage termsStage = new Stage();
 		Scene scene  = new Scene(parent);
-		
+		ErlyBerly.applyCssToWIndow(scene);
 		CloseWindowOnEscape.apply(scene, termsStage);
 		
 		termsStage.setScene(scene);

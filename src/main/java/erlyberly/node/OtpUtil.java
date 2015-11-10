@@ -24,7 +24,11 @@ import com.ericsson.otp.erlang.OtpMbox;
  */
 public class OtpUtil {
 
-	private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
+    private static final OtpErlangAtom ERLYBERLY_RECORD_ATOM = OtpUtil.atom("erlyberly_record");
+
+    private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
+
+    private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
 	private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
 	private static final OtpErlangAtom call = new OtpErlangAtom("call");
 	private static final OtpErlangAtom user = new OtpErlangAtom("user");
@@ -97,6 +101,23 @@ public class OtpUtil {
 		else if(obj instanceof OtpErlangPid) {
 			sb.append(pidToString((OtpErlangPid) obj));
 		}
+        else if(isErlyberlyRecord(obj)) {
+            OtpErlangTuple record = (OtpErlangTuple) obj;
+            OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(1);
+            OtpErlangList fields = (OtpErlangList) record.elementAt(2);
+            sb.append("{").append(recordName).append(", ");
+            for(int i=0; i < fields.arity(); i++) {
+                if(i != 0) {
+                    sb.append(", ");
+                }
+                otpObjectToString(fields.elementAt(i), sb);
+            }
+            sb.append("}");
+        }
+        else if(isErlyberlyRecordField(obj)) {
+            OtpErlangObject fieldObj = ((OtpErlangTuple)obj).elementAt(2);
+            otpObjectToString(fieldObj, sb);
+        }
 		else if(obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
 			String brackets = bracketsForTerm(obj);
 			OtpErlangObject[] elements = elementsForTerm(obj);
@@ -119,8 +140,8 @@ public class OtpUtil {
 		}
 		return sb;
 	}
-	
-	public static String bracketsForTerm(OtpErlangObject obj) {
+
+    public static String bracketsForTerm(OtpErlangObject obj) {
 		assert obj != null;
 		
 		if(obj instanceof OtpErlangTuple)
@@ -203,6 +224,18 @@ public class OtpUtil {
 		
 		return r;
 	}
+
+	/**
+	 * Checks if a term is tuple tagged with the erlyberly_record atom, meaning
+	 * it has metadata tagged with record and field names around the field values.
+	 */
+    public static boolean isErlyberlyRecord(OtpErlangObject obj) {
+        return isTupleTagged(ERLYBERLY_RECORD_ATOM, obj);
+    }
+
+    private static boolean isErlyberlyRecordField(OtpErlangObject obj) {
+        return isTupleTagged(ERLYBERLY_RECORD_FIELD_ATOM, obj);
+    }
 	
 	public static boolean isErrorReason(OtpErlangObject reason, OtpErlangObject error) {
 		assert isTupleTagged(ERROR_ATOM, error) : "tuple " + error + "is not tagged with 'error'";

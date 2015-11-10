@@ -70,6 +70,8 @@ get_process_state(Pid_string) when is_list(Pid_string) ->
         false ->
             {ok, State}
     end.
+
+%%
 format_record(Rec, Mod) when is_list(Rec) ->
     [format_record(R, Mod) || R <- Rec];
 format_record(Rec, Mod) when is_atom(element(1, Rec)) ->
@@ -98,6 +100,7 @@ record_fields([{record_field,_,{atom,_,Field},_} | Fs]) ->
     [Field | record_fields(Fs)];
 record_fields([]) ->
     [].
+
 %%% ============================================================================
 %%% module function tree
 %%% ============================================================================
@@ -232,26 +235,47 @@ collect_log(U, TC) ->
 maybe_add_log(skip, Logs) -> Logs;
 maybe_add_log(Log, Logs)  -> [Log | Logs].
 
-%%
-trace_to_props({trace_ts, Pid, call, Func, _, Timestamp}) ->
+%% Convert a 'call' trace (a normal function call, before return) to a
+%% {call, proplists()} that erlyberly can understand.
+call_trace_props(Pid, Func, Timestamp)  ->
     {call, 
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func},
-          {timetamp_call_us, timestamp_to_us(Timestamp)} ]};
+          {timetamp_call_us, timestamp_to_us(Timestamp)} ]}.
+
+%% Covert a 'return_from' trace into proplists erlyberly can understand
+return_from_trace_props(Pid, Result, Timestamp) ->
+    {return_from,
+        [ {pid, pid_to_list(Pid)},
+          {reg_name, get_registered_name(Pid)},
+          {result, Result},
+          {timetamp_return_us, timestamp_to_us(Timestamp)} ]}.
+
+%%
+trace_to_props({trace_ts, Pid, call, {Mod, Func_name, [Req, State]}, _, Timestamp}) when Func_name == handle_info orelse
+                                                                                         Func_name == handle_cast ->
+    call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp);
+trace_to_props({trace_ts, Pid, call, {Mod, handle_call, [Req, From, State]}, _, Timestamp}) ->
+    call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp);
+trace_to_props({trace_ts, Pid, call, Func, _, Timestamp}) ->
+    % call handler for everything else
+    call_trace_props(Pid, Func, Timestamp);
+trace_to_props({trace_ts, Pid, return_from, {Mod, Func_name, _}, {noreply, Rec}, Timestamp}) when Func_name == handle_info orelse
+                                                                                                  Func_name == handle_cast orelse
+                                                                                                  Func_name == handle_call ->
+    return_from_trace_props(Pid, {noreply, format_record(Rec, Mod)}, Timestamp);
+trace_to_props({trace_ts, Pid, return_from, {Mod, handle_call, _}, {reply, Reply, Rec}, Timestamp}) ->
+    return_from_trace_props(Pid, {reply, Reply, format_record(Rec, Mod)}, Timestamp);
+trace_to_props({trace_ts, Pid, return_from, _Func, Result, Timestamp}) ->
+    % return from handler for everything else
+    return_from_trace_props(Pid, Result, Timestamp);
 trace_to_props({trace_ts, Pid, exception_from, Func, {Class, Value}, Timestamp}) ->
-    {exception_from, 
+    {exception_from,
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func},
           {exception_from, {Class, Value}},
-          {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
-trace_to_props({trace_ts, Pid, return_from, Func, Result, Timestamp}) ->
-    {return_from, 
-        [ {pid, pid_to_list(Pid)},
-          {reg_name, get_registered_name(Pid)},
-          {fn, Func},
-          {result, Result},
           {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
 trace_to_props({trace, Pid, call, Func, _}) ->
     {call, 

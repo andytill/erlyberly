@@ -72,7 +72,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 			}
 			else {
                 TreeItem<TermTreeItem> tupleItem;
-                if(isRecord(obj)) {
+                if(OtpUtil.isErlyberlyRecord(obj)) {
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
                     
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, "{"));
@@ -166,10 +166,6 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
 	private boolean isRecordField(OtpErlangObject obj) {
 		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
-	}
-
-	private boolean isRecord(OtpErlangObject obj) {
-		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record"), obj);
 	}
 
     public void populateFromListContents(OtpErlangList list) {
