@@ -17,7 +17,7 @@ Now, git clone the repo:
 
 `cd` into the erlyberly repo directory and run:
 
-    ./setup.sh
+    ./mvnw install assembly:single
 
 This will install dependencies locally and build the runnable jar, run erlyberly:
 
@@ -28,10 +28,6 @@ This will install dependencies locally and build the runnable jar, run erlyberly
 To recompile the erlyberly.erl or java source after modifications:
 
     ./mvnw compile
-
-To rebuild the runnable jar after modifying the java or erlang code:
-
-    ./mvnw install assembly:single
 
 Note usage of `./mvnw`. erlyberly uses [maven-wrapper](https://github.com/takari/maven-wrapper) so that maven does not need to be installed to compile.
 
