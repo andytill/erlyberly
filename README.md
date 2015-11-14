@@ -21,7 +21,7 @@ If you want to build from a known tag:
 
 `cd` into the erlyberly repo directory and run:
 
-    ./mvnw install assembly:single
+    ./mvnw compile install assembly:single
 
 This will install dependencies locally and build the runnable jar, run erlyberly:
 
