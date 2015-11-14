@@ -21,11 +21,13 @@ Now, git clone the repo:
 
 This will install dependencies locally and build the runnable jar, run erlyberly:
 
-    java -jar target/erlyberly-0.6.7-jar-with-dependencies.jar
+    java -jar target/erlyberly-<version>-runnable.jar
+
+Make sure to run the jar marked runnable, this has all it's dependencies included to make it portable.  Otherwise `ClassNotFoundException` will be thrown. 
 
 ### Compiling for dev work
 
-To recompile the erlyberly.erl or java source after modifications:
+To recompile erlyberly.erl or java source after modifications but not recreate the jar:
 
     ./mvnw compile
 
