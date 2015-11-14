@@ -4,7 +4,7 @@
 
   <groupId>andytill</groupId>
   <artifactId>erlyberly</artifactId>
-  <version>0.6.7</version>
+  <version>0.6.7-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>erlyberly</name>
