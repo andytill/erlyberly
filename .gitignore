@@ -14,3 +14,7 @@ target
 jinterface
 floaty-field
 src/main/resources/erlyberly/beam/erlyberly.beam
+
+# maven release stuff
+pom.xml.releaseBackup
+release.properties

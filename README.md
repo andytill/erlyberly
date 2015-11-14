@@ -15,6 +15,10 @@ Now, git clone the repo:
 
     git clone https://github.com/andytill/erlyberly.git
 
+If you want to build from a known tag:
+
+	git checkout tags/<version>
+
 `cd` into the erlyberly repo directory and run:
 
     ./mvnw install assembly:single
@@ -23,7 +27,7 @@ This will install dependencies locally and build the runnable jar, run erlyberly
 
     java -jar target/erlyberly-<version>-runnable.jar
 
-Make sure to run the jar marked runnable, this has all it's dependencies included to make it portable.  Otherwise `ClassNotFoundException` will be thrown. 
+Make sure to run the jar marked runnable, this has all it's dependencies included to make it portable.  Otherwise `ClassNotFoundException` will be thrown. If the jar wasn't compiled from a tag it will have SNAPSHOT in the jar name.
 
 ### Compiling for dev work
 
@@ -173,6 +177,14 @@ erlyberly must have epmd running on the machine as it is running.  Otherwise it 
 
 ##### Cannot start, `NoSuchMethodException` is thrown
 This happens when java version 8 is installed but the update is less than 20. Please update your version of java. See issue [#39](https://github.com/andytill/erlyberly/issues/39).
+
+### Creating a tag
+
+If you have admin rights on the repo:
+
+	git release:prepare
+
+The tag name should be the tag version. The new development tag should be an incremented version prepended with `-SNAPSHOT`.
 
 ### Roadmap
 
