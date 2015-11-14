@@ -58,6 +58,8 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+          <finalName>erlyberly-${project.version}-runnable</finalName>
           <archive>
             <manifest>
               <mainClass>erlyberly.ErlyBerly</mainClass>
