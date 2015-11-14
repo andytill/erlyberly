@@ -3,7 +3,7 @@
 
   <groupId>andytill</groupId>
   <artifactId>erlyberly</artifactId>
-  <version>0.6.8</version>
+  <version>0.6.9-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>erlyberly</name>
@@ -20,7 +20,7 @@
     <connection>scm:git:git@github.com:andytill/erlyberly.git</connection>
     <url>scm:git:git@github.com:andytill/erlyberly.git</url>
     <developerConnection>scm:git:git@github.com:andytill/erlyberly.git</developerConnection>
-    <tag>erlyberly-0.6.8</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
