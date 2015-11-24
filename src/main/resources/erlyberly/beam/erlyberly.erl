@@ -464,6 +464,8 @@ format_utc_timestamp() ->
 -include_lib("stdlib/include/ms_transform.hrl").
 
 %%
+seq_trace_match_spec(0) ->
+    dbg:fun2ms(fun(_) -> ?SET_SEQ_TOKEN end);
 seq_trace_match_spec(1) ->
     dbg:fun2ms(fun([_]) -> ?SET_SEQ_TOKEN end);
 seq_trace_match_spec(2) ->
