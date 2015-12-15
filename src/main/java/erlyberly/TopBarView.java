@@ -1,11 +1,21 @@
 package erlyberly;
 
+import java.awt.Desktop;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangObject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
+import erlyberly.node.AppProcs;
+import erlyberly.node.OtpUtil;
+import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
@@ -37,17 +47,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
-import com.ericsson.otp.erlang.OtpErlangObject;
-
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
-import erlyberly.node.AppProcs;
-import erlyberly.node.OtpUtil;
-import floatyfield.FloatyFieldView;
 
 public class TopBarView implements Initializable {
 	private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
@@ -117,8 +121,16 @@ public class TopBarView implements Initializable {
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
-		});
-		
+        });
+
+        Button tweetButton;
+        tweetButton = new Button("Tweet");
+        tweetButton.setGraphic(Icon.create().icon(AwesomeIcon.TWITTER));
+        tweetButton.setContentDisplay(ContentDisplay.TOP);
+        tweetButton.setGraphicTextGap(0d);
+        tweetButton.setOnAction((e) -> { tweet(); });
+        tweetButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
+
         hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
         hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
         erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
@@ -127,6 +139,8 @@ public class TopBarView implements Initializable {
 		
 		topBox.getItems().add(new Separator(Orientation.VERTICAL));
 		topBox.getItems().add(loader.fxmlNode);
+
+        topBox.getItems().addAll(rhsSpacer(), tweetButton);
 		
 		toggleHideProcsText();
 		toggleHideFuncsText();
@@ -136,6 +150,27 @@ public class TopBarView implements Initializable {
 		    .addListener(this::traceLogsChanged);
 	}
 
+    /**
+     * Create a node that just takes up space, so everything after
+     * is laid out on the right hand side.
+     */
+    private HBox rhsSpacer() {
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
+    }
+
+    private void tweet() {
+        String message = 
+            "Using erlyberly to debug my node @erlyberlytips";
+        URI uri;
+        try {
+            uri = new URI("https://twitter.com/intent/tweet?text=" + URLEncoder.encode(message, "utf-8"));
+            Desktop.getDesktop().browse(uri);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void traceLogsChanged(ListChangeListener.Change<? extends OtpErlangObject> e) {
         while(e.next()) {
