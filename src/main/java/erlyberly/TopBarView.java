@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -202,7 +203,7 @@ public class TopBarView implements Initializable {
     private CrashReportView crashReportView(OtpErlangObject obj) {
         CrashReportView crashReportView;
         crashReportView = new CrashReportView();
-        crashReportView.setCrashReport(obj);
+        crashReportView.setCrashReport((OtpErlangList) obj);
         return crashReportView;
     }
 
