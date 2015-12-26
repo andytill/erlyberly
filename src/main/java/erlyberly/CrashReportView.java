@@ -2,7 +2,9 @@ package erlyberly;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -31,6 +33,40 @@ public class CrashReportView extends TabPane {
         termsTab.setContent(termTreeView);
         stackTraceTab = new Tab("Stack Trace");
         stackTraceTab.setContent(new VBox(crashInfoTable, label, stackTraceListView));
+        
+        stackTraceListView.setCellFactory(new Callback<ListView<StackTraceElement>, ListCell<StackTraceElement>>() {
+            @Override
+            public ListCell<StackTraceElement> call(ListView<StackTraceElement> param) {
+                return new ListCell<StackTraceElement>() {
+                    private final Hyperlink functionLink = new Hyperlink();
+                    {
+                        setGraphic(functionLink);
+                        functionLink.setOnAction((e) -> {
+                            StackTraceElement stackElement = getItem();
+                            if(stackElement == null)
+                                return;
+                            ModFunc mf = stackElement.getModFunc();
+                            try {
+                                String source = ErlyBerly.nodeAPI().moduleFunctionSourceCode(
+                                        mf.getModuleName(), mf.getFuncName(), mf.getArity());
+                                ErlyBerly.showSourceCodeWindow("Crash Report Stack", source);
+                            } catch (Exception e1) {
+                                e1.printStackTrace();
+                            } 
+                        });
+                    }
+                    
+                    @Override
+                    public void updateItem(StackTraceElement item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if(item == null)
+                            functionLink.setText("");
+                        else
+                            functionLink.setText(item.toString());
+                    }
+                };
+            }
+        });
 
         getTabs().addAll(stackTraceTab, termsTab);
     }
@@ -84,14 +120,18 @@ public class CrashReportView extends TabPane {
     }
 
     private class StackTraceElement {
-        private ModFunc modFunc;
-        private long line;
-        private String file;
+        private final ModFunc modFunc;
+        private final long line;
+        private final String file;
 
         public StackTraceElement(ModFunc modFunc, String file, long line) {
             this.modFunc = modFunc;
             this.file = file;
             this.line = line;
+        }
+
+        public ModFunc getModFunc() {
+            return modFunc;
         }
 
         @Override

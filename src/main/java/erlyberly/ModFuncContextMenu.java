@@ -5,6 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangLong;
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangTuple;
+
+import erlyberly.node.NodeAPI;
+import erlyberly.node.OtpUtil;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -15,18 +22,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
-
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
-import erlyberly.node.NodeAPI;
-import erlyberly.node.OtpUtil;
 
 public class ModFuncContextMenu extends ContextMenu {
 
@@ -282,23 +280,7 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private void showModuleSourceCode(String title, String moduleSourceCode) {
-        TextArea textArea;
-        
-        textArea = new TextArea(moduleSourceCode);
-        textArea.getStyleClass().add("mod-src");
-        textArea.setEditable(false);
-        
-        Scene scene = new Scene(textArea, 800, 800);
-        ErlyBerly.applyCssToWIndow(scene);
-
-        Stage primaryStage;
-        
-        primaryStage = new Stage();
-        primaryStage.setTitle(title);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        CloseWindowOnEscape.apply(scene, primaryStage);
+        ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
     }
 
     /**
