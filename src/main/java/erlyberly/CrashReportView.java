@@ -19,17 +19,18 @@ public class CrashReportView extends TabPane {
     private final ListView<StackTraceElement> stackTraceListView = new ListView<>();
     private final TableView<Object[]> crashInfoTable = new TableView<>();
 
-    public CrashReportView() {
-        Tab stackTraceTab, termsTab;
-        
+    public CrashReportView() {        
         VBox.setVgrow(termTreeView, Priority.ALWAYS);
-        
 
-        Label label = new Label("Stack Trace");
+        Label label;
+        label = new Label("Stack Trace");
         label.setStyle("-fx-padding: 5; -fx-font-size: 14;");
-        
-        termsTab = new Tab("Crash Report Terms", termTreeView);
-        stackTraceTab = new Tab("Stack Trace", new VBox(crashInfoTable, label, stackTraceListView));
+
+        Tab stackTraceTab, termsTab;
+        termsTab = new Tab("Crash Report Terms");
+        termsTab.setContent(termTreeView);
+        stackTraceTab = new Tab("Stack Trace");
+        stackTraceTab.setContent(new VBox(crashInfoTable, label, stackTraceListView));
 
         getTabs().addAll(stackTraceTab, termsTab);
     }
