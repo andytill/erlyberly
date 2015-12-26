@@ -615,7 +615,7 @@ init([Node]) ->
 handle_event({error_report,_,{_, crash_report, Crash_props_1}}, State) ->
     Node = (State#err_state.node),
     {value, {error_info}, Crash_props_2} = lists:keytake(error_info, 1, Crash_props_1),
-    Node ! {erlyberly_error_report, lists:flatten(Crash_props)},
+    Node ! {erlyberly_error_report, lists:flatten(Crash_props_2)},
     {ok, State};
 handle_event(_, State) ->
     % io:format("error: ~p ~p~n", [element(1,E), tuple_size(E) ]), 
