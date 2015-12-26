@@ -1,10 +1,5 @@
 package erlyberly;
 
-import java.util.HashMap;
-
-import com.ericsson.otp.erlang.OtpErlangList;
-
-import erlyberly.node.OtpUtil;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
@@ -39,10 +34,7 @@ public class CrashReportView extends TabPane {
         getTabs().addAll(stackTraceTab, termsTab);
     }
 
-    public void setCrashReport(OtpErlangList obj) {
-        System.out.println(obj);
-        HashMap<Object, Object> crashMap  = OtpUtil.propsToMap(obj);
-        CrashReport crashReport  = new CrashReport(crashMap);
+    public void setCrashReport(CrashReport crashReport) {
         try {
             stackTraceListView.getItems().addAll(crashReport.mapStackTraces((module, function, arity, file, line) -> {
                 try {
@@ -58,12 +50,12 @@ public class CrashReportView extends TabPane {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        termTreeView.populateFromTerm(obj);
+        termTreeView.populateFromTerm(crashReport.getProps());
         
         Object[][] crashProps = {
-                {"Pid", crashMap.get(OtpUtil.atom("pid")) },
-                {"Reg. Name", crashMap.get(OtpUtil.atom("registered_name")) },
-                {"Initial Call", crashMap.get(OtpUtil.atom("initial_call")) }};
+                {"Pid", crashReport.getPid() },
+                {"Reg. Name", crashReport.getRegisteredName() },
+                {"Initial Call", crashReport.getProcessInitialCall() }};
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
         TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");

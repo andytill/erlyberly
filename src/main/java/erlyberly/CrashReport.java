@@ -8,6 +8,7 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
@@ -21,8 +22,22 @@ public class CrashReport {
     
     private final HashMap<Object, Object> crashProps;
 
-    public CrashReport(HashMap<Object, Object> hashMap) {
-        crashProps = hashMap;
+    private final String registeredName;
+
+    private final OtpErlangObject Terms;
+
+    public CrashReport(OtpErlangObject obj) {
+        this.Terms = obj;
+        crashProps  = OtpUtil.propsToMap((OtpErlangList) obj);
+        
+        // pull out the register name of the crashing process
+        Object aRegName = crashProps.get(OtpUtil.atom("registered_name"));
+        if(OtpUtil.list().equals(aRegName)) {
+            registeredName = "";
+        }
+        else {
+            registeredName = aRegName.toString();
+        }
     }
     
     <T> List<T> mapStackTraces(StackTraceFn<T> fn) {
@@ -48,6 +63,22 @@ public class CrashReport {
     
     public interface StackTraceFn<T> {
         T invoke(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity, String file, OtpErlangLong line);
+    }
+
+    public OtpErlangPid getPid() {
+        return (OtpErlangPid) crashProps.get(OtpUtil.atom("pid"));
+    }
+
+    public Object getRegisteredName() {
+        return registeredName;
+    }
+
+    public Object getProcessInitialCall() {
+        return crashProps.get(OtpUtil.atom("initial_call"));
+    }
+
+    public OtpErlangObject getProps() {
+        return Terms;
     }
 
 }

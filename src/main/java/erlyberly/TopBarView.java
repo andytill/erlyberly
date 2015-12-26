@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
-import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -19,6 +18,7 @@ import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
@@ -39,15 +39,16 @@ import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -71,8 +72,8 @@ public class TopBarView implements Initializable {
 	private Button refreshModulesButton;
 	@FXML
 	private Button erlangMemoryButton;
-    @FXML
-    private Button crashReportsButton;
+
+    private MenuButton crashReportsButton = new MenuButton("Crash Reports");
     @FXML
     private Button xrefAnalysisButton;
   	@FXML
@@ -82,6 +83,8 @@ public class TopBarView implements Initializable {
 	
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
+	    topBox.getItems().add(crashReportsButton);
+	    
 		hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
 		hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
 		hideProcessesButton.setGraphicTextGap(0d);
@@ -104,12 +107,31 @@ public class TopBarView implements Initializable {
 		erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
 		erlangMemoryButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
-		crashReportsButton.setGraphic(crashReportsGraphic());
-		crashReportsButton.setContentDisplay(ContentDisplay.TOP);
-		crashReportsButton.setGraphicTextGap(0d);
-		crashReportsButton.setTooltip(new Tooltip("View crash reports received from the connected node."));
-		crashReportsButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
-		crashReportsButton.setOnAction((e) -> { showCrashReportWindow(); });
+        crashReportsButton.setGraphic(crashReportsGraphic());
+        crashReportsButton.setContentDisplay(ContentDisplay.LEFT);
+        crashReportsButton.setGraphicTextGap(0d);
+        crashReportsButton.setTooltip(new Tooltip("View crash reports received from the connected node."));
+        // disable the button if we're not connected or there are no crash report menu items
+        crashReportsButton.disableProperty().bind(
+                ErlyBerly.nodeAPI().connectedProperty().not()
+                .or(Bindings.size(crashReportsButton.getItems()).isEqualTo(2)));
+        crashReportsButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
+        crashReportsButton.getItems().addAll(removeCrashReportsMenuItem(), new SeparatorMenuItem());
+        ErlyBerly.nodeAPI().getCrashReports()
+            .addListener((ListChangeListener.Change<? extends OtpErlangObject> e) -> {
+                while(e.next()) {
+                    for (OtpErlangObject obj : e.getAddedSubList()) {
+                        CrashReport crashReport = new  CrashReport(obj);
+                        MenuItem menuItem;
+                        menuItem = new MenuItem(crashReport.getPid().toString());
+                        menuItem.setOnAction((action) -> { 
+                            unreadCrashReportsProperty.set(0);
+                            showWindow("Crash Report", crashReportView(crashReport));
+                        });
+                        crashReportsButton.getItems().add(menuItem);
+                        }
+                    }
+                });
 
 		xrefAnalysisButton.setGraphic(xrefAnalysisGraphic());
 		xrefAnalysisButton.setContentDisplay(ContentDisplay.TOP);
@@ -151,6 +173,21 @@ public class TopBarView implements Initializable {
 		    .addListener(this::traceLogsChanged);
 	}
 
+    private MenuItem removeCrashReportsMenuItem() {
+        MenuItem menuItem;
+        menuItem = new MenuItem("Remove All Reports");
+        menuItem.setOnAction((e) -> {
+            ObservableList<MenuItem> items = crashReportsButton.getItems();
+            if(items.size() == 2)
+                return;
+            // the first two items are this menu item and a separator, delete
+            // everything after that
+            items.remove(2, items.size());
+            unreadCrashReportsProperty.set(0);
+        });
+        return menuItem;
+    }
+
     /**
      * Create a node that just takes up space, so everything after
      * is laid out on the right hand side.
@@ -179,31 +216,11 @@ public class TopBarView implements Initializable {
             unreadCrashReportsProperty.set(unreadCrashReportsProperty.get() + size);
         }
     }
-    
-    private void showCrashReportWindow() {
-        unreadCrashReportsProperty.set(0);
-        
-        ListView<OtpErlangObject> crashReportListView;
-        
-        crashReportListView = new ListView<OtpErlangObject>(ErlyBerly.nodeAPI().getCrashReports());
-        crashReportListView.setTooltip(new Tooltip("Double click on the crash report to see it in more detail."));
-        crashReportListView.setOnMouseClicked((me) -> {
-            if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
-                OtpErlangObject obj = crashReportListView.getSelectionModel().getSelectedItem();
-                
-                if(obj != null && obj != null) {
-                    showWindow("Crash Report", crashReportView(obj));
-                }
-            }
-        });
-        showWindow("Crash Reports", crashReportListView);
-    }
 
-
-    private CrashReportView crashReportView(OtpErlangObject obj) {
+    private CrashReportView crashReportView(CrashReport crashReport) {
         CrashReportView crashReportView;
         crashReportView = new CrashReportView();
-        crashReportView.setCrashReport((OtpErlangList) obj);
+        crashReportView.setCrashReport(crashReport);
         return crashReportView;
     }
 
