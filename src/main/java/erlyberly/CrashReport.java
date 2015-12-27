@@ -16,6 +16,8 @@ import erlyberly.node.OtpUtil;
 
 public class CrashReport {
     
+    private static final OtpErlangAtom ATOM_ERROR_INFO = OtpUtil.atom("error_info");
+
     private static final OtpErlangAtom ATOM_FILE = OtpUtil.atom("file");
     
     private static final OtpErlangAtom ATOM_LINE = OtpUtil.atom("line");
@@ -24,11 +26,14 @@ public class CrashReport {
 
     private final String registeredName;
 
-    private final OtpErlangObject Terms;
+    private final OtpErlangObject terms;
+
+    private final OtpErlangTuple errorInfo;
 
     public CrashReport(OtpErlangObject obj) {
-        this.Terms = obj;
+        this.terms = obj;
         crashProps  = OtpUtil.propsToMap((OtpErlangList) obj);
+        errorInfo = (OtpErlangTuple) crashProps.get(ATOM_ERROR_INFO);
         
         // pull out the register name of the crashing process
         Object aRegName = crashProps.get(OtpUtil.atom("registered_name"));
@@ -41,7 +46,6 @@ public class CrashReport {
     }
     
     <T> List<T> mapStackTraces(StackTraceFn<T> fn) {
-        OtpErlangTuple errorInfo = (OtpErlangTuple) crashProps.get(OtpUtil.atom("error_info"));
         OtpErlangList stackTrace = (OtpErlangList) errorInfo.elementAt(2);
         ArrayList<T> result = new ArrayList<T>();
         
@@ -78,7 +82,14 @@ public class CrashReport {
     }
 
     public OtpErlangObject getProps() {
-        return Terms;
+        return terms;
     }
 
+    public OtpErlangAtom getErrorClass() {
+        return (OtpErlangAtom) errorInfo.elementAt(0);
+    }
+
+    public OtpErlangObject getErrorReason() {
+        return errorInfo.elementAt(1);
+    }
 }

@@ -1,5 +1,6 @@
 package erlyberly;
 
+import erlyberly.node.OtpUtil;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Hyperlink;
@@ -92,6 +93,7 @@ public class CrashReportView extends TabPane {
         Object[][] crashProps = {
                 {"Pid", crashReport.getPid() },
                 {"Reg. Name", crashReport.getRegisteredName() },
+                {"Error", crashReport.getErrorClass() + ":" + OtpUtil.otpObjectToString(crashReport.getErrorReason(), new StringBuilder()) },
                 {"Initial Call", crashReport.getProcessInitialCall() }};
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
