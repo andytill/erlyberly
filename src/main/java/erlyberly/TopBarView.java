@@ -123,7 +123,8 @@ public class TopBarView implements Initializable {
                     for (OtpErlangObject obj : e.getAddedSubList()) {
                         CrashReport crashReport = new  CrashReport(obj);
                         MenuItem menuItem;
-                        menuItem = new MenuItem(crashReport.getPid().toString());
+                        menuItem = new MenuItem();
+                        menuItem.setGraphic(new CrashReportGraphic(crashReport));
                         menuItem.setOnAction((action) -> { 
                             unreadCrashReportsProperty.set(0);
                             showWindow("Crash Report", crashReportView(crashReport));

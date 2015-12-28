@@ -1,5 +1,6 @@
 package erlyberly;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,8 @@ public class CrashReport {
     private final OtpErlangObject terms;
 
     private final OtpErlangTuple errorInfo;
+
+    private final LocalDateTime date = LocalDateTime.now();
 
     public CrashReport(OtpErlangObject obj) {
         this.terms = obj;
@@ -73,7 +76,7 @@ public class CrashReport {
         return (OtpErlangPid) crashProps.get(OtpUtil.atom("pid"));
     }
 
-    public Object getRegisteredName() {
+    public String getRegisteredName() {
         return registeredName;
     }
 
@@ -91,5 +94,9 @@ public class CrashReport {
 
     public OtpErlangObject getErrorReason() {
         return errorInfo.elementAt(1);
+    }
+
+    public LocalDateTime getDateTime() {
+        return date;
     }
 }
