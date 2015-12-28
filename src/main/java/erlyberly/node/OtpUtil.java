@@ -1,6 +1,7 @@
 package erlyberly.node;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -327,6 +328,27 @@ public class OtpUtil {
             }
             
         }
-	    return true;
-	}
+        return true;
+    }
+
+    /**
+     * Convert an MFA tuple to a string, where the MFA must have the type:
+     *
+     * {Module::atom(), Function::atom(), Args::[any()]}.
+     */
+    public static String toStringMFA(OtpErlangTuple mfa) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(mfa.elementAt(0))
+          .append(":")
+          .append(mfa.elementAt(1))
+          .append("(");
+        OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
+        ArrayList<String> stringArgs = new ArrayList<>();
+        for (OtpErlangObject arg : args) {
+            stringArgs.add(OtpUtil.otpObjectToString(arg, new StringBuilder()).toString());
+        }
+        sb.append(String.join(", ", stringArgs));
+        sb.append(")");
+        return sb.toString();
+    }
 }

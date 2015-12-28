@@ -1,5 +1,7 @@
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangTuple;
+
 import erlyberly.node.OtpUtil;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -94,7 +96,7 @@ public class CrashReportView extends TabPane {
                 {"Pid", crashReport.getPid() },
                 {"Reg. Name", crashReport.getRegisteredName() },
                 {"Error", crashReport.getErrorClass() + ":" + OtpUtil.otpObjectToString(crashReport.getErrorReason(), new StringBuilder()) },
-                {"Initial Call", crashReport.getProcessInitialCall() }};
+                {"Initial Call", OtpUtil.toStringMFA((OtpErlangTuple) crashReport.getProcessInitialCall()) }};
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
         TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");
@@ -105,9 +107,7 @@ public class CrashReportView extends TabPane {
                 return new SimpleObjectProperty<>((p.getValue()[0]));
             }
         });
-        
 
-        
         valueColumn.setCellValueFactory(new Callback<CellDataFeatures<Object[], Object>, ObservableValue<Object>>() {
             @Override
             public ObservableValue<Object> call(CellDataFeatures<Object[], Object> p) {
