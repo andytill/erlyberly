@@ -103,6 +103,10 @@ public class ProcController {
 		}
 		polling.set(timeout > 0);
 	}
+	
+	public void clearProcesses(){
+		processes.clear();
+	}
 
 	public ObservableList<ProcInfo> getProcs() {
 		return sortedProcesses;
@@ -170,7 +174,7 @@ public class ProcController {
 				}
 			}
 		}
-
+		
 		private void updateProcessList(final ArrayList<ProcInfo> processList) {
 			Platform.runLater(new Runnable() {
 				@Override

@@ -12,6 +12,7 @@
 -export([process_info/0]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
+-export([stop_traces/0]).
 -export([stop_trace/4]).
 -export([xref_analysis/3]).
 
@@ -128,6 +129,10 @@ start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
 %%
 stop_trace(Mod, Func, Arity, IsExported) ->
     erlyberly_tcollector ! {stop_trace, Mod, Func, Arity, IsExported}.
+
+stop_traces() ->
+    erlyberly_tcollector ! stop_traces.
+
 %%
 when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
@@ -193,6 +198,8 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             Traces_1 = Traces -- [{Mod, Func, Arity, IsExported}],
             TC1 = TC#tcollector{ traces = Traces_1 },
             erlyberly_tcollector2(TC1);
+        stop_traces ->
+            ok = dbg:stop_clear();
         {nodedown, _Node} ->
             ok = dbg:stop_clear();
         {take_logs, Pid} ->
