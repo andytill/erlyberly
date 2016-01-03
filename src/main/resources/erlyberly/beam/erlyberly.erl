@@ -612,10 +612,10 @@ abstract_code(Module, ExecFun) ->
 init([Node]) ->
     {ok, #err_state{ node = Node}}.
 
-handle_event({error_report,_,_} = Error_report, State) ->
+handle_event({error_report,_,{_, crash_report, Crash_props_1}}, State) ->
     Node = (State#err_state.node),
-    Node ! {erlyberly_error_report, Error_report},
-    % io:format("error: ~p~n", [Error_report]), 
+    %{value, {error_info,}, Crash_props_2} = lists:keytake(error_info, 1, lists:flatten(Crash_props_1)),
+    Node ! {erlyberly_error_report, lists:flatten(Crash_props_1)},
     {ok, State};
 handle_event(_, State) ->
     % io:format("error: ~p ~p~n", [element(1,E), tuple_size(E) ]), 

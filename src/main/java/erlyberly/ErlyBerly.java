@@ -9,6 +9,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -170,5 +171,27 @@ public class ErlyBerly extends Application {
         stage.setTitle(title);
 
         stage.show();
+    }
+
+    public static void showSourceCodeWindow(String title, String moduleSourceCode) {
+        assert Platform.isFxApplicationThread();
+        
+        TextArea textArea;
+        
+        textArea = new TextArea(moduleSourceCode);
+        textArea.getStyleClass().add("mod-src");
+        textArea.setEditable(false);
+        
+        Scene scene = new Scene(textArea, 800, 800);
+        ErlyBerly.applyCssToWIndow(scene);
+
+        Stage primaryStage;
+        
+        primaryStage = new Stage();
+        primaryStage.setTitle(title);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        CloseWindowOnEscape.apply(scene, primaryStage);
     }
 }
