@@ -21,6 +21,7 @@ import javafx.util.Callback;
 public class CrashReportView extends TabPane {
     
     private final TermTreeView termTreeView = new TermTreeView();
+    private final TermTreeView argsTreeView = new TermTreeView();
     private final ListView<StackTraceElement> stackTraceListView = new ListView<>();
     private final TableView<Object[]> crashInfoTable = new TableView<>();
 
@@ -31,11 +32,15 @@ public class CrashReportView extends TabPane {
         label = new Label("Stack Trace");
         label.setStyle("-fx-padding: 5; -fx-font-size: 14;");
 
-        Tab stackTraceTab, termsTab;
+        Tab stackTraceTab, argsTermsTab, termsTab;
         termsTab = new Tab("Crash Report Terms");
         termsTab.setContent(termTreeView);
+        argsTermsTab = new Tab("Call Args");
+        argsTermsTab.setContent(argsTreeView);
         stackTraceTab = new Tab("Stack Trace");
         stackTraceTab.setContent(new VBox(crashInfoTable, label, stackTraceListView));
+
+        getTabs().addAll(stackTraceTab, argsTermsTab, termsTab);
         
         stackTraceListView.setCellFactory(new Callback<ListView<StackTraceElement>, ListCell<StackTraceElement>>() {
             @Override
@@ -70,8 +75,6 @@ public class CrashReportView extends TabPane {
                 };
             }
         });
-
-        getTabs().addAll(stackTraceTab, termsTab);
     }
 
     public void setCrashReport(CrashReport crashReport) {
@@ -119,6 +122,10 @@ public class CrashReportView extends TabPane {
         crashInfoTable.getColumns().add(valueColumn);
 
         crashInfoTable.getItems().addAll(crashProps);
+        
+        crashReport.getCallArgs().ifPresent((callArgs) -> {
+            argsTreeView.populateFromListContents(callArgs);
+        });
     }
 
     private class StackTraceElement {

@@ -54,11 +54,17 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         }
     }
 
+    public void populateFromListContents(OtpErlangList list) {
+        for (OtpErlangObject a : list) {
+            populateFromTerm(a);
+        }
+    }
+
 	public void populateFromTerm(OtpErlangObject obj) {
 		setShowRoot(false);
 		addToTreeItem(getRoot(), obj);
 	}
-	
+
 	private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
 		if(obj instanceof OtpErlangBinary) {
 			TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, OtpUtil.binaryToString((OtpErlangBinary) obj)));
@@ -167,12 +173,6 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 	private boolean isRecordField(OtpErlangObject obj) {
 		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
 	}
-
-    public void populateFromListContents(OtpErlangList list) {
-        for (OtpErlangObject a : list) {
-            populateFromTerm(a);
-        }
-    }
 
     private void onCopyCalls(ActionEvent e) {
         StringBuilder sbuilder = new StringBuilder();
