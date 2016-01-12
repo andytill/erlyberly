@@ -107,7 +107,7 @@ public class DbgTraceView extends VBox {
 		resultColumn.setCellValueFactory(new TreeItemPropertyValueFactory("result"));
 		
 		tracesBox.getColumns().setAll(
-		    seqColumn, pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
+		        functionnNameColumn, seqColumn, pidColumn, regNameColumn, durationNameColumn, argsColumn, resultColumn
 		);
 
 		// based on http://stackoverflow.com/questions/27015961/tableview-row-style
