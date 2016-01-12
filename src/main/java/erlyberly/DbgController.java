@@ -5,23 +5,24 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangList;
+
+import erlyberly.node.NodeAPI;
+import erlyberly.node.NodeAPI.RpcCallback;
+import erlyberly.node.TraceManager;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangList;
-
-import erlyberly.node.NodeAPI;
-import erlyberly.node.NodeAPI.RpcCallback;
+import javafx.scene.control.TreeItem;
 
 
 public class DbgController implements Initializable {
 	
-	public final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
+	public final ObservableList<TreeItem<TraceLog>> traceLogs = FXCollections.observableArrayList();
 	
 	private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
 	
@@ -30,6 +31,8 @@ public class DbgController implements Initializable {
 	private volatile boolean collectingTraces;
 
 	private volatile boolean collectingSeqTraces;
+
+    private final TraceManager traceManager = new TraceManager();
 
 	public void setCollectingTraces(boolean collecting) {
 		collectingTraces = collecting;
@@ -41,7 +44,7 @@ public class DbgController implements Initializable {
 		new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
 	}
 	
-	public ObservableList<TraceLog> getTraceLogs() {
+	public ObservableList<TreeItem<TraceLog>> getTraceLogs() {
 		return traceLogs;
 	}
 	
@@ -126,9 +129,13 @@ public class DbgController implements Initializable {
 			while (true) {
 				if(collectingTraces && ErlyBerly.nodeAPI().isConnected()) {
 					try {
-						final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
+						OtpErlangList collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
 						
-						Platform.runLater(() -> { traceLogs.addAll(collectTraceLogs); });
+						Platform.runLater(() -> {
+						    final ArrayList<TreeItem<TraceLog>> resultList = new ArrayList<>();
+						    traceManager.collateTraces(collectTraceLogs, resultList);
+						    traceLogs.addAll(resultList);
+						});
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
