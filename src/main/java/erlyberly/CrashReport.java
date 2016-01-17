@@ -73,16 +73,28 @@ public class CrashReport {
                 arity = new OtpErlangLong(list.arity());
             }
             HashMap<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
-            OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
+            String filePath = crashModuleSourceFile(fileLineProps.get(ATOM_FILE));
             OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
             
             result.add(
-                fn.invoke(module, function, arity, file.stringValue(), line)
+                fn.invoke(module, function, arity, filePath, line)
             );
         }
         return result;
     }
-    
+
+    /**
+     * Return the file path for the module that the crash originated from. The
+     * path might not be there if there was no module, for example it originated
+     * in the shell.
+     */
+    private String crashModuleSourceFile(Object object) {
+        if(object != null && object instanceof OtpErlangString)
+            return ((OtpErlangString)object).stringValue();
+        else
+            return "";
+    }
+
     public interface StackTraceFn<T> {
         T invoke(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity, String file, OtpErlangLong line);
     }
@@ -118,7 +130,7 @@ public class CrashReport {
     public Optional<OtpErlangList> getCallArgs() {
         OtpErlangTuple staceTrace1 = (OtpErlangTuple) ((OtpErlangList) errorInfo.elementAt(2)).getHead();
         OtpErlangObject argsOrArity = staceTrace1.elementAt(2);
-        if(argsOrArity instanceof OtpErlangList)
+        if(argsOrArity != null && argsOrArity instanceof OtpErlangList)
             return Optional.of((OtpErlangList)argsOrArity);
         else
             return Optional.empty();
