@@ -119,15 +119,15 @@ module_functions2(Mod) when is_atom(Mod) ->
 %%% ============================================================================
 
 %%
-start_trace({Node, Pid}, Mod, Func, Arity, IsExported) ->
+start_trace({Node, Pid}, Mod, Func, Arity, _IsExported) ->
     ensure_dbg_started({Node, Pid}),
 
-    erlyberly_tcollector ! {start_trace, Mod, Func, Arity, IsExported},
+    erlyberly_tcollector ! {start_trace, Mod, Func, Arity},
 
     {ok, whereis(erlyberly_tcollector)}.
 %%
-stop_trace(Mod, Func, Arity, IsExported) ->
-    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity, IsExported}.
+stop_trace(Mod, Func, Arity, _IsExported) ->
+    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity}.
 %%
 when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
@@ -182,15 +182,12 @@ erlyberly_tcollector(Node) ->
 %%
 erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
-        {start_trace, _, _, _, _} = Eb_spec ->
+        {start_trace, _, _, _} = Eb_spec ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
             erlyberly_tcollector2(TC1);
-        {stop_trace, Mod, Func, Arity, IsExported} ->
-            case IsExported of
-                true  -> dbg:ctp(Mod, Func, Arity);
-                false -> dbg:ctpl(Mod, Func, Arity)
-            end,
-            Traces_1 = Traces -- [{Mod, Func, Arity, IsExported}],
+        {stop_trace, Mod, Func, Arity} ->
+            dbg:ctpl(Mod, Func, Arity),
+            Traces_1 = Traces -- [{Mod, Func, Arity}],
             TC1 = TC#tcollector{ traces = Traces_1 },
             erlyberly_tcollector2(TC1);
         {nodedown, _Node} ->
@@ -203,13 +200,10 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             erlyberly_tcollector2(TC1)
    end.
 %%
-tcollector_start_trace({start_trace, Mod, Func, Arity, IsExported}, #tcollector{ traces = Traces } = TC) ->
-    case IsExported of
-        true  -> dbg:tp(Mod, Func, Arity, cx);
-        false -> dbg:tpl(Mod, Func, Arity, cx)
-    end,
+tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Traces } = TC) ->
+    dbg:tpl(Mod, Func, Arity, cx),
     dbg:p(all, [c, timestamp]),
-    Trace_spec = {Mod, Func, Arity, IsExported},
+    Trace_spec = {Mod, Func, Arity},
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
@@ -307,7 +301,7 @@ reapply_traces(Loaded_module, Traces) ->
                             end, Traces),
 
     % reapply each trace that has the loaded module
-    [erlyberly_tcollector ! {start_trace, M, F, A, IsExported} || {M, F, A, IsExported} <- Traces_1],
+    [erlyberly_tcollector ! {start_trace, M, F, A} || {M, F, A} <- Traces_1],
     ok.
 %%
 collect_trace_logs() ->
