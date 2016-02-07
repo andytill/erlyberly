@@ -15,13 +15,9 @@ Now, git clone the repo:
 
     git clone https://github.com/andytill/erlyberly.git
 
-If you want to build from a known tag:
-
-	git checkout tags/<version>
-
 `cd` into the erlyberly repo directory and run:
 
-    ./mvnw compile install assembly:single
+    ./mvnw clean compile install assembly:single
 
 This will install dependencies locally and build the runnable jar, run erlyberly:
 
