@@ -59,7 +59,6 @@ public class DbgView implements Initializable {
 	public void initialize(URL url, ResourceBundle r) {
         modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
         /*modulesTree.setOnKeyPressed(this::onKeyPressInModuleTree);*/
-        modulesTree.setContextMenu(modFuncContextMenu);
         modulesTree.setRoot(new TreeItemSF<>());
         
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
@@ -72,6 +71,7 @@ public class DbgView implements Initializable {
                 if(newItem != null)
                     modFuncContextMenu.selectedItemProperty().set(newItem.getValue()); 
             });
+        modulesTree.setContextMenu(modFuncContextMenu);
         
         getRoot().comparatorProperty().set(treeItemModFuncComparator());
 		
@@ -165,16 +165,16 @@ public class DbgView implements Initializable {
 			treeItem.setExpanded(contains);
 		}
 		
-		for (TreeItem<ModFunc> funcItemList : getRoot().getInputItems()) {
-		    ((TreeItemSF<ModFunc>)funcItemList).setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
+		for (TreeItem<ModFunc> funcItem : getRoot().getInputItems()) {
+		    ((TreeItemSF<ModFunc>)funcItem).setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
 		}
 
 		getRoot().setPredicate((t) -> { return isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty(); });
 	}
 
 	private void filterForTracedFunctions() {
-		for (TreeItem<ModFunc> funcItemList : getRoot().getInputItems()) {
-		    ((TreeItemSF<ModFunc>)funcItemList).setPredicate((t) -> { return dbgController.isTraced(t.getValue()); });
+		for (TreeItem<ModFunc> funcItem : getRoot().getInputItems()) {
+		    ((TreeItemSF<ModFunc>)funcItem).setPredicate((t) -> { return dbgController.isTraced(t.getValue()); });
 		}
 
 		getRoot().setPredicate((t) -> { return !t.getChildren().isEmpty(); });

@@ -6,7 +6,7 @@
 .tree-table-row-cell:exception {
     -fx-background-color: #F9F2F4;
 }
-.tree-table-row-cell:exception > .table-cell {
+.tree-table-row-cell:exception > .tree-table-cell {
     -fx-text-fill: #C7254E;
 }
 
@@ -14,15 +14,24 @@
     /* make the background a little darker for alternate cells */
     -fx-background-color: #F1E0E4;
 }
-.tree-table-row-cell:exception:odd > .table-cell {
+.tree-table-row-cell:exception:odd > .tree-table-cell {
     -fx-text-fill: #C7254E;
+}
+
+.tree-table-row-cell:exception:odd:selected {
+    /* invert the colours when the cell is selected */
+    -fx-background-color: #C7254E;
+}
+.tree-table-row-cell:exception:odd:selected > .tree-table-cell {
+    /* invert the colours when the cell is selected */
+    -fx-text-fill: white;
 }
 
 .tree-table-row-cell:exception:selected {
     /* invert the colours when the cell is selected */
     -fx-background-color: #C7254E;
 }
-.tree-table-row-cell:exception:selected > .table-cell {
+.tree-table-row-cell:exception:selected > .tree-table-cell {
     /* invert the colours when the cell is selected */
     -fx-text-fill: white;
 }

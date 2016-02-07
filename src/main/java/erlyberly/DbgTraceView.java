@@ -29,6 +29,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import ui.TreeItemSF;
 
 
 public class DbgTraceView extends VBox {
@@ -41,7 +42,7 @@ public class DbgTraceView extends VBox {
      */
 	private boolean insertTracesAtTop;
 	
-	private TreeItem<TraceLog> rootItem = new TreeItem<>();
+	private TreeItemSF<TraceLog> rootItem = new TreeItemSF<>();
 	
 	public DbgTraceView(DbgController dbgController) {
 		setSpacing(5d);
@@ -154,7 +155,7 @@ public class DbgTraceView extends VBox {
 
 	private void putTraceContextMenu() {
 		TraceContextMenu traceContextMenu = new TraceContextMenu();
-		traceContextMenu.setItems(rootItem.getChildren());
+		traceContextMenu.setItems(rootItem.getInputItems());
 		traceContextMenu
 				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 		
@@ -273,10 +274,11 @@ public class DbgTraceView extends VBox {
 	public void traceLogsChanged(ListChangeListener.Change<? extends TreeItem<TraceLog>> e) {
 		while(e.next()) {
 			for (TreeItem<TraceLog> trace : e.getAddedSubList()) {
-				if(insertTracesAtTop)
-					tracesBox.getRoot().getChildren().add(0, trace);
+				TreeItemSF<TraceLog> traceRoot = (TreeItemSF<TraceLog>) tracesBox.getRoot();
+                if(insertTracesAtTop)
+					traceRoot.getInputItems().add(0, trace);
 				else
-				    tracesBox.getRoot().getChildren().add(trace);
+				    traceRoot.getInputItems().add(trace);
 			}
 		}
 	}

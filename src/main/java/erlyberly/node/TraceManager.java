@@ -13,6 +13,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.TraceLog;
 import javafx.application.Platform;
 import javafx.scene.control.TreeItem;
+import ui.TreeItemSF;
 
 public class TraceManager {
 
@@ -22,7 +23,7 @@ public class TraceManager {
 
 	private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
 	
-	private final HashMap<String, Stack<TreeItem<TraceLog>>> unfinishedCalls = new HashMap<>();
+	private final HashMap<String, Stack<TreeItemSF<TraceLog>>> unfinishedCalls = new HashMap<>();
 
 	
 	public ArrayList<TreeItem<TraceLog>> collateTraces(OtpErlangList traceLogs, ArrayList<TreeItem<TraceLog>> resultList) {
@@ -40,20 +41,19 @@ public class TraceManager {
         
         if(CALL_ATOM.equals(traceType)) {
             TraceLog trace = proplistToTraceLog(tup);
-            TreeItem<TraceLog> traceItem = new TreeItem<>(trace);
+            TreeItemSF<TraceLog> traceItem = new TreeItemSF<>(trace);
             traceItem.setExpanded(true);
-            Stack<TreeItem<TraceLog>> stack = unfinishedCalls.get(trace.getPidString());
+            Stack<TreeItemSF<TraceLog>> stack = unfinishedCalls.get(trace.getPidString());
             
             boolean is_child = false;
             if(stack == null) {
                 stack = new Stack<>();
             }
             else {
-                TreeItem<TraceLog> peek = stack.peek();
+                TreeItemSF<TraceLog> peek = stack.peek();
                 if(peek != null) {
                     is_child = true;
-                    peek.getChildren().add(traceItem);
-                    System.out.println("is child " + trace);
+                    peek.getInputItems().add(traceItem);
                 }
             }
             stack.add(traceItem);
@@ -62,8 +62,6 @@ public class TraceManager {
             
             if(!is_child) {
                 traceList.add(traceItem);
-
-                System.out.println("not child " + trace);
             }
         }
         else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
@@ -74,7 +72,7 @@ public class TraceManager {
             if(object != null) {
                 OtpErlangString pidString = (OtpErlangString) object;
                 
-                Stack<TreeItem<TraceLog>> stack = unfinishedCalls.get(pidString.stringValue());
+                Stack<TreeItemSF<TraceLog>> stack = unfinishedCalls.get(pidString.stringValue());
                 if(stack == null)
                     return;
                 
