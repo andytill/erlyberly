@@ -9,13 +9,14 @@ import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TreeItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
 
 public class TraceContextMenu extends ContextMenu {
 	
-	private ObservableList<TraceLog> items, selectedItems;
+	private ObservableList<TreeItem<TraceLog>> items, selectedItems;
 
     public TraceContextMenu() {
         getItems().add(menuItem("Copy All", "shortcut+c", this::onCopy));
@@ -40,8 +41,8 @@ public class TraceContextMenu extends ContextMenu {
 	private void onCopy(ActionEvent e) {
 		StringBuilder sbuilder = new StringBuilder();
 		
-		for (TraceLog traceLog : selectedItems) {
-			sbuilder.append(traceLog.toString()).append("\n");
+		for (TreeItem<TraceLog> traceLog : selectedItems) {
+			sbuilder.append(traceLog.getValue().toString()).append("\n");
 		}
 		
 		copyToClipboard(sbuilder);
@@ -50,8 +51,8 @@ public class TraceContextMenu extends ContextMenu {
 	private void onCopyCalls(ActionEvent e) {
 		StringBuilder sbuilder = new StringBuilder();
 		
-		for (TraceLog traceLog : selectedItems) {
-			sbuilder.append(traceLog.toCallString()).append("\n");
+		for (TreeItem<TraceLog> traceLog : selectedItems) {
+			sbuilder.append(traceLog.getValue().toCallString()).append("\n");
 		}
 		
 		copyToClipboard(sbuilder);
@@ -66,9 +67,9 @@ public class TraceContextMenu extends ContextMenu {
 	}
 	
 	private void onDelete(ActionEvent e) {
-		ArrayList<TraceLog> arrayList = new ArrayList<TraceLog>(selectedItems);
+		ArrayList<TreeItem<TraceLog>> arrayList = new ArrayList<TreeItem<TraceLog>>(selectedItems);
 		
-		for (TraceLog traceLog : arrayList) {
+		for (TreeItem<TraceLog> traceLog : arrayList) {
 			items.remove(traceLog);
 		}
 	}
@@ -77,11 +78,11 @@ public class TraceContextMenu extends ContextMenu {
         items.clear();
     }
 
-	public void setSelectedItems(ObservableList<TraceLog> selectedItems2) {
+	public void setSelectedItems(ObservableList<TreeItem<TraceLog>> selectedItems2) {
 		selectedItems = selectedItems2;
 	}
 	
-	public void setItems(ObservableList<TraceLog> items2) {
+	public void setItems(ObservableList<TreeItem<TraceLog>> items2) {
 		items = items2;
 	}
 }

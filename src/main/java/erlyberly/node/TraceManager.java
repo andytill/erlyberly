@@ -11,6 +11,9 @@ import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.TraceLog;
+import javafx.application.Platform;
+import javafx.scene.control.TreeItem;
+import ui.TreeItemSF;
 
 public class TraceManager {
 
@@ -20,36 +23,46 @@ public class TraceManager {
 
 	private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
 	
-	private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
+	private final HashMap<String, Stack<TreeItemSF<TraceLog>>> unfinishedCalls = new HashMap<>();
 
 	
-	public ArrayList<TraceLog> collateTraces(OtpErlangList traceLogs) {
-		final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
+	public ArrayList<TreeItem<TraceLog>> collateTraces(OtpErlangList traceLogs, ArrayList<TreeItem<TraceLog>> resultList) {
+	    assert Platform.isFxApplicationThread();
 		
 		for (OtpErlangObject obj : traceLogs) {
-		    decodeTraceLog(obj, traceList);
+		    decodeTraceLog(obj, resultList);
 		}
-		
-		return traceList;
+		return resultList;
 	}
 	
-	private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
+	private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TreeItem<TraceLog>> traceList) {
 	    OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
         OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
         
         if(CALL_ATOM.equals(traceType)) {
             TraceLog trace = proplistToTraceLog(tup);
-
-            Stack<TraceLog> stack = unfinishedCalls.get(trace.getPidString());
+            TreeItemSF<TraceLog> traceItem = new TreeItemSF<>(trace);
+            traceItem.setExpanded(true);
+            Stack<TreeItemSF<TraceLog>> stack = unfinishedCalls.get(trace.getPidString());
             
-            if(stack == null)
-                stack = new Stack<TraceLog>();
-            
-            stack.add(trace);
+            boolean is_child = false;
+            if(stack == null) {
+                stack = new Stack<>();
+            }
+            else {
+                TreeItemSF<TraceLog> peek = stack.peek();
+                if(peek != null) {
+                    is_child = true;
+                    peek.getInputItems().add(traceItem);
+                }
+            }
+            stack.add(traceItem);
             
             unfinishedCalls.put(trace.getPidString(), stack);
             
-            traceList.add(trace);
+            if(!is_child) {
+                traceList.add(traceItem);
+            }
         }
         else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
             HashMap<Object, Object> map = propsFromTrace(tup);
@@ -59,12 +72,12 @@ public class TraceManager {
             if(object != null) {
                 OtpErlangString pidString = (OtpErlangString) object;
                 
-                Stack<TraceLog> stack = unfinishedCalls.get(pidString.stringValue());
+                Stack<TreeItemSF<TraceLog>> stack = unfinishedCalls.get(pidString.stringValue());
                 if(stack == null)
                     return;
                 
-                TraceLog traceLog = stack.pop();
-                traceLog.complete(map);
+                TreeItem<TraceLog> traceLog = stack.pop();
+                traceLog.getValue().complete(map);
                 
                 if(stack.isEmpty())
                     unfinishedCalls.remove(pidString.stringValue());

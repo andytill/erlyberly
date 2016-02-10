@@ -7,11 +7,7 @@ import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -21,10 +17,11 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableRow;
+import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -32,23 +29,20 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import ui.TreeItemSF;
 
 
 public class DbgTraceView extends VBox {
-	
-	private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
-	
-	private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traceLogs);
-	
-	private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
 
-	private final TableView<TraceLog> tracesBox;
+	private final TreeTableView<TraceLog> tracesBox;
 	
     /**
      * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
      * make traces be inserted at the top of the list.
      */
 	private boolean insertTracesAtTop;
+	
+	private TreeItemSF<TraceLog> rootItem = new TreeItemSF<>();
 	
 	public DbgTraceView(DbgController dbgController) {
 		setSpacing(5d);
@@ -57,7 +51,9 @@ public class DbgTraceView extends VBox {
 		
 		insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
 		
-		tracesBox = new TableView<TraceLog>();
+		tracesBox = new TreeTableView<TraceLog>();
+		tracesBox.setShowRoot(false);
+		tracesBox.setRoot(rootItem);
 		tracesBox.setOnMouseClicked(this::onTraceClicked);
 		tracesBox.setMaxHeight(Double.MAX_VALUE);
 		VBox.setVgrow(tracesBox, Priority.ALWAYS);
@@ -68,9 +64,9 @@ public class DbgTraceView extends VBox {
         // the table cannot be sorted on columns. Binding the items will throw exceptions
         // when sorting on columns.
         // see http://code.makery.ch/blog/javafx-8-tableview-sorting-filtering/
-        SortedList<TraceLog> sortedData = new SortedList<>(filteredTraces);
-        sortedData.comparatorProperty().bind(tracesBox.comparatorProperty());
-        tracesBox.setItems(sortedData);
+        //SortedList<TraceLog> sortedData = new SortedList<>(filteredTraces);
+        //ReadOnlyObjectProperty<Comparator<TreeItem<TraceLog>>> comparator = tracesBox.comparatorProperty();
+        //sortedData.comparatorProperty().bind(comparator);
 
 		putTraceContextMenu();
 
@@ -83,43 +79,43 @@ public class DbgTraceView extends VBox {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void putTableColumns() {
-        TableColumn<TraceLog,Long> seqColumn;
-        seqColumn = new TableColumn<TraceLog,Long>("Seq.");
-        seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
+	    TreeTableColumn<TraceLog,Long> seqColumn;
+        seqColumn = new TreeTableColumn<TraceLog,Long>("Seq.");
+        seqColumn.setCellValueFactory(new TreeItemPropertyValueFactory("instanceNum"));
         
-	    TableColumn<TraceLog,String> pidColumn;
-		pidColumn = new TableColumn<TraceLog,String>("Pid");
-		pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
+        TreeTableColumn<TraceLog,String> pidColumn;
+		pidColumn = new TreeTableColumn<TraceLog,String>("Pid");
+		pidColumn.setCellValueFactory(new TreeItemPropertyValueFactory("pid"));
 
-		TableColumn<TraceLog,String> regNameColumn;
-		regNameColumn = new TableColumn<TraceLog,String>("Reg. Name");
-		regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
+		TreeTableColumn<TraceLog,String> regNameColumn;
+		regNameColumn = new TreeTableColumn<TraceLog,String>("Reg. Name");
+		regNameColumn.setCellValueFactory(new TreeItemPropertyValueFactory("regName"));
 
-		TableColumn<TraceLog,String> durationNameColumn;
-		durationNameColumn = new TableColumn<TraceLog,String>("Duration");
-		durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
+		TreeTableColumn<TraceLog,String> durationNameColumn;
+		durationNameColumn = new TreeTableColumn<TraceLog,String>("Duration");
+		durationNameColumn.setCellValueFactory(new TreeItemPropertyValueFactory("duration"));
 
-		TableColumn<TraceLog,String> functionnNameColumn;
-		functionnNameColumn = new TableColumn<TraceLog,String>("Function");
-		functionnNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
+		TreeTableColumn<TraceLog,String> functionnNameColumn;
+		functionnNameColumn = new TreeTableColumn<TraceLog,String>("Function");
+		functionnNameColumn.setCellValueFactory(new TreeItemPropertyValueFactory("function"));
 
-		TableColumn<TraceLog,String> argsColumn;
-		argsColumn = new TableColumn<TraceLog,String>("Args");
-		argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
+		TreeTableColumn<TraceLog,String> argsColumn;
+		argsColumn = new TreeTableColumn<TraceLog,String>("Args");
+		argsColumn.setCellValueFactory(new TreeItemPropertyValueFactory("args"));
 		
-		TableColumn<TraceLog,String> resultColumn;
-		resultColumn = new TableColumn<TraceLog,String>("Result");
-		resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
+		TreeTableColumn<TraceLog,String> resultColumn;
+		resultColumn = new TreeTableColumn<TraceLog,String>("Result");
+		resultColumn.setCellValueFactory(new TreeItemPropertyValueFactory("result"));
 		
 		tracesBox.getColumns().setAll(
-		    seqColumn, pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
+		        functionnNameColumn, seqColumn, pidColumn, regNameColumn, durationNameColumn, argsColumn, resultColumn
 		);
 
 		// based on http://stackoverflow.com/questions/27015961/tableview-row-style
 		PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
 		PseudoClass notCompletedClass = PseudoClass.getPseudoClass("not-completed");
 		tracesBox.setRowFactory(tv -> {
-		    TableRow<TraceLog> row = new TableRow<>();
+		    TreeTableRow<TraceLog> row = new TreeTableRow<>();
 		    row.itemProperty().addListener((obs, oldTl, tl) -> {
 		        if (tl != null) {
 		            row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
@@ -134,7 +130,7 @@ public class DbgTraceView extends VBox {
 		});
 		
 		tracesBox.setRowFactory(tv -> {  
-		    TableRow<TraceLog> row = new TableRow<>();
+		    TreeTableRow<TraceLog> row = new TreeTableRow<>();
 		    ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
 	            row.pseudoClassStateChanged(exceptionClass, row.getItem().isExceptionThrower());
 	            row.pseudoClassStateChanged(notCompletedClass, !row.getItem().isComplete());
@@ -159,7 +155,7 @@ public class DbgTraceView extends VBox {
 
 	private void putTraceContextMenu() {
 		TraceContextMenu traceContextMenu = new TraceContextMenu();
-		traceContextMenu.setItems(traceLogs);
+		traceContextMenu.setItems(rootItem.getInputItems());
 		traceContextMenu
 				.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 		
@@ -169,10 +165,10 @@ public class DbgTraceView extends VBox {
 
 	private void onTraceClicked(MouseEvent me) {
 		if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
-        	TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
+        	TreeItem<TraceLog> selectedItem = tracesBox.getSelectionModel().getSelectedItem();
         	
-        	if(selectedItem != null && selectedItem != null) {
-            	showTraceTermView(selectedItem); 
+        	if(selectedItem != null && selectedItem.getValue() != null) {
+            	showTraceTermView(selectedItem.getValue()); 
         	}
         }
 	}
@@ -245,11 +241,11 @@ public class DbgTraceView extends VBox {
 	}
 	
 	private void onTraceFilterChange(String searchText) {
-		BasicSearch basicSearch = new BasicSearch(searchText);
-		filteredTraces.setPredicate((t) -> {
-			String logText = t.toString();
-			return basicSearch.matches(logText); 
-		});
+		//BasicSearch basicSearch = new BasicSearch(searchText);
+		//filteredTraces.setPredicate((t) -> {
+		//	String logText = t.toString();
+		//	return basicSearch.matches(logText); 
+		//});
 	}
 
     private Region traceLogFloatySearchControl() {
@@ -275,13 +271,14 @@ public class DbgTraceView extends VBox {
         return fxmlNode;
     }
 
-	public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
+	public void traceLogsChanged(ListChangeListener.Change<? extends TreeItem<TraceLog>> e) {
 		while(e.next()) {
-			for (TraceLog trace : e.getAddedSubList()) {
-				if(insertTracesAtTop)
-					traceLogs.add(0, trace);
+			for (TreeItem<TraceLog> trace : e.getAddedSubList()) {
+				TreeItemSF<TraceLog> traceRoot = (TreeItemSF<TraceLog>) tracesBox.getRoot();
+                if(insertTracesAtTop)
+					traceRoot.getInputItems().add(0, trace);
 				else
-					traceLogs.add(trace);
+				    traceRoot.getInputItems().add(trace);
 			}
 		}
 	}

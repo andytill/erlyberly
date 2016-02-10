@@ -34,7 +34,6 @@ import com.ericsson.otp.erlang.OtpSelfNode;
 import erlyberly.ModFunc;
 import erlyberly.ProcInfo;
 import erlyberly.SeqTraceLog;
-import erlyberly.TraceLog;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -64,8 +63,6 @@ public class NodeAPI {
 
 	private static final int BEAM_SIZE_LIMIT = 1024 * 50;
 
-	private final TraceManager traceManager;
-
 	private final SimpleBooleanProperty connectedProperty;
 	
     private final SimpleBooleanProperty xrefStartedProperty;
@@ -91,8 +88,6 @@ public class NodeAPI {
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
 
 	public NodeAPI() {
-		traceManager = new TraceManager();
-
 		connectedProperty = new SimpleBooleanProperty();
 		connectedProperty.addListener(new ChangeListener<Boolean>() {
 			@Override
@@ -396,7 +391,7 @@ public class NodeAPI {
 		OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
 	}
 
-	public synchronized ArrayList<TraceLog> collectTraceLogs() throws Exception {
+	public synchronized OtpErlangList collectTraceLogs() throws Exception {
 		sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
 
 		OtpErlangObject prcResult = receiveRPC();
@@ -404,12 +399,13 @@ public class NodeAPI {
 		if(!isTupleTagged(OK_ATOM, prcResult)) {
 			System.out.println(prcResult);
 
-			return new ArrayList<TraceLog>();
+			return new OtpErlangList();
 		}
 
 		OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult).elementAt(1);
 
-		return traceManager.collateTraces(traceLogs);
+        
+        return traceLogs;
 	}
 
 	public synchronized ArrayList<SeqTraceLog> collectSeqTraceLogs() throws Exception {
