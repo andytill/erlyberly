@@ -32,6 +32,16 @@
             <Font size="10.0" />
          </font>
       </Button>
+      <Button fx:id="disconnectButton" mnemonicParsing="false" text="Disconnect">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Button>
+      <Button fx:id="prefButton" mnemonicParsing="false" text="Preferences">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Button>
    </items>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

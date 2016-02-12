@@ -86,6 +86,8 @@ public class ProcView implements Initializable {
 		
 		final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 		
+		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
+		
 		heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
 		heapPieButton.getStyleClass().add("erlyberly-icon-button");
 		heapPieButton.setStyle("-fx-background-color: transparent;");
@@ -315,6 +317,17 @@ public class ProcView implements Initializable {
 	@FXML
 	private void onTogglePolling() {
 		procController.togglePolling();
+	}
+	
+	private void onConnected(Observable o) {
+		
+		boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
+		
+		if(connected) {
+			procController.refreshOnce();
+		} else {
+			procController.clearProcesses();
+		}
 	}
 	
 	private void initialiseProcessSorting() {

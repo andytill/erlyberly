@@ -99,6 +99,7 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 		
 		dbgSplitPane.getItems().add(new DbgTraceView(dbgController));
+		
 	}
 
 	private FxmlLoadable addModulesFloatySearchControl() {
@@ -214,8 +215,8 @@ public class DbgView implements Initializable {
 		if(connected) {
 			refreshModules();
 			dbgController.reapplyTraces();
-		}
-		else {
+		} else {
+			// Don't clear the Traces, keep it, an re-apply once connected again.
 			treeModules.clear();
 		}
 	}

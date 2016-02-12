@@ -228,7 +228,7 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private boolean isModuleInfo(ModFunc func) {
-        return func.toString().equals("module_info/0") && !func.toString().equals("module_info/1");
+        return func.toString().equals("module_info/0") || func.toString().equals("module_info/1");
     }
     
    private void onModuleCode(ActionEvent ae){

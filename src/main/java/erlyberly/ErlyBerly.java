@@ -1,5 +1,6 @@
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangException;
 import java.io.IOException;
 
 import javafx.application.Application;
@@ -18,6 +19,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import erlyberly.node.NodeAPI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ErlyBerly extends Application {
 
@@ -42,33 +45,26 @@ public class ErlyBerly extends Application {
 		}
 
 		FxmlLoadable topBarFxml;
-		
 		topBarFxml = new FxmlLoadable("/erlyberly/topbar.fxml");
 		topBarFxml.load();
 		
 		FxmlLoadable dbgFxml;
-		
 		dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
 		dbgFxml.load();
         
 		splitPane = new SplitPane();
-		
 		entopPane = (Region) loadEntopPane();
 		splitPane.getItems().add(entopPane);
-		
 		splitPane.getItems().add(dbgFxml.load());
 		
 		setupProcPaneHiding(topBarFxml, dbgFxml);
 
 		VBox rootView;
-		
 		rootView = new VBox(topBarFxml.fxmlNode, splitPane);
 		rootView.setMaxWidth(Double.MAX_VALUE);
-		
 		VBox.setVgrow(splitPane, Priority.ALWAYS);
 		
         Scene scene;
-        
 		scene = new Scene(rootView);
 		applyCssToWIndow(scene);  
 
@@ -81,45 +77,77 @@ public class ErlyBerly extends Application {
         displayConnectionPopup(primaryStage);
         
         FilterFocusManager.init(scene);
+		
+		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent t) {
+				try {
+					nodeAPI().manually_disconnect();
+                } catch(Exception e) {
+                    System.out.println(e);
+                }
+                Platform.exit();
+                System.exit(0);
+            }
+        });
+		
     }
-
+	
     public static void applyCssToWIndow(Scene scene) {
         scene.getStylesheets().add(ErlyBerly.class.getResource("/floatyfield/floaty-field.css").toExternalForm());
 		scene.getStylesheets().add(ErlyBerly.class.getResource("/erlyberly/erlyberly.css").toString());
     }
 
 	private void setupProcPaneHiding(FxmlLoadable topBarFxml, FxmlLoadable dbgFxml) {
+        
 		TopBarView topView;
 		DbgView dbgView;
 		
-		topView = (TopBarView)topBarFxml.controller;
+		topView = (TopBarView) topBarFxml.controller;
 		dbgView = (DbgView) dbgFxml.controller;
 		
 		topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
 			if(!nb) {
-				splitPane.getItems().add(0, entopPane);
-				
-				Divider div = splitPane.getDividers().get(0);
-				div.setPosition(entopDivPosition);
+                showProcsPane();
 			}
 			else {
-				Divider div = splitPane.getDividers().get(0);
-
-				entopDivPosition = div.getPosition();
-				
-				div.setPosition(0d);
-				splitPane.getItems().remove(0);
+                hideProcsPane();
 			}
 		});
-		
+        
 		topView.hideFunctionsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
 			dbgView.setFunctionsVisibility(nb);
 		});
-		
+        
+        boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
+        if(hideProcs){
+            hideProcsPane();
+        }
+        boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
+        if(hideMods){
+            dbgView.setFunctionsVisibility(true);
+        }
+        
 		topView.setOnRefreshModules(dbgView::onRefreshModules);
 		
 		Platform.runLater(() -> { topView.addAccelerators(); });
 	}
+    
+    private void showProcsPane(){
+        splitPane.getItems().add(0, entopPane);
+
+        Divider div = splitPane.getDividers().get(0);
+        div.setPosition(entopDivPosition);
+    }
+    
+    private void hideProcsPane(){
+        Divider div = splitPane.getDividers().get(0);
+
+        entopDivPosition = div.getPosition();
+
+        div.setPosition(0d);
+        splitPane.getItems().remove(0);
+    }
 
 	private Parent loadEntopPane() {
 		Parent entopPane = new FxmlLoadable("/erlyberly/entop.fxml").load();
@@ -127,7 +155,7 @@ public class ErlyBerly extends Application {
         
 		return entopPane;
 	}
-
+	
 	private void displayConnectionPopup(Stage primaryStage) {
 		Stage connectStage;
         

@@ -8,7 +8,6 @@ import javafx.scene.Parent;
 
 class FxmlLoadable {
 	final String resource;
-	
 	Parent fxmlNode;
 	Object controller;
 
@@ -27,6 +26,7 @@ class FxmlLoadable {
 			fxmlNode = (Parent) fxmlLoader.load();
 			controller = fxmlLoader.getController();
 		} catch (IOException e) {
+			System.err.println(e);
 			throw new RuntimeException("Cannot load FXML");
 		}
 		return fxmlNode;

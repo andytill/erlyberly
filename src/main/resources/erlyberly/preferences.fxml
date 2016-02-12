@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 
 <GridPane fx:id="root" hgap="5.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" 
-          vgap="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ConnectionView">
+          vgap="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.PreferencesView">
   <columnConstraints>
     <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
@@ -18,14 +18,22 @@
     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
+      <Label text="Target Node" GridPane.columnIndex="1" />
       <TextField fx:id="nodeNameField" />
+      <Label text="Cookie" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <TextField fx:id="cookieField" GridPane.rowIndex="1" />
       <CheckBox fx:id="autoConnectField" text="Auto Connect?" GridPane.columnSpan="2" GridPane.rowIndex="2" />
-      <Button fx:id="connectButton" defaultButton="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" 
-              mnemonicParsing="false" onAction="#onConnect" text="Connect" GridPane.columnSpan="2" GridPane.rowIndex="3" />
-      <Label text="Target Node" GridPane.columnIndex="1" />
-      <Label text="Cookie" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      <Label fx:id="messageLabel" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+      <CheckBox fx:id="hideProcesses" text="Hide Processes on startup?" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+      <CheckBox fx:id="hideModules" text="Hide Modules on startup?" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+<!--      <Label text="processPaneWidth" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      <TextField fx:id="processPaneWidth" GridPane.rowIndex="5" />
+      <Label text="modulesPaneWidth" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+      <TextField fx:id="modulesPaneWidth" GridPane.rowIndex="6" />-->
+      <Button fx:id="saveButton" defaultButton="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" 
+              mnemonicParsing="false" onAction="#onSave" text="Save" GridPane.columnSpan="2" GridPane.rowIndex="7" />
+<!--      Add:
+        Width of columns in the trace log table-->
+      
    </children>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

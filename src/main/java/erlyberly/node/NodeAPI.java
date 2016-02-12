@@ -89,6 +89,9 @@ public class NodeAPI {
 	private final AtomicBoolean connected = new AtomicBoolean();
 	
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
+	
+	private boolean manually_disconnected = false;
+	//private final AtomicBoolean connected = new AtomicBoolean();
 
 	public NodeAPI() {
 		traceManager = new TraceManager();
@@ -122,11 +125,18 @@ public class NodeAPI {
     public SimpleObjectProperty<AppProcs> appProcsProperty() {
 		return appProcs;
 	}
-
+	
+	public synchronized void manual_connect() throws IOException, OtpErlangException, OtpAuthException {
+		// TODO: here, we've cleared (set to false) being Manually/intentionally disconnected.
+		manually_disconnected = false;
+		connect();
+	}
+	
     public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
         assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 
         // clear previous connections and threads if any, before we reconnect
+		// TODO: investigate whether we need this ...
         disconnect();
 
         self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
@@ -152,14 +162,23 @@ public class NodeAPI {
 
 		Platform.runLater(() -> { connectedProperty.set(true); });
 
-		if(checkAliveThread != null)
-			return;
-
 		checkAliveThread = new CheckAliveThread();
 		checkAliveThread.start();
 	}
-
-    private void disconnect() {
+	
+	public void manually_disconnect() throws IOException, OtpErlangException{
+        // TODO: have a look at this: ( How can we properly "Close", or is the below acceptable? )
+        // com.ericsson.otp.erlang.OtpErlangExit: 'Remote has closed connection'
+        // at com.ericsson.otp.erlang.AbstractConnection.run(AbstractConnection.java:733)
+        manually_disconnected = true;
+        stopAllTraces();
+        removeErrorLoggerHandler();
+        unloadRemoteErlyberly();
+        mbox.close();
+        Platform.runLater(() -> { connectedProperty.set(false); }); 
+	}
+	
+    public void disconnect() {
         try {
             if (connection != null)
                 connection.close();
@@ -188,19 +207,34 @@ public class NodeAPI {
         // flush the return value
         receiveRPC();
     }
+	
+	private void removeErrorLoggerHandler() throws IOException, OtpErlangException {
+        OtpErlangList args = OtpUtil.list(mbox.self());
+        sendRPC(
+            "error_logger", "delete_report_handler",
+            OtpUtil.list(ERLYBERLY_ATOM, args)
+        );
+        
+        // flush the return value
+        receiveRPC();
+    }
 
     class CheckAliveThread extends Thread {
 		public CheckAliveThread() {
 			setDaemon(true);
-			setName("Erlyberly Check Alive");
+			setName("Erlyberly Check Alive"+ System.currentTimeMillis());
 		}
 
 		@Override
 		public void run() {
 			while(true) {
-				ensureAlive();
-
-				mySleep(450);
+				if (manually_disconnected){
+                    this.interrupt();
+					break;
+				}else{
+					ensureAlive();
+					mySleep(150);
+				}
 			}
 		}
 	}
@@ -227,6 +261,20 @@ public class NodeAPI {
 		else {
 			throw new RuntimeException("error loading the erlyberly module, result was " + result);
 		}
+	}
+	
+	private void unloadRemoteErlyberly() throws IOException, OtpErlangException {
+		
+		OtpErlangBinary otpErlangBinary = new OtpErlangBinary(loadBeamFile());
+		
+        sendRPC("code", "purge", list(atom("erlyberly")));
+		OtpErlangObject result = receiveRPC();
+		
+		sendRPC("code", "delete", list(atom("erlyberly")));
+		OtpErlangObject result2 = receiveRPC();
+		
+		sendRPC("code", "soft_purge", list(atom("erlyberly")));
+		OtpErlangObject result3 = receiveRPC();	
 	}
 
 	private OtpErlangObject receiveRPC() throws IOException, OtpErlangException {
@@ -307,19 +355,20 @@ public class NodeAPI {
 
     private boolean ensureAlive() {
         try {
-           receiveRPC(0);
-           if(connection.isAlive())
-               return true;
-        } catch (OtpErlangException | IOException e1) {
-            e1.printStackTrace();
-        }
+			receiveRPC(0);
+			if(connection.isAlive()) return true;
+		} catch (OtpErlangException | IOException e1) {
+			e1.printStackTrace();
+		}
 
         Platform.runLater(() -> { connectedProperty.set(false); });
 
         while(true) {
             try {
-                connect();
-                break;
+                if(!this.manually_disconnected){
+                    connect();
+                    break;
+                }
             }
             catch(Exception e) {
                 int millis = 50;
@@ -363,7 +412,6 @@ public class NodeAPI {
 
 	public synchronized void stopTrace(ModFunc mf) throws Exception {
 		assert mf.getFuncName() != null : "function name cannot be null";
-
 		sendRPC("erlyberly", "stop_trace",
 			list(
 				OtpUtil.atom(mf.getModuleName()),
@@ -371,6 +419,11 @@ public class NodeAPI {
 				new OtpErlangInt(mf.getArity()),
 				new OtpErlangAtom(mf.isExported())
 			));
+		receiveRPC();
+	}
+	
+	public void stopAllTraces() throws IOException, OtpErlangException {
+		sendRPC("erlyberly", "stop_traces", list());
 		receiveRPC();
 	}
 
@@ -393,6 +446,7 @@ public class NodeAPI {
 	}
 
 	private void sendRPC(String module, String function, OtpErlangList args) throws IOException {
+        //System.out.println("sendRPC<- "+ module+":"+function+"("+args+")");
 		OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
 	}
 
@@ -432,7 +486,7 @@ public class NodeAPI {
 			}
 		}
 		catch (ClassCastException e) {
-			System.out.println("did not understand result from collect_seq_trace_logs " + prcResult);
+            System.out.println("did not understand result from collect_seq_trace_logs " + prcResult);
 			e.printStackTrace();
 		}
 		return seqLogs;
@@ -489,6 +543,10 @@ public class NodeAPI {
 
 	public boolean isConnected() {
 		return connected.get();
+	}
+	
+	public boolean manuallyDisconnected(){
+		return manually_disconnected;
 	}
 	
 	public synchronized OtpErlangObject callGraph(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {
