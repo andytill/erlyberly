@@ -96,6 +96,19 @@ public class DbgController implements Initializable {
 			}
 		}
 	}
+	
+	// TODO: 
+	
+	public void removeTraces() {
+		ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
+		
+		for (ModFunc function : tracesCopy) {
+			// TODO: simply remove the GUI trace selection...
+			// The back-end will be dealt with :)
+			//ErlyBerly.nodeAPI().stopTrace(function);
+			traces.remove(function);	
+		}
+	}
 
 	public void addTraceListener(InvalidationListener listener) {
 		traces.addListener(listener);
