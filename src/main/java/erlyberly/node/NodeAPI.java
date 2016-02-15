@@ -500,7 +500,7 @@ public class NodeAPI {
 		String summaryText = "erlyberly";
 
 		if(!wasConnected && isConnected)
-			summaryText = "erlyberly, connected as " + self.node();
+			summaryText = self.node() + " connected to " + this.remoteNodeName;
 		else if(wasConnected && !isConnected)
 			summaryText = "erlyberly, connection lost.  reconnecting...";
 
