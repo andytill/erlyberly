@@ -200,3 +200,5 @@ The following people have contributed code to erlyberly:
 + [@aboroska](https://github.com/aboroska)
 + [@ruanpienaar](https://github.com/ruanpienaar)
 + [@horvand ](https://github.com/horvand)
+
+The hex editor originated from [hexstar](https://github.com/Velocity-/Hexstar).
