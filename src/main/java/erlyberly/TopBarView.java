@@ -427,16 +427,6 @@ public class TopBarView implements Initializable {
 		
 		hideProcessesButton.setText(buttonText);
 	}
-    
-	private void toggleHideProcs(Boolean preferenceBool) {
-        String buttonText;
-		if(preferenceBool){
-            buttonText = "Hide Processes";
-        }else{
-            buttonText = "Show Processes";
-        }
-        hideProcessesButton.setText(buttonText);
-	}
 	
 	private void toggleHideFuncs() {
 		String buttonText = "";

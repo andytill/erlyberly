@@ -6,6 +6,7 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
+import hextstar.HexstarView;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -28,9 +29,24 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
         MenuItem dictMenuItem = new MenuItem("Dict to List");
         dictMenuItem.setOnAction(this::onViewDict);
+        
 
-        setContextMenu(new ContextMenu(copyMenuItem, dictMenuItem));
-}
+        MenuItem hexViewMenuItem = new MenuItem("Hex View");
+        hexViewMenuItem.setOnAction(this::onHexView);
+
+        setContextMenu(new ContextMenu(copyMenuItem, dictMenuItem, hexViewMenuItem));
+    }
+
+    public void onHexView(ActionEvent e) {
+        TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
+        if(item != null && item.getValue().getObject() instanceof OtpErlangBinary) {
+            OtpErlangBinary binary = (OtpErlangBinary) item.getValue().getObject();
+            HexstarView hexstarView;
+            hexstarView = new HexstarView();
+            hexstarView.setBinary(binary);
+            ErlyBerly.subWindow("Hex View", hexstarView);
+        }
+    }
 
     public void onViewDict(ActionEvent e) {
         TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
