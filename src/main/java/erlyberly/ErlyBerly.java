@@ -1,8 +1,8 @@
 package erlyberly;
 
-import com.ericsson.otp.erlang.OtpErlangException;
 import java.io.IOException;
 
+import erlyberly.node.NodeAPI;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -10,17 +10,14 @@ import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import erlyberly.node.NodeAPI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ErlyBerly extends Application {
 

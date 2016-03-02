@@ -259,17 +259,12 @@ public class NodeAPI {
 	}
 	
 	private void unloadRemoteErlyberly() throws IOException, OtpErlangException {
-		
-		OtpErlangBinary otpErlangBinary = new OtpErlangBinary(loadBeamFile());
-		
         sendRPC("code", "purge", list(atom("erlyberly")));
-		OtpErlangObject result = receiveRPC();
-		
+		receiveRPC();
 		sendRPC("code", "delete", list(atom("erlyberly")));
-		OtpErlangObject result2 = receiveRPC();
-		
+		receiveRPC();
 		sendRPC("code", "soft_purge", list(atom("erlyberly")));
-		OtpErlangObject result3 = receiveRPC();	
+		receiveRPC();
 	}
 
 	private OtpErlangObject receiveRPC() throws IOException, OtpErlangException {
