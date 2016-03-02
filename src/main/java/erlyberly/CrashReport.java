@@ -56,7 +56,16 @@ public class CrashReport {
     }
     
     <T> List<T> mapStackTraces(StackTraceFn<T> fn) {
-        OtpErlangList stackTrace = (OtpErlangList) errorInfo.elementAt(2);
+        OtpErlangList stackTrace = null;
+        if(errorInfo.elementAt(0).equals(OtpUtil.atom("exit"))) {
+            OtpErlangTuple exitInfo = (OtpErlangTuple)errorInfo.elementAt(1);
+            if(exitInfo.elementAt(1) instanceof OtpErlangList) {
+                stackTrace = (OtpErlangList)exitInfo.elementAt(1);
+            }
+        }
+        if(stackTrace == null) {
+            stackTrace = (OtpErlangList) errorInfo.elementAt(2);
+        }
         ArrayList<T> result = new ArrayList<T>();
         
         for (OtpErlangObject obj : stackTrace) {

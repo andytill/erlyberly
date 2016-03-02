@@ -85,6 +85,7 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 		
 		dbgSplitPane.getItems().add(new DbgTraceView(dbgController));
+		
 	}
 	
 	private TreeItemSF<ModFunc> getRoot() {

@@ -1,5 +1,6 @@
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangException;
 import java.awt.Desktop;
 import java.net.URI;
 import java.net.URL;
@@ -55,6 +56,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import javafx.stage.Modality;
+import javafx.stage.WindowEvent;
+
 public class TopBarView implements Initializable {
 	private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
 
@@ -76,6 +81,10 @@ public class TopBarView implements Initializable {
     private MenuButton crashReportsButton = new MenuButton("Crash Reports");
     @FXML
     private Button xrefAnalysisButton;
+	@FXML
+    private Button disconnectButton;
+	@FXML
+    private Button prefButton;
   	@FXML
 	private ToolBar topBox;
     
@@ -84,12 +93,14 @@ public class TopBarView implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 	    topBox.getItems().add(crashReportsButton);
-	    
+        
+		// TODO: Should we hide these buttons, when disconnected ?
 		hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
 		hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
 		hideProcessesButton.setGraphicTextGap(0d);
 		hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes (ctrl+p)"));
 
+		// TODO: Should we hide these buttons, when disconnected ?
 		hideFunctionsButton.setGraphic(Icon.create().icon(AwesomeIcon.CUBE));
 		hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
 		hideFunctionsButton.setGraphicTextGap(0d);
@@ -107,6 +118,8 @@ public class TopBarView implements Initializable {
 		erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
 		erlangMemoryButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
+        // TODO: maybe make this button available, sometimes, there are crashes causing the node to go down, 
+		// and then it's disabled when disconnected....( i would like to see the crashes ) :)
         crashReportsButton.setGraphic(crashReportsGraphic());
         crashReportsButton.setContentDisplay(ContentDisplay.LEFT);
         crashReportsButton.setGraphicTextGap(0d);
@@ -154,9 +167,30 @@ public class TopBarView implements Initializable {
         tweetButton.setGraphicTextGap(0d);
         tweetButton.setOnAction((e) -> { tweet(); });
         tweetButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
-
-        hideProcsProperty().addListener((Observable o) -> { toggleHideProcsText(); });
-        hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncsText(); });
+		
+		disconnectButton.setGraphic(Icon.create().icon(AwesomeIcon.EJECT));
+		disconnectButton.setContentDisplay(ContentDisplay.TOP);
+		disconnectButton.setGraphicTextGap(0d);
+		disconnectButton.setTooltip(new Tooltip("Disconnect"));
+		disconnectButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+		disconnectButton.setOnAction((e) -> { 
+			try {
+				disconnect();
+			} catch (Exception e1) {
+                e1.printStackTrace();
+            }
+		});
+		
+		prefButton.setGraphic(Icon.create().icon(AwesomeIcon.GEARS));
+		prefButton.setContentDisplay(ContentDisplay.TOP);
+		prefButton.setGraphicTextGap(0d);
+		prefButton.setTooltip(new Tooltip("Preferences"));
+		prefButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+		prefButton.setOnAction((e) -> { showPreferences(); });
+		
+        hideProcsProperty().addListener((Observable o) -> { toggleHideProcs(); });
+        hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncs(); });
+		
         erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
         
 		FxmlLoadable loader = processCountStat();	
@@ -166,9 +200,25 @@ public class TopBarView implements Initializable {
 
         topBox.getItems().addAll(rhsSpacer(), tweetButton);
 		
-		toggleHideProcsText();
-		toggleHideFuncsText();
-		
+        // let's store the ui preferences, as the end user changes them...
+		PrefBind.bind_boolean("hideProcesses", hideProcessesButton.selectedProperty());
+        PrefBind.bind_boolean("hideModules", hideFunctionsButton.selectedProperty());
+        
+        boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
+        boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
+        
+        if(hideProcs){
+            // click the hide button manually.
+            hideProcessesButton.setSelected(true);
+        }
+        if(hideMods){
+            // click the hide button manually.
+            hideFunctionsButton.setSelected(true);
+        }
+        
+        toggleHideProcs();
+		toggleHideFuncs();
+        
 		ErlyBerly.nodeAPI()
 		    .getCrashReports()
 		    .addListener(this::traceLogsChanged);
@@ -246,8 +296,6 @@ public class TopBarView implements Initializable {
         return stackPane;
     }
     
-
-
     private Parent xrefAnalysisGraphic() {
         Icon icon;
         
@@ -369,7 +417,7 @@ public class TopBarView implements Initializable {
 		return hideFunctionsButton.selectedProperty();
 	}
 	
-	private void toggleHideProcsText() {
+    private void toggleHideProcs() {
 		String buttonText = "";
 		
 		if(hideProcessesButton.isSelected())
@@ -379,8 +427,18 @@ public class TopBarView implements Initializable {
 		
 		hideProcessesButton.setText(buttonText);
 	}
+    
+	private void toggleHideProcs(Boolean preferenceBool) {
+        String buttonText;
+		if(preferenceBool){
+            buttonText = "Hide Processes";
+        }else{
+            buttonText = "Show Processes";
+        }
+        hideProcessesButton.setText(buttonText);
+	}
 	
-	private void toggleHideFuncsText() {
+	private void toggleHideFuncs() {
 		String buttonText = "";
 		
 		if(hideFunctionsButton.isSelected())
@@ -395,6 +453,78 @@ public class TopBarView implements Initializable {
 		refreshModulesAction = e;
 		
 		refreshModulesButton.setOnAction(refreshModulesAction);
+	}
+	
+	public void disconnect() throws IOException, OtpErlangException{
+		ErlyBerly.nodeAPI().manually_disconnect();
+		ErlyBerly.nodeAPI().disconnect();
+		Stage s = new Stage();
+		displayConnectionPopup(s);
+	}
+	
+	public void showPreferences(){
+		Stage s = new Stage();
+		displayPreferencesPopup(s);
+	}
+	
+	// TODO: (improve) lazy copy paste 
+	// TODO: THIS was a ugly copy paste effort
+	private void displayConnectionPopup(Stage primaryStage) {
+		Stage connectStage;
+        
+		connectStage = new Stage();
+        connectStage.initModality(Modality.WINDOW_MODAL);
+        connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
+        connectStage.setAlwaysOnTop(true);
+        
+        // javafx vertical resizing is laughably ugly, lets just disallow it
+        connectStage.setResizable(false);
+        connectStage.setWidth(400);
+        
+        // if the user closes the window without connecting then close the app
+        connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			@Override
+			public void handle(WindowEvent e) {
+				if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
+					Platform.exit();
+				}
+				
+				Platform.runLater(() -> { 
+					//primaryStage.setResizable(true);
+				});
+			}});
+
+        connectStage.show();
+	}
+	
+	// TODO: (improve) lazy copy paste 
+	// TODO: THIS was a ugly copy paste effort
+	private void displayPreferencesPopup(Stage stage){
+		Stage prefStage;
+        
+		prefStage = new Stage();
+        prefStage.initModality(Modality.WINDOW_MODAL);
+        prefStage.setScene(new Scene(new FxmlLoadable("/erlyberly/preferences.fxml").load()));
+        prefStage.setAlwaysOnTop(true);
+        
+        // javafx vertical resizing is laughably ugly, lets just disallow it
+        prefStage.setResizable(false);
+        prefStage.setWidth(400);
+        
+        // if the user closes the window without connecting then close the app
+        prefStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			@Override
+			public void handle(WindowEvent e) {
+				if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
+					// save the preferences
+				}
+				
+				Platform.runLater(() -> { 
+					//primaryStage.setResizable(true);
+				});
+			}});
+
+        prefStage.show();
 	}
 	
 	class ErlangMemoryThread extends Thread {

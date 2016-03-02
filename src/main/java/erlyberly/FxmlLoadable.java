@@ -8,7 +8,6 @@ import javafx.scene.Parent;
 
 class FxmlLoadable {
 	final String resource;
-	
 	Parent fxmlNode;
 	Object controller;
 

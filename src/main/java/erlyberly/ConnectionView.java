@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.CheckBox;
 import javafx.stage.Stage;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -34,15 +35,34 @@ public class ConnectionView implements Initializable {
 	private Button connectButton;
 	@FXML
 	private Label messageLabel;
+	@FXML
+    private CheckBox autoConnectField;
 
 	@Override
 	public void initialize(URL url, ResourceBundle r) {
 		PrefBind.bind("targetNodeName", nodeNameField.textProperty());
 		PrefBind.bind("cookieName", cookieField.textProperty());
-		
+        PrefBind.bind_boolean("autoConnect", autoConnectField.selectedProperty());
+        
 		nodeNameField.disableProperty().bind(isConnecting);
 		cookieField.disableProperty().bind(isConnecting);
 		connectButton.disableProperty().bind(isConnecting);
+		autoConnectField.disableProperty().bind(isConnecting);
+		
+		// TODO: or immediately start connecting when the CMDLINE flag is present...
+		if (autoConnectField.isSelected() && !ErlyBerly.nodeAPI().manuallyDisconnected()) {
+			try {
+				// TODO: This sleep/yield, allows the proc controller to start it's thread,
+				// and to prevent a npointer exception.
+				Thread.sleep(50);
+			} catch(InterruptedException ex) {
+				Thread.currentThread().interrupt();
+			}
+			
+			this.onConnect();
+		}else{
+			// show the Connection Dialogue...
+		}
 	}
 	
 	@FXML
@@ -53,7 +73,6 @@ public class ConnectionView implements Initializable {
 		cookie = cookie.replaceAll("'", "");
 		
 		isConnecting.set(true);
-		
 		
 		new ConnectorThead(nodeNameField.getText(), cookie).start();
 	}
@@ -72,10 +91,10 @@ public class ConnectionView implements Initializable {
 				.icon(AwesomeIcon.BAN)
 				.style("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
 	}
-
+	
+	// TODO: make into a more generic stage handling function.
 	private void closeThisWindow() {
-		Stage stage;
-		
+		Stage stage;	
 		stage = (Stage) connectButton.getScene().getWindow();
 		stage.close();
 	}
@@ -101,7 +120,7 @@ public class ConnectionView implements Initializable {
 				ErlyBerly
 					.nodeAPI()
 					.connectionInfo(remoteNodeName, cookie)
-					.connect();
+					.manual_connect();
 
 				Platform.runLater(() -> { closeThisWindow(); });
 			}

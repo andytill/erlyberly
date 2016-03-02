@@ -12,6 +12,7 @@
 -export([process_info/0]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
+-export([stop_traces/0]).
 -export([stop_trace/4]).
 -export([xref_analysis/3]).
 
@@ -129,6 +130,9 @@ start_trace({Node, Pid}, Mod, Func, Arity, _IsExported) ->
 stop_trace(Mod, Func, Arity, _IsExported) ->
     erlyberly_tcollector ! {stop_trace, Mod, Func, Arity}.
 %%
+stop_traces() ->
+    erlyberly_tcollector ! stop_traces.
+%%
 when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
         undefined -> Fn();
@@ -190,6 +194,8 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             Traces_1 = Traces -- [{Mod, Func, Arity}],
             TC1 = TC#tcollector{ traces = Traces_1 },
             erlyberly_tcollector2(TC1);
+        stop_traces ->
+            ok = dbg:stop_clear();
         {nodedown, _Node} ->
             ok = dbg:stop_clear();
         {take_logs, Pid} ->
@@ -608,12 +614,15 @@ init([Node]) ->
 
 handle_event({error_report,_,{_, crash_report, Crash_props_1}}, State) ->
     Node = (State#err_state.node),
-    %{value, {error_info,}, Crash_props_2} = lists:keytake(error_info, 1, lists:flatten(Crash_props_1)),
-    Node ! {erlyberly_error_report, lists:flatten(Crash_props_1)},
+    case lists:keyfind(error_info, 1, Crash_props_1) of
+        {error_info, {Error_reason, StackTrace}} ->
+            Crash_props_2 = lists:keystore(reason, 1, Crash_props_1, {reason, Error_reason});
+        _ ->
+            Crash_props_2 = Crash_props_1
+    end,
+    Node ! {erlyberly_error_report, lists:flatten(Crash_props_2)},
     {ok, State};
 handle_event(_, State) ->
-    % io:format("error: ~p ~p~n", [element(1,E), tuple_size(E) ]), 
-
     {ok, State}.
 
 handle_call(_Request, State) -> {ok, ok, State}.

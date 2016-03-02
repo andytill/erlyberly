@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -35,18 +36,14 @@ public class PrefBind {
 		if(props == null) {
 			return;
 		}
-		
 		String storedValue = props.getProperty(propName);
-		
 		if(storedValue != null) {
 			stringProp.set(storedValue);
 		}
-
 		stringProp.addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> o, String oldValue, String newValue) {
 				props.setProperty(propName, newValue);
-				
 				timer.schedule(new TimerTask() {
 					@Override
 					public void run() {
@@ -55,11 +52,38 @@ public class PrefBind {
 							awaitingStore = true;
 						}
 					}}, 1000);
+				
 			}});
 	}
-	
+    
+    public static void bind_boolean(final String propName, BooleanProperty boolProp){
+        if(props == null) {
+			return;
+		}
+		String storedValue = props.getProperty(propName);
+        Boolean b = Boolean.valueOf(storedValue);
+		if(storedValue != null) {
+            boolProp.set(b);
+		}
+        boolProp.addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {            
+                props.setProperty(propName, newValue.toString());
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						if(!awaitingStore) {
+							Platform.runLater(PrefBind::store);
+							awaitingStore = true;
+						}
+					}}, 1000);
+            }
+        });
+	}
+    
 	static void store() {
 		try {
+			System.out.println("Storing "+props);
 			props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
 		} catch (IOException e) {
 			e.printStackTrace();
