@@ -2,8 +2,6 @@ package erlyberly;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -11,7 +9,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 public class SeqTraceView extends VBox {
 
@@ -80,30 +77,12 @@ public class SeqTraceView extends VBox {
 	}
 
 	private void showTraceTermView(final SeqTraceLog seqTraceLog) {
-		
 		TermTreeView argTermsTreeView;
 		
 		argTermsTreeView = newTermTreeView();
 		argTermsTreeView.populateFromTerm(seqTraceLog.getMessage());
 		
-	/*	StringBuilder sb = new StringBuilder(seqTraceLog.getPidString());
-		sb.append(" ");
-		seqTraceLog.appendFunctionToString(sb);*/
-		
-		showWindow(argTermsTreeView, "");
-	}
-
-	private void showWindow(Parent parent, CharSequence sb) {
-		Stage termsStage = new Stage();
-		Scene scene  = new Scene(parent);
-		
-		CloseWindowOnEscape.apply(scene, termsStage);
-		
-        termsStage.setScene(scene);
-        termsStage.setWidth(800);
-        termsStage.setHeight(600);
-        termsStage.setTitle(sb.toString());
-        termsStage.show();
+        ErlyBerly.showPane("Seq Trace", argTermsTreeView);
 	}
 
 	private TermTreeView newTermTreeView() {

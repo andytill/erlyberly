@@ -28,6 +28,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -98,7 +100,11 @@ public class DbgView implements Initializable {
 		
 		dbgController.initialize(url, r);
 		
-		dbgSplitPane.getItems().add(new DbgTraceView(dbgController));
+		tabPane = new TabPane();
+		Tab traceViewTab = new Tab("Traces", new DbgTraceView(dbgController));
+		traceViewTab.setClosable(false);
+        getTabPane().getTabs().add(traceViewTab);
+		dbgSplitPane.getItems().add(getTabPane());
 		
 	}
 
@@ -138,6 +144,8 @@ public class DbgView implements Initializable {
     static boolean toggleAllTracesDown = false;
 
     private StringProperty filterTextProperty;
+
+    private TabPane tabPane;
 
     private TextField floatyFieldTextField(FxmlLoadable loader) {
         // FIXME floaty field should allow access to the text field
@@ -324,4 +332,7 @@ public class DbgView implements Initializable {
 		}
 	}
 
+    public TabPane getTabPane() {
+        return tabPane;
+    }
 }
