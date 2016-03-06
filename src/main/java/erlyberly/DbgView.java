@@ -28,12 +28,15 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ui.TabPaneDetacher;
 
 
 
@@ -90,7 +93,6 @@ public class DbgView implements Initializable {
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
 		modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
-		/*modulesTree.setOnKeyPressed(this::onKeyPressInModuleTree);*/
         modulesTree.setContextMenu(modFuncContextMenu);
 		
 		
@@ -98,7 +100,16 @@ public class DbgView implements Initializable {
 		
 		dbgController.initialize(url, r);
 		
-		dbgSplitPane.getItems().add(new DbgTraceView(dbgController));
+		tabPane = new TabPane();
+		TabPaneDetacher.create()
+		    .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
+		    .makeTabsDetachable(tabPane);
+		Tab traceViewTab;
+        traceViewTab = new Tab("Traces");
+		traceViewTab.setContent(new DbgTraceView(dbgController));
+		traceViewTab.setClosable(false);
+        getTabPane().getTabs().add(traceViewTab);
+		dbgSplitPane.getItems().add(getTabPane());
 		
 	}
 
@@ -138,6 +149,8 @@ public class DbgView implements Initializable {
     static boolean toggleAllTracesDown = false;
 
     private StringProperty filterTextProperty;
+
+    private TabPane tabPane;
 
     private TextField floatyFieldTextField(FxmlLoadable loader) {
         // FIXME floaty field should allow access to the text field
@@ -324,4 +337,7 @@ public class DbgView implements Initializable {
 		}
 	}
 
+    public TabPane getTabPane() {
+        return tabPane;
+    }
 }

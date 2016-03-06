@@ -17,14 +17,11 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCombination;
-import javafx.stage.Stage;
 
 public class ModFuncContextMenu extends ContextMenu {
 
@@ -132,7 +129,7 @@ public class ModFuncContextMenu extends ContextMenu {
         
         dbgController.seqTrace(func);
         
-        showWindow(new SeqTraceView(dbgController.getSeqTraceLogs()), "Seq Trace");
+        ErlyBerly.showPane("Seq Trace", new SeqTraceView(dbgController.getSeqTraceLogs()));
     }
     
     private void onViewCallGraph(ActionEvent ae) {
@@ -146,24 +143,11 @@ public class ModFuncContextMenu extends ContextMenu {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
-            showWindow(callGraphView, func.toFullString() + " call graph");
+            ErlyBerly.showPane(func.toFullString() + " call graph", callGraphView);
         } 
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void showWindow(Parent parent, CharSequence sb) {
-        Stage termsStage = new Stage();
-        Scene scene  = new Scene(parent);
-        
-        CloseWindowOnEscape.apply(scene, termsStage);
-        
-        termsStage.setScene(scene);
-        termsStage.setWidth(800);
-        termsStage.setHeight(600);
-        termsStage.setTitle(sb.toString());
-        termsStage.show();
     }
     
     private void onFunctionTrace(ActionEvent e) {

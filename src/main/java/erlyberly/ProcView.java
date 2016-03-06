@@ -3,6 +3,12 @@ package erlyberly;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangString;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.fontawesome.Icon;
+import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -13,7 +19,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
-import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Button;
@@ -28,15 +33,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.util.Callback;
-
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
-
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
-import floatyfield.FloatyFieldView;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}. 
@@ -191,8 +188,6 @@ public class ProcView implements Initializable {
 		if(obj == null)
 			obj = new OtpErlangString("Error, erlyberly cannot get process state. Probably not OTP compliant process");
 		
-		Stage termsStage = new Stage();
-		
 		TermTreeView termTreeView;
 		
 		termTreeView = new TermTreeView();
@@ -200,18 +195,7 @@ public class ProcView implements Initializable {
 		VBox.setVgrow(termTreeView, Priority.ALWAYS);
 		termTreeView.populateFromTerm(obj); 
 
-		Scene scene  = new Scene(termTreeView);
-        ErlyBerly.applyCssToWIndow(scene);
-		
-		CloseWindowOnEscape.apply(scene, termsStage);
-		
-		String shortName = procInfo.getShortName();
-		
-		termsStage.setScene(scene);
-        termsStage.setWidth(600);
-        termsStage.setHeight(600);
-		termsStage.setTitle("Process State for " + shortName);
-        termsStage.show();
+        ErlyBerly.showPane("Process State for " + procInfo.getShortName(), termTreeView);
 	}
 	
 	@FXML
@@ -277,21 +261,9 @@ public class ProcView implements Initializable {
 
 	private void showPieChart(String title, ObservableList<PieChart.Data> data) {
         PieChart pieChart;
-        
 		pieChart = new PieChart(data);
         pieChart.setTitle(title);
-        
-		Stage pieStage = new Stage();
-		Scene scene = new Scene(pieChart);
-    
-		CloseWindowOnEscape.apply(scene, pieStage);
-		
-		pieStage.setScene(scene);
-        pieStage.setWidth(800);
-        pieStage.setHeight(600);
-        pieStage.setTitle(title);
-        
-        pieStage.show();
+        ErlyBerly.showPane(title, pieChart);
 	}
 
 	private String procDescription(ProcInfo proc) {

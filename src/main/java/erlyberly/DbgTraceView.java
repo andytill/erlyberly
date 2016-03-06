@@ -16,7 +16,6 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
@@ -31,7 +30,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 
 public class DbgTraceView extends VBox {
@@ -177,19 +175,6 @@ public class DbgTraceView extends VBox {
         }
 	}
 
-	private void showWindow(Parent parent, CharSequence sb) {
-		Stage termsStage = new Stage();
-		Scene scene  = new Scene(parent);
-		ErlyBerly.applyCssToWIndow(scene);
-		CloseWindowOnEscape.apply(scene, termsStage);
-		
-		termsStage.setScene(scene);
-        termsStage.setWidth(800);
-        termsStage.setHeight(600);
-        termsStage.setTitle(sb.toString());
-        termsStage.show();
-	}
-
 	private TermTreeView newTermTreeView() {
 		TermTreeView termTreeView;
 		
@@ -237,7 +222,7 @@ public class DbgTraceView extends VBox {
 		boolean appendArity = false;
 		traceLog.appendFunctionToString(sb, appendArity);
 		
-		showWindow(splitPane, sb);
+		ErlyBerly.showPane(sb.toString(), splitPane);
 	}
 	
 	private Node labelledTreeView(String label, TermTreeView node) {		

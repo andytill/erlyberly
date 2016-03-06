@@ -44,7 +44,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             HexstarView hexstarView;
             hexstarView = new HexstarView();
             hexstarView.setBinary(binary);
-            ErlyBerly.subWindow("Hex View", hexstarView);
+            ErlyBerly.showPane("Hex View", hexstarView);
         }
     }
 
@@ -63,7 +63,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             OtpErlangList props = ErlyBerly.nodeAPI().dictToPropslist(dict);
             TermTreeView parentControl = new TermTreeView();
             parentControl.populateFromTerm(props);
-            ErlyBerly.subWindow("dict_to_list", parentControl);
+            ErlyBerly.showPane("dict_to_list", parentControl);
         }
         catch (Exception e1) {
             e1.printStackTrace();
