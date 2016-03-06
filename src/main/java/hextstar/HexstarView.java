@@ -51,10 +51,11 @@ public class HexstarView extends TableView<DataRow> {
     public void setBinary(OtpErlangBinary binary) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(binary.binaryValue());
         byte[] input = new byte[16];
-        int addr = 0;
+        int addr = 0, bytesRead = 0;
         try {
-            while ((inputStream.read(input)) > 0) {
-                getItems().add(new DataRow(addr += 16, input));
+            while ((bytesRead = inputStream.read(input)) > 0) {
+                getItems().add(new DataRow(addr, input, bytesRead));
+                addr += 16;
                 Arrays.fill(input, (byte)0);
             }
         }

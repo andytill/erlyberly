@@ -5,18 +5,22 @@ import javafx.beans.property.StringProperty;
 
 /**
  * Created by Bart on 9/26/2015.
+ * Originally from https://github.com/Velocity-/Hexstar
  */
 public class DataRow {
     private StringProperty address, text;
     private StringProperty[] data = new StringProperty[16];
 
-    public DataRow(int addr, byte[] b) {
+    public DataRow(int addr, byte[] b, int bytesRead) {
         address = new SimpleStringProperty(String.format("%08X", addr));
         text = new SimpleStringProperty();
-        StringBuilder sb = new StringBuilder(16);
+        StringBuilder sb = new StringBuilder(bytesRead);
         for (int i = 0; i < b.length; i++) {
+            String stringByteValue = "";
             // display the byte as an unsigned number, like erlang binaries
-            data[i] = new SimpleStringProperty((b[i]& 0xFF) + "");
+            if(i < bytesRead)
+                stringByteValue = Integer.toString((b[i]& 0xFF));
+            data[i] = new SimpleStringProperty(stringByteValue);
             if(b[i] == 10)
                 sb.append("\\n");
             else if(b[i] >= 32 && b[i] < 127)
