@@ -25,7 +25,6 @@ import java.util.TreeSet;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -187,9 +186,6 @@ public class TabPaneDetacher {
         stage.setScene(scene);
         stage.setTitle(tab.getText());
         stage.setAlwaysOnTop(isAlwaysOnTop());
-        Point2D p = MouseRobot.getMousePosition();
-        stage.setX(p.getX());
-        stage.setY(p.getY());
         stage.setOnCloseRequest((WindowEvent t) -> {
             stage.close();
             tab.setContent(content);
@@ -209,6 +205,7 @@ public class TabPaneDetacher {
         stage.setOnShown((WindowEvent t) -> {
             tab.getTabPane().getTabs().remove(tab);
         });
+        CloseWindowOnEscape.apply(scene, stage);
         stage.show();
     }
 

@@ -36,6 +36,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ui.TabPaneDetacher;
 
 
 
@@ -92,7 +93,6 @@ public class DbgView implements Initializable {
 		ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 		
 		modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
-		/*modulesTree.setOnKeyPressed(this::onKeyPressInModuleTree);*/
         modulesTree.setContextMenu(modFuncContextMenu);
 		
 		
@@ -101,6 +101,9 @@ public class DbgView implements Initializable {
 		dbgController.initialize(url, r);
 		
 		tabPane = new TabPane();
+		TabPaneDetacher.create()
+		    .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
+		    .makeTabsDetachable(tabPane);
 		Tab traceViewTab = new Tab("Traces", new DbgTraceView(dbgController));
 		traceViewTab.setClosable(false);
         getTabPane().getTabs().add(traceViewTab);
