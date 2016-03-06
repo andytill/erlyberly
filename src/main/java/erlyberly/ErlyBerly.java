@@ -210,7 +210,9 @@ public class ErlyBerly extends Application {
      */
     public static void showPane(String title, Parent parentControl) {
         assert Platform.isFxApplicationThread();
-        Tab newTab = new Tab(title, parentControl);
+        Tab newTab;
+        newTab = new Tab(title);
+        newTab.setContent(parentControl);
         tabPane.getTabs().add(newTab);
         tabPane.getSelectionModel().select(newTab);
     }

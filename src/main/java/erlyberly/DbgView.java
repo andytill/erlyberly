@@ -104,7 +104,9 @@ public class DbgView implements Initializable {
 		TabPaneDetacher.create()
 		    .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
 		    .makeTabsDetachable(tabPane);
-		Tab traceViewTab = new Tab("Traces", new DbgTraceView(dbgController));
+		Tab traceViewTab;
+        traceViewTab = new Tab("Traces");
+		traceViewTab.setContent(new DbgTraceView(dbgController));
 		traceViewTab.setClosable(false);
         getTabPane().getTabs().add(traceViewTab);
 		dbgSplitPane.getItems().add(getTabPane());
