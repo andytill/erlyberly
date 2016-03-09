@@ -1,7 +1,7 @@
 package erlyberly;
 
-import com.ericsson.otp.erlang.OtpErlangException;
 import java.awt.Desktop;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -54,10 +55,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-
-import java.io.IOException;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class TopBarView implements Initializable {
@@ -140,7 +139,7 @@ public class TopBarView implements Initializable {
                         menuItem.setGraphic(new CrashReportGraphic(crashReport));
                         menuItem.setOnAction((action) -> { 
                             unreadCrashReportsProperty.set(0);
-                            showWindow("Crash Report", crashReportView(crashReport));
+                            ErlyBerly.showPane("Crash Report", crashReportView(crashReport));
                         });
                         crashReportsButton.getItems().add(menuItem);
                         }
@@ -332,23 +331,8 @@ public class TopBarView implements Initializable {
         
 		pieChart = new PieChart(data);
         pieChart.setTitle(title);
-        
-		showWindow(title, pieChart);
+        ErlyBerly.showPane(title, pieChart);
 	}
-
-    private void showWindow(String title, Parent pieChart) {
-        Stage stage = new Stage();
-		Scene scene = new Scene(pieChart);
-    
-		CloseWindowOnEscape.apply(scene, stage);
-		
-		stage.setScene(scene);
-        stage.setWidth(800);
-        stage.setHeight(600);
-        stage.setTitle(title);
-        
-        stage.show();
-    }
 
 	/**
 	 * these have to be run after initialisation is complete or an exception occurs

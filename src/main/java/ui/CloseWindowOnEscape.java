@@ -1,12 +1,13 @@
-package erlyberly;
+package ui;
 
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
-class CloseWindowOnEscape implements EventHandler<KeyEvent> {
+public class CloseWindowOnEscape implements EventHandler<KeyEvent> {
 	
 	private final Stage stage;
 
@@ -17,6 +18,10 @@ class CloseWindowOnEscape implements EventHandler<KeyEvent> {
 	@Override
 	public void handle(KeyEvent evt) {
 	    if (evt.getCode().equals(KeyCode.ESCAPE)) {
+	        EventHandler<WindowEvent> onCloseRequest = stage.getOnCloseRequest();
+	        if(onCloseRequest != null) {
+	            onCloseRequest.handle(null);
+	        }
 	    	stage.close();
 	    }
 	}

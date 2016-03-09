@@ -11,13 +11,18 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import ui.CloseWindowOnEscape;
 
 public class ErlyBerly extends Application {
 
@@ -28,6 +33,8 @@ public class ErlyBerly extends Application {
 	private Region entopPane;
 
 	private double entopDivPosition;
+
+    private static TabPane tabPane;
 
 	public static void main(String[] args) throws Exception {
 		launch(args);
@@ -48,6 +55,7 @@ public class ErlyBerly extends Application {
 		FxmlLoadable dbgFxml;
 		dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
 		dbgFxml.load();
+		tabPane = ((DbgView)dbgFxml.controller).getTabPane();
         
 		splitPane = new SplitPane();
 		entopPane = (Region) loadEntopPane();
@@ -63,6 +71,19 @@ public class ErlyBerly extends Application {
 		
         Scene scene;
 		scene = new Scene(rootView);
+		scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+
+	        @Override
+	        public void handle(KeyEvent t) {
+	            if (KeyCode.W.equals(t.getCode()) && t.isShortcutDown()) {
+	                Tab selectedItem = tabPane.getSelectionModel().getSelectedItem();
+	                if(selectedItem != null && selectedItem.isClosable()) {
+	                    tabPane.getTabs().remove(selectedItem);
+	                    t.consume();
+	                }
+	            }
+	        }
+	    });
 		applyCssToWIndow(scene);  
 
 		primaryStage.setScene(scene);
@@ -184,18 +205,16 @@ public class ErlyBerly extends Application {
 	}
 
 
-    public static void subWindow(String title, Parent parentControl) {
-        Stage stage = new Stage();
-        Scene scene = new Scene(parentControl);
-
-        CloseWindowOnEscape.apply(scene, stage);
-
-        stage.setScene(scene);
-        stage.setWidth(800);
-        stage.setHeight(600);
-        stage.setTitle(title);
-
-        stage.show();
+    /**
+     * Show a new control in the tab pane. The tab is closable.
+     */
+    public static void showPane(String title, Parent parentControl) {
+        assert Platform.isFxApplicationThread();
+        Tab newTab;
+        newTab = new Tab(title);
+        newTab.setContent(parentControl);
+        tabPane.getTabs().add(newTab);
+        tabPane.getSelectionModel().select(newTab);
     }
 
     public static void showSourceCodeWindow(String title, String moduleSourceCode) {
