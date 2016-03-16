@@ -14,27 +14,27 @@ import erlyberly.TraceLog;
 
 public class TraceManager {
 
-	private static final OtpErlangAtom RETURN_FROM_ATOM = new OtpErlangAtom("return_from");
-	
-	private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
+    private static final OtpErlangAtom RETURN_FROM_ATOM = new OtpErlangAtom("return_from");
+    
+    private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
 
-	private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
-	
-	private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
+    private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
+    
+    private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
 
-	
-	public ArrayList<TraceLog> collateTraces(OtpErlangList traceLogs) {
-		final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
-		
-		for (OtpErlangObject obj : traceLogs) {
-		    decodeTraceLog(obj, traceList);
-		}
-		
-		return traceList;
-	}
-	
-	private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
-	    OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
+    
+    public ArrayList<TraceLog> collateTraces(OtpErlangList traceLogs) {
+        final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
+        
+        for (OtpErlangObject obj : traceLogs) {
+            decodeTraceLog(obj, traceList);
+        }
+        
+        return traceList;
+    }
+    
+    private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
+        OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
         OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
         
         if(CALL_ATOM.equals(traceType)) {
@@ -71,17 +71,17 @@ public class TraceManager {
             }
             
         }
-	}
+    }
 
-	private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
-		HashMap<Object, Object> map = propsFromTrace(tup);
-		
-		TraceLog trace = new TraceLog(map);
-		
-		return trace;
-	}
+    private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
+        HashMap<Object, Object> map = propsFromTrace(tup);
+        
+        TraceLog trace = new TraceLog(map);
+        
+        return trace;
+    }
 
-	private HashMap<Object, Object> propsFromTrace(OtpErlangTuple tup) {
-		return OtpUtil.propsToMap((OtpErlangList) tup.elementAt(1));
-	}
+    private HashMap<Object, Object> propsFromTrace(OtpErlangTuple tup) {
+        return OtpUtil.propsToMap((OtpErlangList) tup.elementAt(1));
+    }
 }

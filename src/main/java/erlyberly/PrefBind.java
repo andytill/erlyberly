@@ -23,101 +23,101 @@ import javafx.beans.value.ObservableValue;
  * <b>All methods must be called on the JavaFX thread.</b>
  */
 public class PrefBind {
-	
-	private static Timer timer = new Timer(true);
-	
-	private static Properties props;
-	
-	private static File erlyberlyConfig;
-	
-	private static boolean awaitingStore;
+    
+    private static Timer timer = new Timer(true);
+    
+    private static Properties props;
+    
+    private static File erlyberlyConfig;
+    
+    private static boolean awaitingStore;
 
-	public static void bind(final String propName, StringProperty stringProp) {
-		if(props == null) {
-			return;
-		}
-		String storedValue = props.getProperty(propName);
-		if(storedValue != null) {
-			stringProp.set(storedValue);
-		}
-		stringProp.addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> o, String oldValue, String newValue) {
-				props.setProperty(propName, newValue);
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						if(!awaitingStore) {
-							Platform.runLater(PrefBind::store);
-							awaitingStore = true;
-						}
-					}}, 1000);
-				
-			}});
-	}
+    public static void bind(final String propName, StringProperty stringProp) {
+        if(props == null) {
+            return;
+        }
+        String storedValue = props.getProperty(propName);
+        if(storedValue != null) {
+            stringProp.set(storedValue);
+        }
+        stringProp.addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> o, String oldValue, String newValue) {
+                props.setProperty(propName, newValue);
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(!awaitingStore) {
+                            Platform.runLater(PrefBind::store);
+                            awaitingStore = true;
+                        }
+                    }}, 1000);
+                
+            }});
+    }
     
     public static void bind_boolean(final String propName, BooleanProperty boolProp){
         if(props == null) {
-			return;
-		}
-		String storedValue = props.getProperty(propName);
+            return;
+        }
+        String storedValue = props.getProperty(propName);
         Boolean b = Boolean.valueOf(storedValue);
-		if(storedValue != null) {
+        if(storedValue != null) {
             boolProp.set(b);
-		}
+        }
         boolProp.addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {            
                 props.setProperty(propName, newValue.toString());
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						if(!awaitingStore) {
-							Platform.runLater(PrefBind::store);
-							awaitingStore = true;
-						}
-					}}, 1000);
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(!awaitingStore) {
+                            Platform.runLater(PrefBind::store);
+                            awaitingStore = true;
+                        }
+                    }}, 1000);
             }
         });
-	}
+    }
     
-	static void store() {
-		try {
-			System.out.println("Storing "+props);
-			props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		awaitingStore = false;
-	}
-	
-	public static void setup() throws IOException {
-		String home = System.getProperty("user.home");
-		
-		File homeDir = new File(home);
-		
-		File dotConfigDir = new File(homeDir, ".config");
-		
-		if(dotConfigDir.exists()) {
-			homeDir = dotConfigDir;
-		}
-		
-		erlyberlyConfig = new File(homeDir, ".erlyberly");
-		erlyberlyConfig.createNewFile();
-		
-		Properties properties;
-		
-		properties = new Properties();
-		properties.load(new FileInputStream(erlyberlyConfig));
-		
-		props = properties;
-	}
-	
-	public static Object get(Object key) {
-		return props.get(key);
-	}
+    static void store() {
+        try {
+            System.out.println("Storing "+props);
+            props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        awaitingStore = false;
+    }
+    
+    public static void setup() throws IOException {
+        String home = System.getProperty("user.home");
+        
+        File homeDir = new File(home);
+        
+        File dotConfigDir = new File(homeDir, ".config");
+        
+        if(dotConfigDir.exists()) {
+            homeDir = dotConfigDir;
+        }
+        
+        erlyberlyConfig = new File(homeDir, ".erlyberly");
+        erlyberlyConfig.createNewFile();
+        
+        Properties properties;
+        
+        properties = new Properties();
+        properties.load(new FileInputStream(erlyberlyConfig));
+        
+        props = properties;
+    }
+    
+    public static Object get(Object key) {
+        return props.get(key);
+    }
 
-	public static Object getOrDefault(String key, Object theDefault) {
-		return props.getOrDefault(key, theDefault);
-	}
+    public static Object getOrDefault(String key, Object theDefault) {
+        return props.getOrDefault(key, theDefault);
+    }
 }
