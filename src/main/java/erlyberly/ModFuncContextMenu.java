@@ -183,10 +183,10 @@ public class ModFuncContextMenu extends ContextMenu {
         // filter the exported ones
         HashSet<ModFunc> exported = new HashSet<ModFunc>();
         for (ModFunc modFunc : funcs) {
-			if(modFunc.isExported()) {
-				exported.add(modFunc);
-			}
-		}
+            if(modFunc.isExported()) {
+                exported.add(modFunc);
+            }
+        }
         
         // trace 'em
         toggleTraceMod(exported);

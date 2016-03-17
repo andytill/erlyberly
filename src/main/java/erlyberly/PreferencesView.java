@@ -11,45 +11,45 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 public class PreferencesView implements Initializable {
-	
-	@FXML
-	private TextField nodeNameField;
-	@FXML
-	private TextField cookieField;
-	@FXML
-	private Button saveButton;
-	@FXML
+    
+    @FXML
+    private TextField nodeNameField;
+    @FXML
+    private TextField cookieField;
+    @FXML
+    private Button saveButton;
+    @FXML
     private CheckBox autoConnectField;
-	@FXML
+    @FXML
     private CheckBox hideProcesses;
-	@FXML
+    @FXML
     private CheckBox hideModules;
-//	@FXML
-//	private TextField processPaneWidth;
-//	@FXML
-//	private TextField modulesPaneWidth;
-	
-	@Override
-	public void initialize(URL url, ResourceBundle r) {
-		PrefBind.bind("targetNodeName", nodeNameField.textProperty());
-		PrefBind.bind("cookieName", cookieField.textProperty());
+//  @FXML
+//  private TextField processPaneWidth;
+//  @FXML
+//  private TextField modulesPaneWidth;
+    
+    @Override
+    public void initialize(URL url, ResourceBundle r) {
+        PrefBind.bind("targetNodeName", nodeNameField.textProperty());
+        PrefBind.bind("cookieName", cookieField.textProperty());
         PrefBind.bind_boolean("autoConnect", autoConnectField.selectedProperty());
-		PrefBind.bind_boolean("hideProcesses", hideProcesses.selectedProperty());
+        PrefBind.bind_boolean("hideProcesses", hideProcesses.selectedProperty());
         PrefBind.bind_boolean("hideModules", hideModules.selectedProperty());
-	}
-	
-	@FXML
-	public void onSave(){
-		PrefBind.store();
-		closeThisWindow();
-	}
-	
-	// TODO: make into a more generic stage handling function.
-	private void closeThisWindow() {
-		Stage stage;	
-		stage = (Stage) saveButton.getScene().getWindow();
-		stage.close();
-	}
+    }
+    
+    @FXML
+    public void onSave(){
+        PrefBind.store();
+        closeThisWindow();
+    }
+    
+    // TODO: make into a more generic stage handling function.
+    private void closeThisWindow() {
+        Stage stage;    
+        stage = (Stage) saveButton.getScene().getWindow();
+        stage.close();
+    }
 
-	
+    
 }

@@ -20,12 +20,12 @@ import javafx.scene.input.KeyCombination;
 @SuppressWarnings("rawtypes")
 public class TermTreeView extends TreeView<TermTreeItem> {
 
-	public TermTreeView() {
-		setRoot(new TreeItem<TermTreeItem>());
+    public TermTreeView() {
+        setRoot(new TreeItem<TermTreeItem>());
 
-		MenuItem copyMenuItem = new MenuItem("Copy");
-		copyMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+c"));
-		copyMenuItem.setOnAction(this::onCopyCalls);
+        MenuItem copyMenuItem = new MenuItem("Copy");
+        copyMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+c"));
+        copyMenuItem.setOnAction(this::onCopyCalls);
 
         MenuItem dictMenuItem = new MenuItem("Dict to List");
         dictMenuItem.setOnAction(this::onViewDict);
@@ -76,23 +76,23 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         }
     }
 
-	public void populateFromTerm(OtpErlangObject obj) {
-		setShowRoot(false);
-		addToTreeItem(getRoot(), obj);
-	}
+    public void populateFromTerm(OtpErlangObject obj) {
+        setShowRoot(false);
+        addToTreeItem(getRoot(), obj);
+    }
 
-	private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
-		if(obj instanceof OtpErlangBinary) {
-			TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, OtpUtil.binaryToString((OtpErlangBinary) obj)));
-			parent.getChildren().add(item);
-		}
-		else if(obj instanceof OtpErlangTuple) {
-			OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
-			
-			if(elements.length == 0) {
-				parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "{ }")));
-			}
-			else {
+    private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
+        if(obj instanceof OtpErlangBinary) {
+            TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, OtpUtil.binaryToString((OtpErlangBinary) obj)));
+            parent.getChildren().add(item);
+        }
+        else if(obj instanceof OtpErlangTuple) {
+            OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
+            
+            if(elements.length == 0) {
+                parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "{ }")));
+            }
+            else {
                 TreeItem<TermTreeItem> tupleItem;
                 if(OtpUtil.isErlyberlyRecord(obj)) {
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
@@ -119,39 +119,39 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                         tupleItem.setValue(new TermTreeItem(value, otpObjectToString(value)));
                     else
                         addToTreeItem(tupleItem, value);
-				}
-				else {
-					tupleItem = new TreeItem<>();
-					tupleItem.setExpanded(true);
-					
-					if(OtpUtil.isLittleTerm(obj)) {
-					    tupleItem.setValue(new TermTreeItem(obj, otpObjectToString(obj)));
-	                    parent.getChildren().add(tupleItem);
-					}
-					else {
+                }
+                else {
+                    tupleItem = new TreeItem<>();
+                    tupleItem.setExpanded(true);
+                    
+                    if(OtpUtil.isLittleTerm(obj)) {
+                        tupleItem.setValue(new TermTreeItem(obj, otpObjectToString(obj)));
+                        parent.getChildren().add(tupleItem);
+                    }
+                    else {
                         tupleItem.setValue(new TermTreeItem(obj, "{"));
-	                    for (OtpErlangObject e : elements) {
-	                        addToTreeItem(tupleItem, e);
-	                    }
-	                    parent.getChildren().add(tupleItem);
-	                    parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "}")));
-					}
-					
-				}
-			}
-		}
-		else if(obj instanceof OtpErlangList) {
-			OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
-			
-			if(elements.length == 0) {
+                        for (OtpErlangObject e : elements) {
+                            addToTreeItem(tupleItem, e);
+                        }
+                        parent.getChildren().add(tupleItem);
+                        parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "}")));
+                    }
+                    
+                }
+            }
+        }
+        else if(obj instanceof OtpErlangList) {
+            OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
+            
+            if(elements.length == 0) {
                 parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "[ ]")));
-			}
-			else {
-				TreeItem<TermTreeItem> listItem;
-				
-				listItem = new TreeItem<>(new TermTreeItem(obj, "["));
-				listItem.setExpanded(true);
-				
+            }
+            else {
+                TreeItem<TermTreeItem> listItem;
+                
+                listItem = new TreeItem<>(new TermTreeItem(obj, "["));
+                listItem.setExpanded(true);
+                
 
                 if(OtpUtil.isLittleTerm(obj)) {
                     listItem.setValue(new TermTreeItem(obj, otpObjectToString(obj)));
@@ -165,12 +165,12 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     parent.getChildren().add(listItem);
                     parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, "]")));
                 }
-			}
-		}
-		else {
+            }
+        }
+        else {
             parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, otpObjectToString(obj))));
-		}
-	}
+        }
+    }
 
     private String otpObjectToString(OtpErlangObject obj) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -186,9 +186,9 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         return label;
     }
 
-	private boolean isRecordField(OtpErlangObject obj) {
-		return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
-	}
+    private boolean isRecordField(OtpErlangObject obj) {
+        return OtpUtil.isTupleTagged(OtpUtil.atom("erlyberly_record_field"), obj);
+    }
 
     private void onCopyCalls(ActionEvent e) {
         StringBuilder sbuilder = new StringBuilder();
