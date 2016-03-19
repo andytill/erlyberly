@@ -249,6 +249,7 @@ public class ErlyBerly extends Application {
         if(node instanceof Pane)
             return (Pane) node;
         VBox.setVgrow(node, Priority.ALWAYS);
-        return new VBox(node);
+        VBox vBox = new VBox(node);
+        return vBox;
     }
 }

@@ -1,5 +1,8 @@
 package erlyberly;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -234,7 +237,7 @@ public class ModFuncContextMenu extends ContextMenu {
                 String functionName = mf.getFuncName();
                 Integer arity = mf.getArity();
                 modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
-                showModuleSourceCode(moduleName + ":" + functionName + "/" + arity.toString() + " Source code "+moduleName, modSrc);
+                showModuleSourceCode(moduleName, modSrc);
             } 
         } catch (Exception e) {
             throw new RuntimeException("failed to load the source code.", e);
@@ -264,7 +267,23 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private void showModuleSourceCode(String title, String moduleSourceCode) {
-        ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+        Boolean showSourceInSystemEditor = PrefBind.getOrDefaultBoolean("showSourceInSystemEditor", false);
+        if(showSourceInSystemEditor) {
+            try {
+                File tmpSourceFile = File.createTempFile(title, ".erl");
+                FileOutputStream out = new FileOutputStream(tmpSourceFile);
+                out.write(moduleSourceCode.getBytes());
+                out.close();
+                Desktop.getDesktop().edit(tmpSourceFile);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+            }
+        }
+        else {
+            ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+        }
     }
 
     /**

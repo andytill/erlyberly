@@ -31,7 +31,7 @@ public class PrefBind {
     private static File erlyberlyConfig;
     
     private static boolean awaitingStore;
-
+    
     public static void bind(final String propName, StringProperty stringProp) {
         if(props == null) {
             return;
@@ -56,7 +56,7 @@ public class PrefBind {
             }});
     }
     
-    public static void bind_boolean(final String propName, BooleanProperty boolProp){
+    public static void bindBoolean(final String propName, BooleanProperty boolProp){
         if(props == null) {
             return;
         }
@@ -83,7 +83,6 @@ public class PrefBind {
     
     static void store() {
         try {
-            System.out.println("Storing "+props);
             props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
         } catch (IOException e) {
             e.printStackTrace();
@@ -119,5 +118,9 @@ public class PrefBind {
 
     public static Object getOrDefault(String key, Object theDefault) {
         return props.getOrDefault(key, theDefault);
+    }
+    
+    public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
+        return Boolean.parseBoolean(PrefBind.getOrDefault("showSourceInSystemEditor", false).toString());
     }
 }
