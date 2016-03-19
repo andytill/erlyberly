@@ -278,11 +278,11 @@ public class ModFuncContextMenu extends ContextMenu {
             }
             catch (IOException e) {
                 e.printStackTrace();
-                ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+                ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
             }
         }
         else {
-            ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+            ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
         }
     }
 

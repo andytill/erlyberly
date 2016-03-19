@@ -14,7 +14,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
@@ -24,7 +23,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import ui.CloseWindowOnEscape;
 
 public class ErlyBerly extends Application {
 
@@ -218,32 +216,8 @@ public class ErlyBerly extends Application {
         tabPane.getSelectionModel().select(newTab);
     }
 
-    public static void showSourceCodeWindow(String title, String moduleSourceCode) {
-        assert Platform.isFxApplicationThread();
-        
-        TextArea textArea;
-        
-        textArea = new TextArea(moduleSourceCode);
-        textArea.getStyleClass().add("mod-src");
-        textArea.setEditable(false);
-        
-        Scene scene = new Scene(textArea, 800, 800);
-        ErlyBerly.applyCssToWIndow(scene);
-
-        Stage primaryStage;
-        
-        primaryStage = new Stage();
-        primaryStage.setTitle(title);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        CloseWindowOnEscape.apply(scene, primaryStage);
-    }
-
     /**
      * All I know is pane.
-     * @param node
-     * @return
      */
     public static Pane wrapInPane(Node node) {
         if(node instanceof Pane)

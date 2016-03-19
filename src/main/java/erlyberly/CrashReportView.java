@@ -57,7 +57,10 @@ public class CrashReportView extends TabPane {
                             try {
                                 String source = ErlyBerly.nodeAPI().moduleFunctionSourceCode(
                                         mf.getModuleName(), mf.getFuncName(), mf.getArity());
-                                ErlyBerly.showSourceCodeWindow("Crash Report Stack", source);
+                                ErlyBerly.showPane(
+                                    "Crash Report Stack",
+                                    ErlyBerly.wrapInPane(new CodeView(source))
+                                );
                             } catch (Exception e1) {
                                 e1.printStackTrace();
                             } 
