@@ -101,6 +101,8 @@ The process and trace filters support **or** and **not** filters, module filteri
 
 If the filter is empty then all data is shown.
 
+Show functions that are currently traced by setting `#t` as the function filter.
+
 ##### Trace between restarts
 
 When the target node VM gets restarted, erlyberly tries to reconnect and reapply the traces you had previously set.  This is great for your dev workflow.  Make a change, restart and your traces will be there waiting for you to retest.
