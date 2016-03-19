@@ -139,7 +139,7 @@ public class TopBarView implements Initializable {
                         menuItem.setGraphic(new CrashReportGraphic(crashReport));
                         menuItem.setOnAction((action) -> { 
                             unreadCrashReportsProperty.set(0);
-                            ErlyBerly.showPane("Crash Report", crashReportView(crashReport));
+                            ErlyBerly.showPane("Crash Report", ErlyBerly.wrapInPane(crashReportView(crashReport)));
                         });
                         crashReportsButton.getItems().add(menuItem);
                         }
@@ -331,7 +331,7 @@ public class TopBarView implements Initializable {
         
         pieChart = new PieChart(data);
         pieChart.setTitle(title);
-        ErlyBerly.showPane(title, pieChart);
+        ErlyBerly.showPane(title, ErlyBerly.wrapInPane(pieChart));
     }
 
     /**

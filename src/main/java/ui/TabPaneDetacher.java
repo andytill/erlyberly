@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Cursor;
@@ -131,6 +132,13 @@ public class TabPaneDetacher {
         }
         tabPane.getTabs().stream().forEach(t -> {
             t.setClosable(false);
+        });
+        tabPane.getTabs().addListener((Observable o) -> {
+            for (Tab tabX : tabPane.getTabs()) {
+                if(!(tabX.getContent() instanceof Pane)) {
+                    throw new RuntimeException("Tab added where the content node was not a subclass of Pane, this means it cannot be dragged by TabPaneDetacher.");
+                }
+            }
         });
         tabPane.setOnDragDetected(
                 (MouseEvent event) -> {

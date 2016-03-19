@@ -82,7 +82,7 @@ public class SeqTraceView extends VBox {
         argTermsTreeView = newTermTreeView();
         argTermsTreeView.populateFromTerm(seqTraceLog.getMessage());
         
-        ErlyBerly.showPane("Seq Trace", argTermsTreeView);
+        ErlyBerly.showPane("Seq Trace", ErlyBerly.wrapInPane(argTermsTreeView));
     }
 
     private TermTreeView newTermTreeView() {

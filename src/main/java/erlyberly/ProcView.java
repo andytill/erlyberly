@@ -195,7 +195,7 @@ public class ProcView implements Initializable {
         VBox.setVgrow(termTreeView, Priority.ALWAYS);
         termTreeView.populateFromTerm(obj); 
 
-        ErlyBerly.showPane("Process State for " + procInfo.getShortName(), termTreeView);
+        ErlyBerly.showPane("Process State for " + procInfo.getShortName(), ErlyBerly.wrapInPane(termTreeView));
     }
     
     @FXML
@@ -263,7 +263,7 @@ public class ProcView implements Initializable {
         PieChart pieChart;
         pieChart = new PieChart(data);
         pieChart.setTitle(title);
-        ErlyBerly.showPane(title, pieChart);
+        ErlyBerly.showPane(title, ErlyBerly.wrapInPane(pieChart));
     }
 
     private String procDescription(ProcInfo proc) {

@@ -143,7 +143,7 @@ public class ModFuncContextMenu extends ContextMenu {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
-            ErlyBerly.showPane(func.toFullString() + " call graph", callGraphView);
+            ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
         } 
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();

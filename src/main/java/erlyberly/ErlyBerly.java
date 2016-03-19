@@ -7,6 +7,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
@@ -16,6 +17,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -204,11 +206,10 @@ public class ErlyBerly extends Application {
         return nodeAPI;
     }
 
-
     /**
      * Show a new control in the tab pane. The tab is closable.
      */
-    public static void showPane(String title, Parent parentControl) {
+    public static void showPane(String title, Pane parentControl) {
         assert Platform.isFxApplicationThread();
         Tab newTab;
         newTab = new Tab(title);
@@ -237,5 +238,17 @@ public class ErlyBerly extends Application {
         primaryStage.show();
 
         CloseWindowOnEscape.apply(scene, primaryStage);
+    }
+
+    /**
+     * All I know is pane.
+     * @param node
+     * @return
+     */
+    public static Pane wrapInPane(Node node) {
+        if(node instanceof Pane)
+            return (Pane) node;
+        VBox.setVgrow(node, Priority.ALWAYS);
+        return new VBox(node);
     }
 }
