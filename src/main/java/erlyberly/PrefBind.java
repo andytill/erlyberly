@@ -11,7 +11,6 @@ import java.util.TimerTask;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
 /**
@@ -40,20 +39,9 @@ public class PrefBind {
         if(storedValue != null) {
             stringProp.set(storedValue);
         }
-        stringProp.addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> o, String oldValue, String newValue) {
-                props.setProperty(propName, newValue);
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if(!awaitingStore) {
-                            Platform.runLater(PrefBind::store);
-                            awaitingStore = true;
-                        }
-                    }}, 1000);
-                
-            }});
+        stringProp.addListener((ObservableValue<? extends String> o, String oldValue, String newValue) -> {
+            set(propName, newValue);
+        });
     }
     
     public static void bindBoolean(final String propName, BooleanProperty boolProp){
@@ -65,19 +53,8 @@ public class PrefBind {
         if(storedValue != null) {
             boolProp.set(b);
         }
-        boolProp.addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {            
-                props.setProperty(propName, newValue.toString());
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if(!awaitingStore) {
-                            Platform.runLater(PrefBind::store);
-                            awaitingStore = true;
-                        }
-                    }}, 1000);
-            }
+        boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {            
+                set(propName, newValue.toString());
         });
     }
     
@@ -122,5 +99,17 @@ public class PrefBind {
     
     public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
         return Boolean.parseBoolean(PrefBind.getOrDefault("showSourceInSystemEditor", false).toString());
+    }
+
+    public static void set(String propName, String newValue) {
+        props.setProperty(propName, newValue.toString());
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(!awaitingStore) {
+                    Platform.runLater(PrefBind::store);
+                    awaitingStore = true;
+                }
+            }}, 1000);
     }
 }
