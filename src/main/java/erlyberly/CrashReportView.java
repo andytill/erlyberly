@@ -101,7 +101,7 @@ public class CrashReportView extends TabPane {
                 {"Pid", crashReport.getPid() },
                 {"Reg. Name", crashReport.getRegisteredName() },
                 {"Error", ErlyBerly.getTermFormatter().exceptionToString(crashReport.getErrorClass(), crashReport.getErrorReason()) },
-                {"Initial Call", ErlyBerly.getTermFormatter().mfaToString((OtpErlangTuple) crashReport.getProcessInitialCall()) }};
+                {"Initial Call", ErlyBerly.getTermFormatter().modFuncArgsToString((OtpErlangTuple) crashReport.getProcessInitialCall()) }};
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
         TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");

@@ -5,19 +5,21 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 /**
- * 
+ * Formatter API for erlang terms, functions, exceptions, and everything
+ * else which differs per language.
  */
 public interface TermFormatter {
 
-    String mfaToString(OtpErlangTuple mfa);
+    String modFuncArgsToString(OtpErlangTuple mfa);
+
+    String modFuncArityToString(OtpErlangTuple mfa);
 
     String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason);
 
-    String toString(OtpErlangObject obj);
+    StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb);
 
-    default StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
-        sb.append(toString(obj));
-        return sb;
+    default String toString(OtpErlangObject obj) {
+        return appendToString(obj, new StringBuilder()).toString();
     }
 
     String emptyTupleString();
@@ -31,6 +33,4 @@ public interface TermFormatter {
     String listLeftParen();
 
     String listRightParen();
-
-    String modFuncArityToString(OtpErlangTuple functionFromMap);
 }

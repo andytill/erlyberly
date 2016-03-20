@@ -13,16 +13,13 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.node.OtpUtil;
 
 public class ErlangFormatter implements TermFormatter {
-
-    @Override
-    public String toString(OtpErlangObject obj) {
-        return appendToString(obj, new StringBuilder()).toString();
-    }
     
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
         if(obj instanceof OtpErlangBinary) {
-            sb.append(binaryToString((OtpErlangBinary) obj));
+            sb.append("<<");
+            Formatting.binaryToString((OtpErlangBinary) obj, sb);
+            sb.append(">>");
         }
         else if(obj instanceof OtpErlangPid) {
             sb.append(pidToString((OtpErlangPid) obj));
@@ -67,53 +64,9 @@ public class ErlangFormatter implements TermFormatter {
         return sb;
     }
     
-    public static String pidToString(OtpErlangPid pid) {
-        return "<0." + pid.id() + "." + pid.serial() + ">";
+    private static String pidToString(OtpErlangPid pid) {
+        return pid.toString();
     }
-    
-    public String binaryToString(OtpErlangBinary bin) {
-        StringBuilder s = new StringBuilder("<<");
-        
-        boolean inString = false;
-        
-        for (int b : bin.binaryValue()) {
-            if(b > 31 && b < 127) {
-                if(!inString) {
-                    if(s.length() > 2) {
-                        s.append(", ");
-                    }
-                    
-                    s.append("\"");
-                }
-                inString = true;
-                s.append((char)b);
-            }
-            else {
-                if(inString) {
-                    s.append("\"");
-                    inString = false;
-                }
-                
-                if(s.length() > 2) {
-                    s.append(", ");
-                }
-
-                if(b < 0) {
-                    b = 256 + b;
-                }
-                s.append(Integer.toString(b));
-            }
-        }
-        
-        if(inString) {
-            s.append("\"");
-        }
-        
-        s.append(">>");
-        
-        return s.toString();
-    }
-
 
     public String bracketsForTerm(OtpErlangObject obj) {
         assert obj != null;
@@ -132,7 +85,7 @@ public class ErlangFormatter implements TermFormatter {
      * {Module::atom(), Function::atom(), Args::[any()]}.
      */
     @Override
-    public String mfaToString(OtpErlangTuple mfa) {
+    public String modFuncArgsToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
         sb.append(mfa.elementAt(0))
           .append(":")

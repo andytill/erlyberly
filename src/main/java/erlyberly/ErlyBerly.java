@@ -2,7 +2,7 @@ package erlyberly;
 
 import java.io.IOException;
 
-import erlyberly.format.ErlangFormatter;
+import erlyberly.format.LFEFormatter;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
 import javafx.application.Application;
@@ -38,7 +38,7 @@ public class ErlyBerly extends Application {
 
     private static TabPane tabPane;
     
-    private static TermFormatter termFormatter = new ErlangFormatter();
+    private static TermFormatter termFormatter = new LFEFormatter();
 
     public static void main(String[] args) throws Exception {
         launch(args);
