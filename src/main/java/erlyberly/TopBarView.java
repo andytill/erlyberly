@@ -139,7 +139,7 @@ public class TopBarView implements Initializable {
                         menuItem.setGraphic(new CrashReportGraphic(crashReport));
                         menuItem.setOnAction((action) -> { 
                             unreadCrashReportsProperty.set(0);
-                            ErlyBerly.showPane("Crash Report", crashReportView(crashReport));
+                            ErlyBerly.showPane("Crash Report", ErlyBerly.wrapInPane(crashReportView(crashReport)));
                         });
                         crashReportsButton.getItems().add(menuItem);
                         }
@@ -185,7 +185,7 @@ public class TopBarView implements Initializable {
         prefButton.setGraphicTextGap(0d);
         prefButton.setTooltip(new Tooltip("Preferences"));
         prefButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
-        prefButton.setOnAction((e) -> { showPreferences(); });
+        prefButton.setOnAction((e) -> { displayPreferencesPane(); });
         
         hideProcsProperty().addListener((Observable o) -> { toggleHideProcs(); });
         hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncs(); });
@@ -200,8 +200,8 @@ public class TopBarView implements Initializable {
         topBox.getItems().addAll(rhsSpacer(), tweetButton);
         
         // let's store the ui preferences, as the end user changes them...
-        PrefBind.bind_boolean("hideProcesses", hideProcessesButton.selectedProperty());
-        PrefBind.bind_boolean("hideModules", hideFunctionsButton.selectedProperty());
+        PrefBind.bindBoolean("hideProcesses", hideProcessesButton.selectedProperty());
+        PrefBind.bindBoolean("hideModules", hideFunctionsButton.selectedProperty());
         
         boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
         boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
@@ -331,7 +331,7 @@ public class TopBarView implements Initializable {
         
         pieChart = new PieChart(data);
         pieChart.setTitle(title);
-        ErlyBerly.showPane(title, pieChart);
+        ErlyBerly.showPane(title, ErlyBerly.wrapInPane(pieChart));
     }
 
     /**
@@ -436,11 +436,6 @@ public class TopBarView implements Initializable {
         displayConnectionPopup(s);
     }
     
-    public void showPreferences(){
-        Stage s = new Stage();
-        displayPreferencesPopup(s);
-    }
-    
     // TODO: (improve) lazy copy paste 
     // TODO: THIS was a ugly copy paste effort
     private void displayConnectionPopup(Stage primaryStage) {
@@ -470,35 +465,12 @@ public class TopBarView implements Initializable {
 
         connectStage.show();
     }
-    
-    // TODO: (improve) lazy copy paste 
-    // TODO: THIS was a ugly copy paste effort
-    private void displayPreferencesPopup(Stage stage){
-        Stage prefStage;
-        
-        prefStage = new Stage();
-        prefStage.initModality(Modality.WINDOW_MODAL);
-        prefStage.setScene(new Scene(new FxmlLoadable("/erlyberly/preferences.fxml").load()));
-        prefStage.setAlwaysOnTop(true);
-        
-        // javafx vertical resizing is laughably ugly, lets just disallow it
-        prefStage.setResizable(false);
-        prefStage.setWidth(400);
-        
-        // if the user closes the window without connecting then close the app
-        prefStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
-                    // save the preferences
-                }
-                
-                Platform.runLater(() -> { 
-                    //primaryStage.setResizable(true);
-                });
-            }});
 
-        prefStage.show();
+    private void displayPreferencesPane() {
+        ErlyBerly.showPane(
+            "Preferences",
+            ErlyBerly.wrapInPane(new FxmlLoadable("/erlyberly/preferences.fxml").load())
+        );
     }
     
     class ErlangMemoryThread extends Thread {

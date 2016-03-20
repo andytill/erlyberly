@@ -1,5 +1,8 @@
 package erlyberly;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -143,7 +146,7 @@ public class ModFuncContextMenu extends ContextMenu {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
-            ErlyBerly.showPane(func.toFullString() + " call graph", callGraphView);
+            ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
         } 
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();
@@ -205,14 +208,8 @@ public class ModFuncContextMenu extends ContextMenu {
 
     private void toggleTraceMod(Collection<ModFunc> functions){
        for (ModFunc func : functions) {
-           if(!isModuleInfo(func)){
-               dbgController.toggleTraceModFunc(func);
-           }
+           dbgController.toggleTraceModFunc(func);
        }
-    }
-
-    private boolean isModuleInfo(ModFunc func) {
-        return func.toString().equals("module_info/0") || func.toString().equals("module_info/1");
     }
     
    private void onModuleCode(ActionEvent ae){
@@ -234,7 +231,7 @@ public class ModFuncContextMenu extends ContextMenu {
                 String functionName = mf.getFuncName();
                 Integer arity = mf.getArity();
                 modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
-                showModuleSourceCode(moduleName + ":" + functionName + "/" + arity.toString() + " Source code "+moduleName, modSrc);
+                showModuleSourceCode(moduleName, modSrc);
             } 
         } catch (Exception e) {
             throw new RuntimeException("failed to load the source code.", e);
@@ -264,7 +261,23 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private void showModuleSourceCode(String title, String moduleSourceCode) {
-        ErlyBerly.showSourceCodeWindow(title, moduleSourceCode);
+        Boolean showSourceInSystemEditor = PrefBind.getOrDefaultBoolean("showSourceInSystemEditor", false);
+        if(showSourceInSystemEditor) {
+            try {
+                File tmpSourceFile = File.createTempFile(title, ".erl");
+                FileOutputStream out = new FileOutputStream(tmpSourceFile);
+                out.write(moduleSourceCode.getBytes());
+                out.close();
+                Desktop.getDesktop().edit(tmpSourceFile);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
+            }
+        }
+        else {
+            ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
+        }
     }
 
     /**
@@ -282,7 +295,9 @@ public class ModFuncContextMenu extends ContextMenu {
         ArrayList<ModFunc> funs = new ArrayList<>();
         for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
             for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
-                funs.add(modFunc.getValue());
+                if(!modFunc.getValue().isModuleInfo()) {
+                    funs.add(modFunc.getValue());
+                }
             }
         }
         return funs;

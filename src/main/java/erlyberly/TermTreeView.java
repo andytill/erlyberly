@@ -16,6 +16,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.VBox;
 
 @SuppressWarnings("rawtypes")
 public class TermTreeView extends TreeView<TermTreeItem> {
@@ -44,7 +45,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             HexstarView hexstarView;
             hexstarView = new HexstarView();
             hexstarView.setBinary(binary);
-            ErlyBerly.showPane("Hex View", hexstarView);
+            ErlyBerly.showPane("Hex View", new VBox(hexstarView));
         }
     }
 
@@ -63,7 +64,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             OtpErlangList props = ErlyBerly.nodeAPI().dictToPropslist(dict);
             TermTreeView parentControl = new TermTreeView();
             parentControl.populateFromTerm(props);
-            ErlyBerly.showPane("dict_to_list", parentControl);
+            ErlyBerly.showPane("dict_to_list", ErlyBerly.wrapInPane(parentControl));
         }
         catch (Exception e1) {
             e1.printStackTrace();

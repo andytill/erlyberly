@@ -42,7 +42,7 @@ public class ConnectionView implements Initializable {
     public void initialize(URL url, ResourceBundle r) {
         PrefBind.bind("targetNodeName", nodeNameField.textProperty());
         PrefBind.bind("cookieName", cookieField.textProperty());
-        PrefBind.bind_boolean("autoConnect", autoConnectField.selectedProperty());
+        PrefBind.bindBoolean("autoConnect", autoConnectField.selectedProperty());
         
         nodeNameField.disableProperty().bind(isConnecting);
         cookieField.disableProperty().bind(isConnecting);

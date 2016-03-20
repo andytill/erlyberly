@@ -219,10 +219,10 @@ public class DbgTraceView extends VBox {
         
         StringBuilder sb = new StringBuilder(traceLog.getPidString());
         sb.append(" ");
-        boolean appendArity = false;
+        boolean appendArity = true; // append arity instead of the arguments
         traceLog.appendFunctionToString(sb, appendArity);
         
-        ErlyBerly.showPane(sb.toString(), splitPane);
+        ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPane));
     }
     
     private Node labelledTreeView(String label, TermTreeView node) {        
