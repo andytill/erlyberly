@@ -208,14 +208,8 @@ public class ModFuncContextMenu extends ContextMenu {
 
     private void toggleTraceMod(Collection<ModFunc> functions){
        for (ModFunc func : functions) {
-           if(!isModuleInfo(func)){
-               dbgController.toggleTraceModFunc(func);
-           }
+           dbgController.toggleTraceModFunc(func);
        }
-    }
-
-    private boolean isModuleInfo(ModFunc func) {
-        return func.toString().equals("module_info/0") || func.toString().equals("module_info/1");
     }
     
    private void onModuleCode(ActionEvent ae){
@@ -301,7 +295,9 @@ public class ModFuncContextMenu extends ContextMenu {
         ArrayList<ModFunc> funs = new ArrayList<>();
         for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
             for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
-                funs.add(modFunc.getValue());
+                if(!modFunc.getValue().isModuleInfo()) {
+                    funs.add(modFunc.getValue());
+                }
             }
         }
         return funs;

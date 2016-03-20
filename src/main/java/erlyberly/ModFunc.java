@@ -137,6 +137,10 @@ public class ModFunc implements Comparable<ModFunc> {
             return false;
         return true;
     }
+
+    public boolean isModuleInfo() {
+        return "module_info".equals(funcName) && (arity == 0 || arity == 1);
+    }
     
     
 }
