@@ -18,7 +18,7 @@ public class ErlangFormatter implements TermFormatter {
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
         if(obj instanceof OtpErlangBinary) {
             sb.append("<<");
-            Formatting.binaryToString((OtpErlangBinary) obj, sb);
+            Formatting.binaryToString((OtpErlangBinary) obj, ", ", sb);
             sb.append(">>");
         }
         else if(obj instanceof OtpErlangPid) {

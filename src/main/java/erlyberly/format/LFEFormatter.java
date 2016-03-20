@@ -61,7 +61,7 @@ public class LFEFormatter implements TermFormatter {
         else if(obj instanceof OtpErlangBinary) {
 
             sb.append("#B(");
-            Formatting.binaryToString((OtpErlangBinary) obj, sb);
+            Formatting.binaryToString((OtpErlangBinary) obj, " ", sb);
             sb.append(")");
         }
         else if(OtpUtil.isErlyberlyRecordField(obj)) {
