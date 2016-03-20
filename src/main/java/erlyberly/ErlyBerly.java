@@ -2,6 +2,8 @@ package erlyberly;
 
 import java.io.IOException;
 
+import erlyberly.format.ErlangFormatter;
+import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -35,6 +37,8 @@ public class ErlyBerly extends Application {
     private double entopDivPosition;
 
     private static TabPane tabPane;
+    
+    private static TermFormatter termFormatter = new ErlangFormatter();
 
     public static void main(String[] args) throws Exception {
         launch(args);
@@ -225,5 +229,13 @@ public class ErlyBerly extends Application {
         VBox.setVgrow(node, Priority.ALWAYS);
         VBox vBox = new VBox(node);
         return vBox;
+    }
+
+    public static TermFormatter getTermFormatter() {
+        return termFormatter;
+    }
+
+    public static void setTermFormatter(TermFormatter aTermFormatter) {
+        termFormatter = aTermFormatter;
     }
 }

@@ -4,8 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangTuple;
+
+import erlyberly.format.ErlangFormatter;
 
 
 public class OtpUtilTest  {
@@ -32,7 +32,7 @@ public class OtpUtilTest  {
 		
 		Assert.assertEquals("<<0, \"hello\", 0>>", bin());
 	}
-	
+	/*
 	@Test
 	public void binaryToString4() {
 		bytes = "_hello\0".getBytes();
@@ -103,12 +103,10 @@ public class OtpUtilTest  {
 		OtpUtil.otpObjectToString(tuple, sb );
 		Assert.assertEquals("{1, 2, {3, 4}}", sb.toString());
 	}
-	
+	*/
 	private String bin() {
 		OtpErlangBinary binary = new OtpErlangBinary(bytes);
 		
-		String string = OtpUtil.binaryToString(binary);
-		
-		return string;
+		return new ErlangFormatter().toString(binary);
 	}
 }

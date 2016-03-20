@@ -2,7 +2,6 @@ package erlyberly;
 
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import erlyberly.node.OtpUtil;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Hyperlink;
@@ -101,8 +100,8 @@ public class CrashReportView extends TabPane {
         Object[][] crashProps = {
                 {"Pid", crashReport.getPid() },
                 {"Reg. Name", crashReport.getRegisteredName() },
-                {"Error", crashReport.getErrorClass() + ":" + OtpUtil.otpObjectToString(crashReport.getErrorReason(), new StringBuilder()) },
-                {"Initial Call", OtpUtil.toStringMFA((OtpErlangTuple) crashReport.getProcessInitialCall()) }};
+                {"Error", ErlyBerly.getTermFormatter().exceptionToString(crashReport.getErrorClass(), crashReport.getErrorReason()) },
+                {"Initial Call", ErlyBerly.getTermFormatter().mfaToString((OtpErlangTuple) crashReport.getProcessInitialCall()) }};
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
         TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");

@@ -219,8 +219,7 @@ public class DbgTraceView extends VBox {
         
         StringBuilder sb = new StringBuilder(traceLog.getPidString());
         sb.append(" ");
-        boolean appendArity = true; // append arity instead of the arguments
-        traceLog.appendFunctionToString(sb, appendArity);
+        traceLog.appendModFuncArity(sb);
         
         ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPane));
     }

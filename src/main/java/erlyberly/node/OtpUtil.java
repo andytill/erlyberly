@@ -1,7 +1,6 @@
 package erlyberly.node;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +14,6 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.ericsson.otp.erlang.OtpMbox;
@@ -95,64 +93,6 @@ public class OtpUtil {
         return map;
     }
     
-    public static StringBuilder otpObjectToString(OtpErlangObject obj, StringBuilder sb) {
-        if(obj instanceof OtpErlangBinary) {
-            sb.append(binaryToString((OtpErlangBinary) obj));
-        }
-        else if(obj instanceof OtpErlangPid) {
-            sb.append(pidToString((OtpErlangPid) obj));
-        }
-        else if(isErlyberlyRecord(obj)) {
-            OtpErlangTuple record = (OtpErlangTuple) obj;
-            OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(1);
-            OtpErlangList fields = (OtpErlangList) record.elementAt(2);
-            sb.append("{").append(recordName).append(", ");
-            for(int i=0; i < fields.arity(); i++) {
-                if(i != 0) {
-                    sb.append(", ");
-                }
-                otpObjectToString(fields.elementAt(i), sb);
-            }
-            sb.append("}");
-        }
-        else if(isErlyberlyRecordField(obj)) {
-            OtpErlangObject fieldObj = ((OtpErlangTuple)obj).elementAt(2);
-            otpObjectToString(fieldObj, sb);
-        }
-        else if(obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
-            String brackets = bracketsForTerm(obj);
-            OtpErlangObject[] elements = elementsForTerm(obj);
-            
-            sb.append(brackets.charAt(0));
-            
-            for(int i=0; i < elements.length; i++) {
-                if(i != 0) {
-                    sb.append(", ");
-                }
-                otpObjectToString(elements[i], sb);
-            }
-            sb.append(brackets.charAt(1));
-        }
-        else if(obj instanceof OtpErlangString) {
-            sb.append(obj.toString().replace("\n", "\\n"));
-        }
-        else {
-            sb.append(obj.toString());
-        }
-        return sb;
-    }
-
-    public static String bracketsForTerm(OtpErlangObject obj) {
-        assert obj != null;
-        
-        if(obj instanceof OtpErlangTuple)
-            return "{}";
-        else if(obj instanceof OtpErlangList)
-            return "[]";
-        else
-            throw new RuntimeException("No brackets for type " + obj.getClass());
-    }
-    
     public static OtpErlangObject[] elementsForTerm(OtpErlangObject obj) {
         assert obj != null;
         
@@ -164,52 +104,7 @@ public class OtpUtil {
             throw new RuntimeException("No brackets for type " + obj.getClass());
     }
     
-    public static String pidToString(OtpErlangPid pid) {
-        return "<0." + pid.id() + "." + pid.serial() + ">";
-    }
-    
-    public static String binaryToString(OtpErlangBinary bin) {
-        StringBuilder s = new StringBuilder("<<");
-        
-        boolean inString = false;
-        
-        for (int b : bin.binaryValue()) {
-            if(b > 31 && b < 127) {
-                if(!inString) {
-                    if(s.length() > 2) {
-                        s.append(", ");
-                    }
-                    
-                    s.append("\"");
-                }
-                inString = true;
-                s.append((char)b);
-            }
-            else {
-                if(inString) {
-                    s.append("\"");
-                    inString = false;
-                }
-                
-                if(s.length() > 2) {
-                    s.append(", ");
-                }
 
-                if(b < 0) {
-                    b = 256 + b;
-                }
-                s.append(Integer.toString(b));
-            }
-        }
-        
-        if(inString) {
-            s.append("\"");
-        }
-        
-        s.append(">>");
-        
-        return s.toString();
-    }
 
     public static boolean isTupleTagged(OtpErlangObject tag, OtpErlangObject result) {
         return isTupleTagged(tag, 0, result);
@@ -234,7 +129,7 @@ public class OtpUtil {
         return isTupleTagged(ERLYBERLY_RECORD_ATOM, obj);
     }
 
-    private static boolean isErlyberlyRecordField(OtpErlangObject obj) {
+    public static boolean isErlyberlyRecordField(OtpErlangObject obj) {
         return isTupleTagged(ERLYBERLY_RECORD_FIELD_ATOM, obj);
     }
     
@@ -329,26 +224,5 @@ public class OtpUtil {
             
         }
         return true;
-    }
-
-    /**
-     * Convert an MFA tuple to a string, where the MFA must have the type:
-     *
-     * {Module::atom(), Function::atom(), Args::[any()]}.
-     */
-    public static String toStringMFA(OtpErlangTuple mfa) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(mfa.elementAt(0))
-          .append(":")
-          .append(mfa.elementAt(1))
-          .append("(");
-        OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
-        ArrayList<String> stringArgs = new ArrayList<>();
-        for (OtpErlangObject arg : args) {
-            stringArgs.add(OtpUtil.otpObjectToString(arg, new StringBuilder()).toString());
-        }
-        sb.append(String.join(", ", stringArgs));
-        sb.append(")");
-        return sb.toString();
     }
 }

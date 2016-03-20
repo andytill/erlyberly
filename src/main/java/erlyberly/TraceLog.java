@@ -50,7 +50,7 @@ public class TraceLog implements Comparable<TraceLog> {
         instanceNum = instanceCounter.incrementAndGet();
         pid = getPidString();
         registeredName = regNameString().intern();
-        function =  appendFunctionToString(new StringBuilder(), true).toString().intern();
+        function =  appendModFuncArity(new StringBuilder()).toString().intern();
         argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
     }
     
@@ -88,16 +88,13 @@ public class TraceLog implements Comparable<TraceLog> {
         sb.append(" => ");
         
         if(map.containsKey(RESULT_ATOM)) {
-            OtpUtil.otpObjectToString((OtpErlangObject) map.get(RESULT_ATOM), sb);
+            ErlyBerly.getTermFormatter().appendToString((OtpErlangObject) map.get(RESULT_ATOM), sb);
         }
         else if(isExceptionThrower()) {
             OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
-            
-            // class
-            OtpUtil.otpObjectToString(exception.elementAt(0), sb);
-            sb.append(":");
-            // reason
-            OtpUtil.otpObjectToString(exception.elementAt(1), sb);
+            ErlyBerly.getTermFormatter().exceptionToString(
+                (OtpErlangAtom) exception.elementAt(0), exception.elementAt(1)
+            );
         }
         return sb.toString();
     }
@@ -116,7 +113,7 @@ public class TraceLog implements Comparable<TraceLog> {
         
         appendTimeStampToString(sb);
         
-        appendFunctionToString(sb, appendArity);
+        appendModFuncArity(sb);
         
         return sb;
     }
@@ -144,43 +141,23 @@ public class TraceLog implements Comparable<TraceLog> {
         return map.containsKey(EXCEPTION_FROM_ATOM);
     }
     
-    public StringBuilder appendFunctionToString(StringBuilder sb, boolean appendArity) {
+    public StringBuilder appendFunctionToString(StringBuilder sb) {
         OtpErlangTuple tuple = getFunctionFromMap();
-        OtpErlangAtom mod = (OtpErlangAtom) tuple.elementAt(0);
-        OtpErlangAtom func = (OtpErlangAtom) tuple.elementAt(1);
         
-        // arguments of one or more integers that all come within the ASCII 
-        // range can get miscast as OtpErlangString instances
-        OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2)); 
-
-        sb
-            .append(mod.atomValue())
-            .append(":")
-            .append(func.atomValue());
-        
-        if(appendArity) {
-            sb
-                .append("/")
-                .append(args.arity());
-        }
-        else {
-            sb.append("(");
-        
-            OtpErlangObject[] elements = args.elements();
-            appendArgsToString(sb, elements);
-            
-            sb.append(")");
-        }
-        return sb;
+        return sb.append(ErlyBerly.getTermFormatter().mfaToString(tuple));
+    }
+    
+    public StringBuilder appendModFuncArity(StringBuilder sb) {
+        return sb.append(ErlyBerly.getTermFormatter().modFuncArityToString(getFunctionFromMap()));
     }
 
     private StringBuilder appendArgsToString(StringBuilder sb, OtpErlangObject[] elements) {
         if(elements.length > 0)
-            OtpUtil.otpObjectToString(elements[0], sb);
+            ErlyBerly.getTermFormatter().appendToString(elements[0], sb);
         
         for(int i=1; i<elements.length; i++) {
             sb.append(", ");
-            OtpUtil.otpObjectToString(elements[i], sb);
+            ErlyBerly.getTermFormatter().appendToString(elements[i], sb);
         }
         return sb;
     }
@@ -225,7 +202,8 @@ public class TraceLog implements Comparable<TraceLog> {
             map.put(EXCEPTION_FROM_ATOM, e);
         if(r != null) {
             map.put(RESULT_ATOM, r);
-            result.set(OtpUtil.otpObjectToString((OtpErlangObject) r, new StringBuilder()).toString());
+            String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
+            result.set(resultString);
         }
         if(ts != null)
             map.put(TIMESTAMP_RETURN_ATOM, ts);
