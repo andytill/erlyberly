@@ -26,8 +26,7 @@ class FxmlLoadable {
             fxmlNode = (Parent) fxmlLoader.load();
             controller = fxmlLoader.getController();
         } catch (IOException e) {
-            System.err.println(e);
-            throw new RuntimeException("Cannot load FXML");
+            throw new RuntimeException("Cannot load FXML", e);
         }
         return fxmlNode;
     }
