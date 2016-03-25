@@ -49,6 +49,8 @@ public class NodeAPI {
     private static final OtpErlangAtom ERLYBERLY_XREF_STARTED_ATOM = atom("erlyberly_xref_started");
 
     private static final OtpErlangAtom ERLYBERLY_ERROR_REPORT_ATOM = atom("erlyberly_error_report");
+    
+    private static final OtpErlangAtom ERLYBERLY_MODULE_RELOADED_ATOM = atom("erlyberly_module_loaded");
 
     private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom("erlyberly");
 
@@ -93,6 +95,8 @@ public class NodeAPI {
     private boolean manually_disconnected = false;
     //private final AtomicBoolean connected = new AtomicBoolean();
 
+    private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
+
     public NodeAPI() {
         traceManager = new TraceManager();
 
@@ -126,7 +130,7 @@ public class NodeAPI {
         return appProcs;
     }
     
-    public synchronized void manual_connect() throws IOException, OtpErlangException, OtpAuthException {
+    public synchronized void manualConnect() throws IOException, OtpErlangException, OtpAuthException {
         // TODO: here, we've cleared (set to false) being Manually/intentionally disconnected.
         manually_disconnected = false;
         connect();
@@ -160,6 +164,9 @@ public class NodeAPI {
         
         addErrorLoggerHandler();
 
+        // start dbg so we can listen for module loads
+        ensureDbgStarted();
+        
         Platform.runLater(() -> { connectedProperty.set(true); });
 
         checkAliveThread = new CheckAliveThread();
@@ -195,6 +202,15 @@ public class NodeAPI {
         }
         connection = null;
         self = null;
+    }
+    
+    private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
+        sendRPC(
+            "erlyberly", "ensure_dbg_started",
+            list(tuple(atom(self.node()), mbox.self()))
+        );
+        // flush the return value
+        receiveRPC();
     }
 
     private void addErrorLoggerHandler() throws IOException, OtpErlangException {
@@ -287,6 +303,13 @@ public class NodeAPI {
         else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, receive)) {
             Platform.runLater(() -> { crashReports.add(receive.elementAt(1)); });
             return receiveRPC();
+        }
+        else if(isTupleTagged(ERLYBERLY_MODULE_RELOADED_ATOM, receive)) {
+            Platform.runLater(() -> {
+                if(moduleLoadedCallback != null)
+                    moduleLoadedCallback.callback((OtpErlangTuple) receive.elementAt(2));
+            });
+            return null;
         }
         else if(!isTupleTagged(atom("rex"), receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
@@ -441,7 +464,6 @@ public class NodeAPI {
     }
 
     private void sendRPC(String module, String function, OtpErlangList args) throws IOException {
-        //System.out.println("sendRPC<- "+ module+":"+function+"("+args+")");
         OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
     }
 
@@ -451,8 +473,9 @@ public class NodeAPI {
         OtpErlangObject prcResult = receiveRPC();
 
         if(!isTupleTagged(OK_ATOM, prcResult)) {
-            System.out.println(prcResult);
-
+            if(prcResult != null) {
+                System.out.println(prcResult);
+            }
             return new ArrayList<TraceLog>();
         }
 
@@ -600,5 +623,15 @@ public class NodeAPI {
     public OtpErlangList dictToPropslist(OtpErlangObject dict) throws IOException, OtpErlangException {
         sendRPC("dict", "to_list", list(dict));
         return (OtpErlangList) receiveRPC(5000);
+    }
+
+    /**
+     * Set the callback that is invoked when erlyberly receives a message that a
+     * module has been loaded, or reloaded by the VM. The callback argument is in
+     * the format {module(), ExportedFuncs, UnexportedFuncs}. A function is the
+     * format {atom(), integer()}.
+     */
+    public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> aModuleLoadedCallback) {
+        moduleLoadedCallback = aModuleLoadedCallback;
     }
 }

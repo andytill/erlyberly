@@ -120,7 +120,7 @@ public class ConnectionView implements Initializable {
                 ErlyBerly
                     .nodeAPI()
                     .connectionInfo(remoteNodeName, cookie)
-                    .manual_connect();
+                    .manualConnect();
 
                 Platform.runLater(() -> { closeThisWindow(); });
             }
