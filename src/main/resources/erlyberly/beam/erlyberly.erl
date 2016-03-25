@@ -8,12 +8,13 @@
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
+-export([load_modules_on_path/1]).
 -export([module_functions/0]).
 -export([process_info/0]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
--export([stop_traces/0]).
 -export([stop_trace/4]).
+-export([stop_traces/0]).
 -export([xref_analysis/3]).
 
 %% exported for spawned processes
@@ -33,6 +34,22 @@
 %%% ============================================================================
 %%% process info
 %%% ============================================================================
+
+%% Asynchronously load all modules on the path where the app directory matches
+%% the given regular expression.
+load_modules_on_path(RegexValidator) ->
+    proc_lib:spawn(
+        fun() -> load_modules_on_path2(RegexValidator) end).
+
+%%
+load_modules_on_path2(RegexValidator) ->
+    Paths = [P || P <- code:get_path(), re:run(P, RegexValidator) /= nomatch],
+    [code:ensure_loaded(file_name_to_module(F)) || P <- Paths,
+                                                   F <- filelib:wildcard(P ++ "/*.beam")].
+
+%%
+file_name_to_module(Filename) ->
+    list_to_atom(filename:rootname(filename:basename(Filename))).
 
 process_info() ->
     process_info2(erlang:processes(), []).

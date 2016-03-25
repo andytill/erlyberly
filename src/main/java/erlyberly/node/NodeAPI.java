@@ -32,6 +32,7 @@ import com.ericsson.otp.erlang.OtpPeer;
 import com.ericsson.otp.erlang.OtpSelfNode;
 
 import erlyberly.ModFunc;
+import erlyberly.PrefBind;
 import erlyberly.ProcInfo;
 import erlyberly.SeqTraceLog;
 import erlyberly.TraceLog;
@@ -167,12 +168,14 @@ public class NodeAPI {
         // start dbg so we can listen for module loads
         ensureDbgStarted();
         
+        loadModulesOnPath(PrefBind.getOrDefault("loadModulesRegex", "").toString());
+        
         Platform.runLater(() -> { connectedProperty.set(true); });
 
         checkAliveThread = new CheckAliveThread();
         checkAliveThread.start();
     }
-    
+
     public void manually_disconnect() throws IOException, OtpErlangException{
         // TODO: have a look at this: ( How can we properly "Close", or is the below acceptable? )
         // com.ericsson.otp.erlang.OtpErlangExit: 'Remote has closed connection'
@@ -208,6 +211,17 @@ public class NodeAPI {
         sendRPC(
             "erlyberly", "ensure_dbg_started",
             list(tuple(atom(self.node()), mbox.self()))
+        );
+        // flush the return value
+        receiveRPC();
+    }
+    
+    private void loadModulesOnPath(String regex) throws IOException, OtpErlangException {
+        if(regex == null || "".equals(regex))
+            return;
+        sendRPC(
+            "erlyberly", "load_modules_on_path",
+            list(new OtpErlangString(regex))
         );
         // flush the return value
         receiveRPC();
@@ -309,7 +323,7 @@ public class NodeAPI {
                 if(moduleLoadedCallback != null)
                     moduleLoadedCallback.callback((OtpErlangTuple) receive.elementAt(2));
             });
-            return null;
+            return receiveRPC();
         }
         else if(!isTupleTagged(atom("rex"), receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
