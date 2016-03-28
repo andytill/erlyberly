@@ -93,7 +93,7 @@ public class NodeAPI {
 
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
 
-    private boolean manually_disconnected = false;
+    private boolean manuallyDisconnected = false;
     //private final AtomicBoolean connected = new AtomicBoolean();
 
     private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
@@ -133,7 +133,7 @@ public class NodeAPI {
 
     public synchronized void manualConnect() throws IOException, OtpErlangException, OtpAuthException {
         // TODO: here, we've cleared (set to false) being Manually/intentionally disconnected.
-        manually_disconnected = false;
+        manuallyDisconnected = false;
         connect();
     }
 
@@ -176,11 +176,11 @@ public class NodeAPI {
         checkAliveThread.start();
     }
 
-    public void manually_disconnect() throws IOException, OtpErlangException{
+    public void manuallyDisconnect() throws IOException, OtpErlangException{
         // TODO: have a look at this: ( How can we properly "Close", or is the below acceptable? )
         // com.ericsson.otp.erlang.OtpErlangExit: 'Remote has closed connection'
         // at com.ericsson.otp.erlang.AbstractConnection.run(AbstractConnection.java:733)
-        manually_disconnected = true;
+        manuallyDisconnected = true;
         stopAllTraces();
         removeErrorLoggerHandler();
         unloadRemoteErlyberly();
@@ -258,7 +258,7 @@ public class NodeAPI {
         @Override
         public void run() {
             while(true) {
-                if (manually_disconnected){
+                if (manuallyDisconnected){
                     this.interrupt();
                     break;
                 }else{
@@ -397,7 +397,7 @@ public class NodeAPI {
 
         while(true) {
             try {
-                if(!this.manually_disconnected){
+                if(!this.manuallyDisconnected){
                     connect();
                     break;
                 }
@@ -578,7 +578,7 @@ public class NodeAPI {
     }
 
     public boolean manuallyDisconnected(){
-        return manually_disconnected;
+        return manuallyDisconnected;
     }
 
     public synchronized OtpErlangObject callGraph(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {

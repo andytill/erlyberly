@@ -28,9 +28,9 @@ import javafx.scene.input.KeyCombination;
 
 public class ModFuncContextMenu extends ContextMenu {
 
-    private final String VIEW_SOURCE_CODE = "View Source Code";
+    private static final String VIEW_SOURCE_CODE = "View Source Code";
 
-    private final String VIEW_ABST_CODE = "View Abstract Code";
+    private static final String VIEW_ABST_CODE = "View Abstract Code";
 
     private final DbgController dbgController;
 

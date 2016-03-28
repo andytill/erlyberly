@@ -27,6 +27,10 @@ public class OtpUtil {
 
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
+    public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
+        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
+    );
+
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
     private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
     private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
@@ -179,14 +183,10 @@ public class OtpUtil {
             OtpErlangString s = (OtpErlangString) obj;
             return new OtpErlangList(s.stringValue()).elements();
         }
-        else
+        else {
             throw new RuntimeException("" + obj + " cannot return OtpErlangObject[]");
-
+        }
     }
-
-    public static HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
-        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
-    );
 
     /**
      * A short term can be displayed on a single line and does not have to be

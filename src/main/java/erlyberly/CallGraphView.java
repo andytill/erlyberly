@@ -3,9 +3,6 @@ package erlyberly;
 import java.util.Arrays;
 import java.util.List;
 
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
@@ -14,6 +11,8 @@ import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 
 
 public class CallGraphView extends TreeView<ModFunc> {
@@ -23,7 +22,7 @@ public class CallGraphView extends TreeView<ModFunc> {
      * they have lots of sub-calls, cluttering up the tree and it is assumed most usage
      * will be for application calls, not for the standard libs.
      */
-    private static List<String> UNEXPANDED_MODULES = Arrays.asList(
+    private static final List<String> UNEXPANDED_MODULES = Arrays.asList(
             "erlang", "gen_server", "io", "io_lib",  "lists", "rpc", "unicode");
 
     private ModFuncContextMenu modFuncContextMenu;

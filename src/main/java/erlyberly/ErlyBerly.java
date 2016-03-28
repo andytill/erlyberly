@@ -104,7 +104,7 @@ public class ErlyBerly extends Application {
             @Override
             public void handle(WindowEvent t) {
                 try {
-                    nodeAPI().manually_disconnect();
+                    nodeAPI().manuallyDisconnect();
                 } catch(Exception e) {
                     System.out.println(e);
                 }

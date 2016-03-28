@@ -430,7 +430,7 @@ public class TopBarView implements Initializable {
     }
 
     public void disconnect() throws IOException, OtpErlangException{
-        ErlyBerly.nodeAPI().manually_disconnect();
+        ErlyBerly.nodeAPI().manuallyDisconnect();
         ErlyBerly.nodeAPI().disconnect();
         Stage s = new Stage();
         displayConnectionPopup(s);
