@@ -14,6 +14,7 @@ import javafx.fxml.Initializable;
 
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.NodeAPI;
 import erlyberly.node.NodeAPI.RpcCallback;
@@ -228,6 +229,10 @@ public class DbgController implements Initializable {
     public String moduleFunctionAbstCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
         String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstCode(module, function, arity);
         return moduleCode;
+    }
+
+    public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> moduleLoadedCallback) {
+        ErlyBerly.nodeAPI().setModuleLoadedCallback(moduleLoadedCallback);
     }
     
 }

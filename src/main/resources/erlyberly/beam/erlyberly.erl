@@ -3,18 +3,22 @@
 
 -export([collect_seq_trace_logs/0]).
 -export([collect_trace_logs/0]).
+-export([ensure_dbg_started/1]).
 -export([ensure_xref_started/0]).
--export([erlyberly_tcollector/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
+-export([load_modules_on_path/1]).
 -export([module_functions/0]).
 -export([process_info/0]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
--export([stop_traces/0]).
 -export([stop_trace/4]).
+-export([stop_traces/0]).
 -export([xref_analysis/3]).
+
+%% exported for spawned processes
+-export([erlyberly_tcollector/2]).
 
 %%% ============================================================================
 %%% gen_event function exports
@@ -30,6 +34,22 @@
 %%% ============================================================================
 %%% process info
 %%% ============================================================================
+
+%% Asynchronously load all modules on the path where the app directory matches
+%% the given regular expression.
+load_modules_on_path(RegexValidator) ->
+    proc_lib:spawn(
+        fun() -> load_modules_on_path2(RegexValidator) end).
+
+%%
+load_modules_on_path2(RegexValidator) ->
+    Paths = [P || P <- code:get_path(), re:run(P, RegexValidator) /= nomatch],
+    [code:ensure_loaded(file_name_to_module(F)) || P <- Paths,
+                                                   F <- filelib:wildcard(P ++ "/*.beam")].
+
+%%
+file_name_to_module(Filename) ->
+    list_to_atom(filename:rootname(filename:basename(Filename))).
 
 process_info() ->
     process_info2(erlang:processes(), []).
@@ -120,7 +140,7 @@ module_functions2(Mod) when is_atom(Mod) ->
 %%% ============================================================================
 
 %%
-start_trace({Node, Pid}, Mod, Func, Arity, _IsExported) ->
+start_trace({Node, Pid}, Mod, Func, Arity, _IsExported) when is_atom(Node), is_pid(Pid) ->
     ensure_dbg_started({Node, Pid}),
 
     erlyberly_tcollector ! {start_trace, Mod, Func, Arity},
@@ -139,13 +159,13 @@ when_process_is_unregistered(ProcName, Fn) ->
         _         -> ok
     end.
 %%
-ensure_dbg_started({Eb_Node, _}) ->
+ensure_dbg_started({Eb_Node, Eb_pid}) ->
     % restart dbg
     when_process_is_unregistered(dbg, fun dbg:start/0),
 
     StartFn = 
         fun() -> 
-            Pid = spawn(?MODULE, erlyberly_tcollector, [Eb_Node]),
+            Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid]),
             register(erlyberly_tcollector, Pid)
         end,
 
@@ -165,6 +185,8 @@ store_trace(Trace) ->
     erlyberly_tcollector ! Trace.
 
 -record(tcollector, {
+    ui_pid,
+
     %%
     logs = [],
 
@@ -172,7 +194,7 @@ store_trace(Trace) ->
     traces = []
 }).
 
-erlyberly_tcollector(Node) ->
+erlyberly_tcollector(Node, Pid) ->
     % throws a badarg if the node has already closed down
     erlang:monitor_node(Node, true),
 
@@ -182,7 +204,7 @@ erlyberly_tcollector(Node) ->
     dbg:p(all, [c, timestamp]),
     dbg:tp(code, x),
 
-    erlyberly_tcollector2(#tcollector{}).
+    erlyberly_tcollector2(#tcollector{ ui_pid = Pid }).
 %%
 erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
@@ -219,6 +241,7 @@ collect_log({trace_ts, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
 collect_log({trace_ts, _, return_from, {code, _, _}, {module, Loaded_module}, _}, TC) ->
     % if we trace that a module is reloaded then reapply traces to it
     ok = reapply_traces(Loaded_module, TC#tcollector.traces),
+    ok = notify_erlyberly_module_loaded(Loaded_module, TC),
     TC;
 collect_log({trace_ts, _, _, {code, _, _}, _}, TC) ->
     TC;
@@ -230,6 +253,10 @@ collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == tr
 collect_log(U, TC) ->
     io:format("unknown trace ~p~n", [U]),
     TC.
+
+notify_erlyberly_module_loaded(Loaded_module, #tcollector{ ui_pid = Pid }) ->
+    Pid ! {erlyberly_module_loaded, Loaded_module, module_functions2(Loaded_module)},
+    ok.
 
 %%
 maybe_add_log(skip, Logs) -> Logs;
@@ -391,7 +418,7 @@ ensure_seq_tracer_started(Remote_node) ->
 %%
 start_seq_tracer({Node, _}) ->
     Tracer_collector_pid = 
-        spawn(
+        proc_lib:spawn(
             fun() ->
                 % throws a badarg if the node has already closed down
                 erlang:monitor_node(Node, true),

@@ -3,6 +3,7 @@ package erlyberly;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -56,7 +57,7 @@ public class DbgView implements Initializable {
      * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
      * the predicate property does not seem to work.
      */
-    private final ObservableList<FilteredList<TreeItem<ModFunc>>> functionLists = FXCollections.observableArrayList();
+    private final HashMap<ModFunc, FilteredList<TreeItem<ModFunc>>> functionLists = new HashMap<>();
     
     @FXML
     private TreeView<ModFunc> modulesTree;
@@ -95,11 +96,12 @@ public class DbgView implements Initializable {
         modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
         modulesTree.setContextMenu(modFuncContextMenu);
         
-        
         addModulesFloatySearchControl();
         
         dbgController.initialize(url, r);
-        
+        dbgController.setModuleLoadedCallback((tuple) -> {
+            createModuleTreeItem(tuple);
+        });
         tabPane = new TabPane();
         TabPaneDetacher.create()
             .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
@@ -190,7 +192,7 @@ public class DbgView implements Initializable {
             }
         }
         
-        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
             funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
         }
 
@@ -198,7 +200,7 @@ public class DbgView implements Initializable {
     }
 
     private void filterForTracedFunctions() {
-        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists) {
+        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
             funcItemList.setPredicate((t) -> { return dbgController.isTraced(t.getValue()); });
         }
 
@@ -245,38 +247,10 @@ public class DbgView implements Initializable {
     }
     
     private void buildObjectTreeRoot(OtpErlangList requestFunctions) {
-        boolean isExported;
-        
         for (OtpErlangObject e : requestFunctions) {
             OtpErlangTuple tuple = (OtpErlangTuple) e;
             
-            OtpErlangAtom moduleNameAtom = (OtpErlangAtom) tuple.elementAt(0);
-            OtpErlangList exportedFuncs = (OtpErlangList) tuple.elementAt(1);
-            OtpErlangList localFuncs = (OtpErlangList) tuple.elementAt(2);
-            
-            TreeItem<ModFunc> moduleItem;
-            
-            moduleItem = new TreeItem<ModFunc>(ModFunc.toModule(moduleNameAtom));
-            moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
-            
-            ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
-            
-            SortedList<TreeItem<ModFunc>> sortedFuncs = new SortedList<TreeItem<ModFunc>>(modFuncs);
-            
-            FilteredList<TreeItem<ModFunc>> filteredFuncs = new FilteredList<TreeItem<ModFunc>>(sortedFuncs);
-
-            sortedFuncs.setComparator(treeItemModFuncComparator());
-            
-            isExported = true;          
-            addTreeItems(toModFuncs(moduleNameAtom, exportedFuncs, isExported), modFuncs);
-
-            isExported = false;
-            addTreeItems(toModFuncs(moduleNameAtom, localFuncs, isExported), modFuncs);
-            functionLists.add(filteredFuncs);
-            
-            Bindings.bindContentBidirectional(moduleItem.getChildren(), filteredFuncs);
-            
-            treeModules.add(moduleItem);
+            createModuleTreeItem(tuple);
         }
 
         TreeItem<ModFunc> root;
@@ -290,6 +264,44 @@ public class DbgView implements Initializable {
 
         // set predicates on the function tree items so that they filter correctly
         filterForFunctionTextMatch(filterTextProperty.get());
+    }
+
+    private void createModuleTreeItem(OtpErlangTuple tuple) {
+        boolean isExported;
+        OtpErlangAtom moduleNameAtom = (OtpErlangAtom) tuple.elementAt(0);
+        OtpErlangList exportedFuncs = (OtpErlangList) tuple.elementAt(1);
+        OtpErlangList localFuncs = (OtpErlangList) tuple.elementAt(2);
+
+        TreeItem<ModFunc> moduleItem;
+
+        ModFunc module = ModFunc.toModule(moduleNameAtom);
+        moduleItem = new TreeItem<ModFunc>(module);
+        moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
+
+        ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
+
+        SortedList<TreeItem<ModFunc>> sortedFuncs = new SortedList<TreeItem<ModFunc>>(modFuncs);
+
+        FilteredList<TreeItem<ModFunc>> filteredFuncs = new FilteredList<TreeItem<ModFunc>>(sortedFuncs);
+
+        sortedFuncs.setComparator(treeItemModFuncComparator());
+
+        isExported = true;
+        addTreeItems(toModFuncs(moduleNameAtom, exportedFuncs, isExported), modFuncs);
+
+        isExported = false;
+        addTreeItems(toModFuncs(moduleNameAtom, localFuncs, isExported), modFuncs);
+        functionLists.put(module, filteredFuncs);
+
+        Bindings.bindContentBidirectional(moduleItem.getChildren(), filteredFuncs);
+
+        ArrayList<TreeItem<ModFunc>> treeModulesCopy = new ArrayList<>(treeModules);
+        for (TreeItem<ModFunc> treeItem : treeModulesCopy) {
+            if(treeItem.getValue().equals(module)) {
+                treeModules.remove(treeItem);
+            }
+        }
+        treeModules.add(moduleItem);
     }
     
     private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
