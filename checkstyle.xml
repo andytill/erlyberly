@@ -58,5 +58,8 @@
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
 
+        <!-- Checks for common coding problems               -->
+        <!-- See http://checkstyle.sf.net/config_coding.html -->
+        <module name="EqualsHashCode"/>
     </module>
 </module>
