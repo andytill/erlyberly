@@ -28,4 +28,16 @@
     <!-- Checks whether files end with a new line.                        -->
     <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
     <module name="NewlineAtEndOfFile"/>
+
+    <!-- Checks for imports                              -->
+    <!-- See http://checkstyle.sf.net/config_import.html -->
+    
+
+    <module name="TreeWalker">
+      <module name="AvoidStarImport"/>
+      <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+      <module name="RedundantImport"/>
+      <module name="UnusedImports"/>
+
+    </module>
 </module>
