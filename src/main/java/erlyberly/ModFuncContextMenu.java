@@ -29,22 +29,22 @@ import javafx.scene.input.KeyCombination;
 public class ModFuncContextMenu extends ContextMenu {
 
     private final String VIEW_SOURCE_CODE = "View Source Code";
-    
+
     private final String VIEW_ABST_CODE = "View Abstract Code";
 
     private final DbgController dbgController;
-    
+
     private final SimpleObjectProperty<ModFunc> selectedItem;
 
     private final SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItem;
-    
+
     private final SimpleBooleanProperty isSelectionModule, isSelectionFunction;
 
     /**
      * Root tree item of the module tree.
      */
     private final SimpleObjectProperty<TreeItem<ModFunc>> rootProperty;
-    
+
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
         return selectedTreeItem;
     }
@@ -61,11 +61,11 @@ public class ModFuncContextMenu extends ContextMenu {
         isSelectionModule = new SimpleBooleanProperty();
         isSelectionFunction = new SimpleBooleanProperty();
         rootProperty = new SimpleObjectProperty<>();
-        
+
         dbgController = aDbgController;
         selectedItem = new SimpleObjectProperty<>();
         selectedTreeItem = new SimpleObjectProperty<>();
-        
+
         selectedItem.addListener((o, oldv, newv) -> {
             if(newv == null) {
                 isSelectionModule.set(false);
@@ -77,19 +77,19 @@ public class ModFuncContextMenu extends ContextMenu {
                 isSelectionFunction.set(!module);
             }
         });
-        
+
         MenuItem functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
         functionTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+t"));
         functionTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
-        
+
         exportsTraceMenuItem = new MenuItem("Exported Function Trace");
         exportsTraceMenuItem.setOnAction(this::onExportedFunctionTrace);
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
         exportsTraceMenuItem.disableProperty().bind(isSelectionModule.not());
-        
+
         traceAllMenuItem = new MenuItem("Trace All");
         traceAllMenuItem.setOnAction((e) -> { toggleTracesToAllFunctions(); });
         traceAllMenuItem.disableProperty().bind(rootProperty.isNull());
@@ -98,87 +98,87 @@ public class ModFuncContextMenu extends ContextMenu {
         moduleTraceMenuItem = new MenuItem("Recursive Trace");
         moduleTraceMenuItem.setOnAction(this::onModuleTrace);
         moduleTraceMenuItem.disableProperty().bind(isSelectionModule.not());
-        
+
         seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
         seqTraceMenuItem.setOnAction(this::onSeqTrace);
         seqTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
-        
+
         BooleanBinding any = isSelectionFunction.or(isSelectionModule);
-        
+
         moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
         moduleSourceCodeItem.setOnAction(this::onModuleCode);
         moduleSourceCodeItem.disableProperty().bind(any.not());
-        
+
         moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
         moduleAbstCodeItem.setOnAction(this::onModuleCode);
         moduleAbstCodeItem.disableProperty().bind(any.not());
 
         NodeAPI nodeAPI = ErlyBerly.nodeAPI();
         SimpleBooleanProperty connectedProperty = nodeAPI.connectedProperty();
-        
+
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
         callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(isSelectionFunction.not()));
         getItems().addAll(
             functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
-            new SeparatorMenuItem(), callGraphMenuItem, 
+            new SeparatorMenuItem(), callGraphMenuItem,
             new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
     }
-    
+
     private void onSeqTrace(ActionEvent ae) {
         ModFunc func = selectedItem.get();
         if(func == null)
             return;
-        
+
         dbgController.seqTrace(func);
-        
+
         ErlyBerly.showPane("Seq Trace", new SeqTraceView(dbgController.getSeqTraceLogs()));
     }
-    
+
     private void onViewCallGraph(ActionEvent ae) {
         ModFunc func = selectedItem.get();
         if(func == null)
             return;
         if(func.isModule())
             return;
-        
+
         try {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
             ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
-        } 
+        }
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();
         }
     }
-    
+
     private void onFunctionTrace(ActionEvent e) {
         ModFunc mf = selectedItem.get();
-        
-        if(selectedItem == null) 
+
+        if(selectedItem == null)
             return;
         dbgController.toggleTraceModFunc(mf);
     }
 
     private void onModuleTrace(ActionEvent e) {
         TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
-        
+
         if(selectedItem == null)
             return;
-        
+
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();
         recurseModFuncItems(selectedItem, funcs);
-        
+
         toggleTraceMod(funcs);
     }
 
     private void onExportedFunctionTrace(ActionEvent e) {
         TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
-        
+
         if(selectedItem == null)
             return;
-        
+
         // get all the functions we may trace
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();
         recurseModFuncItems(selectedItem, funcs);
@@ -190,17 +190,17 @@ public class ModFuncContextMenu extends ContextMenu {
                 exported.add(modFunc);
             }
         }
-        
+
         // trace 'em
         toggleTraceMod(exported);
     }
-    
+
     private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {
         if(item == null)
             return;
         if(item.getValue() == null || !item.getValue().isModule())
             funcs.add(item.getValue());
-        
+
         for (TreeItem<ModFunc> childItem : item.getChildren()) {
             recurseModFuncItems(childItem, funcs);
         }
@@ -211,16 +211,16 @@ public class ModFuncContextMenu extends ContextMenu {
            dbgController.toggleTraceModFunc(func);
        }
     }
-    
+
    private void onModuleCode(ActionEvent ae){
         try{
             MenuItem mi = (MenuItem) ae.getSource();
             String menuItemClicked = mi.getText();
             ModFunc mf = selectedItem.get();
-            
+
             if(mf == null)
                 return;
-            
+
             String moduleName = mf.getModuleName();
             String modSrc;
             if(mf.isModule()) {
@@ -232,12 +232,12 @@ public class ModFuncContextMenu extends ContextMenu {
                 Integer arity = mf.getArity();
                 modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
                 showModuleSourceCode(moduleName, modSrc);
-            } 
+            }
         } catch (Exception e) {
             throw new RuntimeException("failed to load the source code.", e);
         }
     }
-    
+
     private String fetchModCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
         switch (menuItemClicked){
             case VIEW_SOURCE_CODE:
@@ -248,7 +248,7 @@ public class ModFuncContextMenu extends ContextMenu {
                 return "";
         }
     }
-    
+
     private String fetchModCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
         switch (menuItemClicked){
             case VIEW_SOURCE_CODE:

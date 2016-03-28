@@ -25,15 +25,22 @@
     <!-- See http://checkstyle.sf.net/config_whitespace.html -->
     <module name="FileTabCharacter"/>
 
+    <!-- Miscellaneous other checks.                   -->
+    <!-- See http://checkstyle.sf.net/config_misc.html -->
+    <module name="RegexpSingleline">
+       <property name="format" value="\s+$"/>
+       <property name="minimum" value="0"/>
+       <property name="maximum" value="0"/>
+       <property name="message" value="Line has trailing spaces."/>
+    </module>
+
     <!-- Checks whether files end with a new line.                        -->
     <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
     <module name="NewlineAtEndOfFile"/>
 
-    <!-- Checks for imports                              -->
-    <!-- See http://checkstyle.sf.net/config_import.html -->
-    
-
     <module name="TreeWalker">
+      <!-- Checks for imports                              -->
+      <!-- See http://checkstyle.sf.net/config_import.html -->
       <module name="AvoidStarImport"/>
       <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
       <module name="RedundantImport"/>

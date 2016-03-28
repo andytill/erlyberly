@@ -35,7 +35,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
         MenuItem dictMenuItem = new MenuItem("Dict to List");
         dictMenuItem.setOnAction(this::onViewDict);
-        
+
 
         MenuItem hexViewMenuItem = new MenuItem("Hex View");
         hexViewMenuItem.setOnAction(this::onHexView);
@@ -89,7 +89,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
         TermFormatter f = ErlyBerly.getTermFormatter();
-        
+
         if(obj instanceof OtpErlangBinary) {
             String termString = f.toString(obj);
             TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, termString));
@@ -97,7 +97,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         }
         else if(obj instanceof OtpErlangTuple) {
             OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
-            
+
             if(elements.length == 0) {
                 parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.emptyTupleString())));
             }
@@ -105,7 +105,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 TreeItem<TermTreeItem> tupleItem;
                 if(OtpUtil.isErlyberlyRecord(obj)) {
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
-                    
+
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, f.tupleLeftParen()));
                     tupleItem.setGraphic(recordLabel(recordNameText));
                     parent.getChildren().add(tupleItem);
@@ -132,7 +132,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 else {
                     tupleItem = new TreeItem<>();
                     tupleItem.setExpanded(true);
-                    
+
                     if(OtpUtil.isLittleTerm(obj)) {
                         tupleItem.setValue(new TermTreeItem(obj, f.toString(obj)));
                         parent.getChildren().add(tupleItem);
@@ -145,22 +145,22 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                         parent.getChildren().add(tupleItem);
                         parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.tupleRightParen())));
                     }
-                    
+
                 }
             }
         }
         else if(obj instanceof OtpErlangList) {
             OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
-            
+
             if(elements.length == 0) {
                 parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.emptyListString())));
             }
             else {
                 TreeItem<TermTreeItem> listItem;
-                
+
                 listItem = new TreeItem<>(new TermTreeItem(obj, f.listLeftParen()));
                 listItem.setExpanded(true);
-                
+
 
                 if(OtpUtil.isLittleTerm(obj)) {
                     listItem.setValue(new TermTreeItem(obj, f.toString(obj)));

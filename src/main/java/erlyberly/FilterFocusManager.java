@@ -21,18 +21,18 @@ public class FilterFocusManager {
         filters.add(null);
         filters.add(null);
         filters.add(null);
-        
+
         Platform.runLater(() -> {
             scene.getAccelerators().put(REFRESH_MODULES_SHORTCUT, () -> { nextFilter(); });
         });
     }
-    
+
     private static void nextFilter() {
         if(filters.isEmpty())
             return;
-        
+
         Control control = findNextFilter();
-        
+
         requestFocus(control);
     }
 
@@ -43,9 +43,9 @@ public class FilterFocusManager {
                 return lastFocused;
             }
         }
-        
+
         int focused = findCurrentFilter();
-        
+
         if(focused == -1) {
             focused = 0;
         }
@@ -63,7 +63,7 @@ public class FilterFocusManager {
                     break;
             }
         }
-        
+
         return filters.get(focused);
     }
 
@@ -88,9 +88,9 @@ public class FilterFocusManager {
         assert control != null;
         assert order >= 0;
         assert Platform.isFxApplicationThread();
-        
+
         filters.set(order, control);
-        
+
         control.focusedProperty().addListener((o, oldFocus, newFocus) -> {
             lastFocusedIndex = order;
         });

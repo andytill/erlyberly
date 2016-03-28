@@ -63,7 +63,7 @@ public class HexstarView extends TableView<DataRow> {
             throw new RuntimeException(e);
         }
     }
-    
+
     private void column(String colName, String property) {
         TableColumn<DataRow, String> col;
         col = new TableColumn<DataRow,String>(colName);

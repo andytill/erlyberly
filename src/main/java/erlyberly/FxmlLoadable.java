@@ -18,7 +18,7 @@ class FxmlLoadable {
     public Parent load() {
         if(fxmlNode != null)
             return fxmlNode;
-        
+
         URL location = getClass().getResource(resource);
         FXMLLoader fxmlLoader = new FXMLLoader(location);
 

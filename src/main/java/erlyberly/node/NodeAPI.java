@@ -50,7 +50,7 @@ public class NodeAPI {
     private static final OtpErlangAtom ERLYBERLY_XREF_STARTED_ATOM = atom("erlyberly_xref_started");
 
     private static final OtpErlangAtom ERLYBERLY_ERROR_REPORT_ATOM = atom("erlyberly_error_report");
-    
+
     private static final OtpErlangAtom ERLYBERLY_MODULE_RELOADED_ATOM = atom("erlyberly_module_loaded");
 
     private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom("erlyberly");
@@ -70,7 +70,7 @@ public class NodeAPI {
     private final TraceManager traceManager;
 
     private final SimpleBooleanProperty connectedProperty;
-    
+
     private final SimpleBooleanProperty xrefStartedProperty;
 
     private final SimpleStringProperty summary;
@@ -90,9 +90,9 @@ public class NodeAPI {
     private OtpMbox mbox;
 
     private final AtomicBoolean connected = new AtomicBoolean();
-    
+
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
-    
+
     private boolean manually_disconnected = false;
     //private final AtomicBoolean connected = new AtomicBoolean();
 
@@ -112,7 +112,7 @@ public class NodeAPI {
         appProcs = new SimpleObjectProperty<AppProcs>(new AppProcs(0, LocalDateTime.now()));
 
         connectedProperty.addListener(this::summaryUpdater);
-        
+
         xrefStartedProperty = new SimpleBooleanProperty(false);
     }
 
@@ -130,13 +130,13 @@ public class NodeAPI {
     public SimpleObjectProperty<AppProcs> appProcsProperty() {
         return appProcs;
     }
-    
+
     public synchronized void manualConnect() throws IOException, OtpErlangException, OtpAuthException {
         // TODO: here, we've cleared (set to false) being Manually/intentionally disconnected.
         manually_disconnected = false;
         connect();
     }
-    
+
     public synchronized void connect() throws IOException, OtpErlangException, OtpAuthException {
         assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 
@@ -162,14 +162,14 @@ public class NodeAPI {
         mbox = self.createMbox();
 
         loadRemoteErlyberly();
-        
+
         addErrorLoggerHandler();
 
         // start dbg so we can listen for module loads
         ensureDbgStarted();
-        
+
         loadModulesOnPath(PrefBind.getOrDefault("loadModulesRegex", "").toString());
-        
+
         Platform.runLater(() -> { connectedProperty.set(true); });
 
         checkAliveThread = new CheckAliveThread();
@@ -185,9 +185,9 @@ public class NodeAPI {
         removeErrorLoggerHandler();
         unloadRemoteErlyberly();
         mbox.close();
-        Platform.runLater(() -> { connectedProperty.set(false); }); 
+        Platform.runLater(() -> { connectedProperty.set(false); });
     }
-    
+
     public void disconnect() {
         try {
             if (connection != null)
@@ -206,7 +206,7 @@ public class NodeAPI {
         connection = null;
         self = null;
     }
-    
+
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
         sendRPC(
             "erlyberly", "ensure_dbg_started",
@@ -215,7 +215,7 @@ public class NodeAPI {
         // flush the return value
         receiveRPC();
     }
-    
+
     private void loadModulesOnPath(String regex) throws IOException, OtpErlangException {
         if(regex == null || "".equals(regex))
             return;
@@ -233,18 +233,18 @@ public class NodeAPI {
             "error_logger", "add_report_handler",
             OtpUtil.list(ERLYBERLY_ATOM, args)
         );
-        
+
         // flush the return value
         receiveRPC();
     }
-    
+
     private void removeErrorLoggerHandler() throws IOException, OtpErlangException {
         OtpErlangList args = OtpUtil.list(mbox.self());
         sendRPC(
             "error_logger", "delete_report_handler",
             OtpUtil.list(ERLYBERLY_ATOM, args)
         );
-        
+
         // flush the return value
         receiveRPC();
     }
@@ -292,7 +292,7 @@ public class NodeAPI {
             throw new RuntimeException("error loading the erlyberly module, result was " + result);
         }
     }
-    
+
     private void unloadRemoteErlyberly() throws IOException, OtpErlangException {
         sendRPC("code", "purge", list(atom("erlyberly")));
         receiveRPC();
@@ -310,7 +310,7 @@ public class NodeAPI {
     private OtpErlangObject receiveRPC(int timeout) throws OtpErlangExit,
             OtpErlangDecodeException, IOException, OtpErlangException {
         OtpErlangTuple receive = OtpUtil.receiveRPC(mbox, timeout);
-        
+
         if(receive == null) {
             return null;
         }
@@ -329,7 +329,7 @@ public class NodeAPI {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
         }
         OtpErlangObject result = receive.elementAt(1);
-        
+
         // hack to support certain projects, don't ask...
         if(isTupleTagged(BET_SERVICES_MSG_ATOM, result)) {
             result = receiveRPC();
@@ -344,11 +344,11 @@ public class NodeAPI {
 
     private static byte[] loadBeamFile() throws IOException {
         InputStream resourceAsStream = OtpUtil.class.getResourceAsStream(ERLYBERLY_BEAM_PATH);
-        
+
         byte[] b = new byte[BEAM_SIZE_LIMIT];
         int total = 0;
         int read = 0;
-        
+
         do {
             total += read;
             read = resourceAsStream.read(b, total, BEAM_SIZE_LIMIT - total);
@@ -357,7 +357,7 @@ public class NodeAPI {
         if(total >= BEAM_SIZE_LIMIT) {
             throw new RuntimeException("erlyberly.beam file is too big");
         }
-        
+
         return Arrays.copyOf(b, total);
     }
 
@@ -453,7 +453,7 @@ public class NodeAPI {
             ));
         receiveRPC();
     }
-    
+
     public void stopAllTraces() throws IOException, OtpErlangException {
         sendRPC("erlyberly", "stop_traces", list());
         receiveRPC();
@@ -472,7 +472,7 @@ public class NodeAPI {
     public SimpleBooleanProperty connectedProperty() {
         return connectedProperty;
     }
-    
+
     public SimpleBooleanProperty xrefStartedProperty() {
         return xrefStartedProperty;
     }
@@ -576,33 +576,33 @@ public class NodeAPI {
     public boolean isConnected() {
         return connected.get();
     }
-    
+
     public boolean manuallyDisconnected(){
         return manually_disconnected;
     }
-    
+
     public synchronized OtpErlangObject callGraph(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {
         sendRPC("erlyberly", "xref_analysis", list(module, function, arity));
-        
+
         OtpErlangObject result = (OtpErlangObject) receiveRPC();
-        
+
         return result;
     }
-    
+
     /**
-     * Start xref but  
+     * Start xref but
      */
     public synchronized void asyncEnsureXRefStarted() throws IOException {
         sendRPC("erlyberly", "ensure_xref_started", list());
     }
-    
+
     public synchronized String moduleFunctionSourceCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
         OtpErlangInt otpArity = new OtpErlangInt(arity);
         sendRPC("erlyberly", "get_source_code", list( tuple(atom(module), atom(function), otpArity) ));
         OtpErlangObject result = receiveRPC();
         return returnCode(result, "Failed to get source code for " + module + ":" + function + "/" + arity.toString() + ".");
     }
-    
+
     public synchronized String moduleFunctionSourceCode(String module) throws IOException, OtpErlangException {
         sendRPC("erlyberly", "get_source_code", list( atom(module) ));
         OtpErlangObject result = receiveRPC();
@@ -620,7 +620,7 @@ public class NodeAPI {
         OtpErlangObject result = receiveRPC();
         return returnCode(result, "Failed to get abstract code for " + module + ".");
     }
-    
+
     public String returnCode(OtpErlangObject result, String errorResponse){
         if(isTupleTagged(OK_ATOM, result)) {
             OtpErlangBinary bin = (OtpErlangBinary) ((OtpErlangTuple)result).elementAt(1);

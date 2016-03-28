@@ -22,15 +22,15 @@ import javafx.beans.value.ObservableValue;
  * <b>All methods must be called on the JavaFX thread.</b>
  */
 public class PrefBind {
-    
+
     private static Timer timer = new Timer(true);
-    
+
     private static Properties props;
-    
+
     private static File erlyberlyConfig;
-    
+
     private static boolean awaitingStore;
-    
+
     public static void bind(final String propName, StringProperty stringProp) {
         if(props == null) {
             return;
@@ -43,7 +43,7 @@ public class PrefBind {
             set(propName, newValue);
         });
     }
-    
+
     public static void bindBoolean(final String propName, BooleanProperty boolProp){
         if(props == null) {
             return;
@@ -53,11 +53,11 @@ public class PrefBind {
         if(storedValue != null) {
             boolProp.set(b);
         }
-        boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {            
+        boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
                 set(propName, newValue.toString());
         });
     }
-    
+
     static void store() {
         try {
             props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
@@ -66,29 +66,29 @@ public class PrefBind {
         }
         awaitingStore = false;
     }
-    
+
     public static void setup() throws IOException {
         String home = System.getProperty("user.home");
-        
+
         File homeDir = new File(home);
-        
+
         File dotConfigDir = new File(homeDir, ".config");
-        
+
         if(dotConfigDir.exists()) {
             homeDir = dotConfigDir;
         }
-        
+
         erlyberlyConfig = new File(homeDir, ".erlyberly");
         erlyberlyConfig.createNewFile();
-        
+
         Properties properties;
-        
+
         properties = new Properties();
         properties.load(new FileInputStream(erlyberlyConfig));
-        
+
         props = properties;
     }
-    
+
     public static Object get(Object key) {
         return props.get(key);
     }
@@ -96,7 +96,7 @@ public class PrefBind {
     public static Object getOrDefault(String key, Object theDefault) {
         return props.getOrDefault(key, theDefault);
     }
-    
+
     public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
         return Boolean.parseBoolean(PrefBind.getOrDefault("showSourceInSystemEditor", false).toString());
     }

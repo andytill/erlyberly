@@ -5,15 +5,15 @@ import javafx.scene.control.ListCell;
 
 final class TraceLogListCell extends ListCell<TraceLog> {
     private ChangeListener<? super Boolean> listener;
-    
+
     public TraceLogListCell() {
         listener = (o, noldV, newV) -> {
             TraceLog item = TraceLogListCell.this.getItem();
-            
+
             removeCompletionListender(item);
 
             getStyleClass().remove("not-completed");
-            
+
             putCompletionStyle(item);
         };
     }
@@ -23,30 +23,30 @@ final class TraceLogListCell extends ListCell<TraceLog> {
             item.isCompleteProperty().removeListener(listener);
         }
     }
-    
+
     @Override
     protected void updateItem(TraceLog item, boolean empty) {
 
         // clean up
         getStyleClass().remove("exception");
         getStyleClass().remove("not-completed");
-        
+
         textProperty().unbind();
-        
+
         removeCompletionListender(getItem());
-        
+
         // setup
         super.updateItem(item, empty);
-        
+
         // set new UI for item
         if (item == null || empty) {
             setText(null);
         }
         else {
             textProperty().bind(item.summaryProperty());
-            
+
             putCompletionStyle(item);
-            
+
             if(!item.isComplete())
                 item.isCompleteProperty().addListener(listener);
         }

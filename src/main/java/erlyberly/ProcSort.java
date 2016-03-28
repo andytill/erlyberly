@@ -3,11 +3,11 @@ package erlyberly;
 import javafx.scene.control.TableColumn.SortType;
 
 /**
- * Description of how to sort {@link ProcInfo} objects. 
+ * Description of how to sort {@link ProcInfo} objects.
  */
 public class ProcSort {
     private final String sortField;
-    
+
     private final SortType sortType;
 
     public ProcSort(String sortField, SortType sortType) {
@@ -58,6 +58,6 @@ public class ProcSort {
             return false;
         return true;
     }
-    
-    
+
+
 }

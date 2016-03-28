@@ -13,7 +13,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.node.OtpUtil;
 
 public class ErlangFormatter implements TermFormatter {
-    
+
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
         if(obj instanceof OtpErlangBinary) {
@@ -44,9 +44,9 @@ public class ErlangFormatter implements TermFormatter {
         else if(obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
             String brackets = bracketsForTerm(obj);
             OtpErlangObject[] elements = OtpUtil.elementsForTerm(obj);
-            
+
             sb.append(brackets.charAt(0));
-            
+
             for(int i=0; i < elements.length; i++) {
                 if(i != 0) {
                     sb.append(", ");
@@ -63,14 +63,14 @@ public class ErlangFormatter implements TermFormatter {
         }
         return sb;
     }
-    
+
     private static String pidToString(OtpErlangPid pid) {
         return pid.toString();
     }
 
     public String bracketsForTerm(OtpErlangObject obj) {
         assert obj != null;
-        
+
         if(obj instanceof OtpErlangTuple)
             return "{}";
         else if(obj instanceof OtpErlangList)

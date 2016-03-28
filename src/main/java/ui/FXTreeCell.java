@@ -6,14 +6,13 @@ import javafx.scene.control.TreeCell;
 public class FXTreeCell<T> extends TreeCell<T> {
 
     private final CellController<T> controller;
+
     private Parent aControl;
-    
-    
 
     public FXTreeCell(CellController<T> aController, Parent aControl) {
         controller = aController;
         this.aControl = aControl;
-        
+
     }
 
     @Override
@@ -37,7 +36,7 @@ public class FXTreeCell<T> extends TreeCell<T> {
     @Override
     public void startEdit() {
         super.startEdit();
-        
+
         if(controller != null) {
             controller.startEdit();
         }
@@ -46,7 +45,7 @@ public class FXTreeCell<T> extends TreeCell<T> {
     @Override
     protected void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
-        
+
         if(item == null || empty) {
             setGraphic(null);
             setText(null);

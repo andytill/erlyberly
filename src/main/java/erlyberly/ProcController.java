@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangObject;
+
+import erlyberly.node.NodeAPI.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,63 +20,58 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn.SortType;
 
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangObject;
-
-import erlyberly.node.NodeAPI.RpcCallback;
-
 /**
- * Logic and processing for the entop control. 
+ * Logic and processing for the entop control.
  */
 public class ProcController {
-    
+
     private final SimpleBooleanProperty polling;
-    
-    private final SimpleObjectProperty<ProcSort> procSortProperty;  
-    
+
+    private final SimpleObjectProperty<ProcSort> procSortProperty;
+
     private ProcPollerThread procPollerThread;
 
     private final Object waiter;
 
     private int timeout = -1;
-    
+
     private final SimpleStringProperty filter = new SimpleStringProperty();
-    
+
     private final ObservableList<ProcInfo> processes = FXCollections.observableArrayList();
-    
+
     private final FilteredList<ProcInfo> filteredProcesses = new FilteredList<ProcInfo>(processes);
-    
+
     private final SortedList<ProcInfo> sortedProcesses = new SortedList<ProcInfo>(filteredProcesses);
-    
+
     private volatile boolean temporarilySuspendPolling;
-    
+
     public ProcController() {
         polling = new SimpleBooleanProperty();
-        
+
         procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", SortType.DESCENDING));
-        
+
         procPollerThread = new ProcPollerThread();
-        
+
         waiter = new Object();
-        
+
         Platform.runLater(() -> {
             ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> { startPollingThread(); } );
         });
-        
+
         filter.addListener((o, ov, nv) -> { updateProcFilter(nv); });
     }
-    
+
     public void setListComparator(ObservableValue<? extends Comparator<? super ProcInfo>> tableComparator) {
         sortedProcesses.comparatorProperty().bind(tableComparator);
     }
-    
+
     private void updateProcFilter(String filterText) {
         BasicSearch basicSearch = new BasicSearch(filterText);
         filteredProcesses.setPredicate((proc) -> { return isMatchingProcess(basicSearch, proc); });
     }
 
     private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
-        return 
+        return
                 basicSearch.matches(proc.getPid(), proc.getProcessName());
     }
 
@@ -95,7 +94,7 @@ public class ProcController {
     public void togglePolling() {
         if(timeout == -1) {
             timeout = 1000;
-            
+
             refreshOnce();
         }
         else {
@@ -103,7 +102,7 @@ public class ProcController {
         }
         polling.set(timeout > 0);
     }
-    
+
     public void clearProcesses(){
         processes.clear();
     }
@@ -111,11 +110,11 @@ public class ProcController {
     public ObservableList<ProcInfo> getProcs() {
         return sortedProcesses;
     }
-    
+
     public SimpleBooleanProperty pollingProperty() {
         return polling;
     }
-    
+
     public SimpleObjectProperty<ProcSort> procSortProperty() {
         return procSortProperty;
     }
@@ -138,18 +137,18 @@ public class ProcController {
             setDaemon(true);
             setName("Process Info Poller");
         }
-        
+
         @Override
         public void run() {
-            
-            while(true) {   
+
+            while(true) {
 
                 boolean connected = ErlyBerly.nodeAPI().isConnected();
                 if(!connected)
                     continue;
-                
+
                 final ArrayList<ProcInfo> processList = new ArrayList<>();
-                
+
                 if (!temporarilySuspendPolling) {
                     try {
                         ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
@@ -158,9 +157,9 @@ public class ProcController {
                     }
                     catch (Exception e) {
                         e.printStackTrace();
-                    } 
+                    }
                 }
-                
+
                 try {
                     synchronized (waiter) {
                         if(timeout > 0)
@@ -168,13 +167,13 @@ public class ProcController {
                         else
                             waiter.wait();
                     }
-                } 
+                }
                 catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
             }
         }
-        
+
         private void updateProcessList(final ArrayList<ProcInfo> processList) {
             Platform.runLater(new Runnable() {
                 @Override
@@ -182,7 +181,7 @@ public class ProcController {
                     ProcSort procSort = procSortProperty.get();
                     if(procSort != null) {
                         Comparator<ProcInfo> comparator = null;
-                        
+
                         if("proc".equals(procSort.getSortField())) {
                             comparator = new Comparator<ProcInfo>() {
                                 @Override
@@ -197,7 +196,7 @@ public class ProcController {
                                     return Long.compare(o1.getReductions(), o2.getReductions());
                                 }};
                         }
-                        
+
                         if(comparator != null) {
                             if(procSort.getSortType() == SortType.DESCENDING) {
                                 comparator = Collections.reverseOrder(comparator);
@@ -214,27 +213,27 @@ public class ProcController {
     public void processState(ProcInfo proc, RpcCallback<OtpErlangObject> callback) {
         new ProcessStateThread(proc.getPid(), callback).start();
     }
-    
+
     class ProcessStateThread extends Thread {
-        
+
         private final String pidString;
         private final RpcCallback<OtpErlangObject> callback;
 
         public ProcessStateThread(String aPidString, RpcCallback<OtpErlangObject> aCallback) {
             pidString = aPidString;
             callback = aCallback;
-            
+
             setDaemon(true);
             setName("Erlyberly Get Process State");
         }
-        
+
         @Override
         public void run() {
             try {
                 OtpErlangObject processState = ErlyBerly.nodeAPI().getProcessState(pidString);
-                
+
                 Platform.runLater(() -> { callback.callback(processState); });
-            } 
+            }
             catch (OtpErlangException | IOException e) {
                 e.printStackTrace();
             }

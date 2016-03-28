@@ -34,7 +34,7 @@ public class SeqTraceLog {
         Object timestamp = props.get(OtpUtil.atom("timestamp"));
         return new SeqTraceLog(msg_type, serial,  from, to, message, timestamp);
     }
-    
+
     private String stringValue(Object obj) {
         if(obj instanceof OtpErlangString)
             return ((OtpErlangString) obj).stringValue();

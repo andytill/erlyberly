@@ -3,18 +3,18 @@ package erlyberly;
 import java.util.Map;
 import java.util.Objects;
 
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangString;
 
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 /**
- * Domain object for an erlang process. 
+ * Domain object for an erlang process.
  */
 public class ProcInfo implements Comparable<ProcInfo> {
 
@@ -29,13 +29,13 @@ public class ProcInfo implements Comparable<ProcInfo> {
     private static final OtpErlangList EMPTY_LIST = new OtpErlangList();
 
     private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
-    
+
     private static final OtpErlangAtom PID_ATOM = new OtpErlangAtom("pid");
 
     private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
 
     private StringProperty pid;
-    
+
     private StringProperty processName;
 
     private LongProperty reductions;
@@ -47,7 +47,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     private LongProperty stackSize;
 
     private LongProperty totalHeapSize;
-    
+
     public void setTotalHeapSize(long value) {
         totalHeapSizeProperty().set(value);
     }
@@ -61,7 +61,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
             totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
         return totalHeapSize;
     }
-    
+
     public void setStackSize(long value) {
         stackSizeProperty().set(value);
     }
@@ -75,7 +75,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
             stackSize = new SimpleLongProperty(this, "stackSize");
         return stackSize;
     }
-    
+
     public void setHeapSize(long value) {
         heapSizeProperty().set(value);
     }
@@ -89,7 +89,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
             heapSize = new SimpleLongProperty(this, "msgQueueLen");
         return heapSize;
     }
-    
+
     public void setMsgQueueLen(long value) {
         msgQueueLenProperty().set(value);
     }
@@ -103,7 +103,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
             msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
         return msgQueueLen;
     }
-    
+
     public void setPid(String value) {
         pidProperty().set(value);
     }
@@ -117,7 +117,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
             pid = new SimpleStringProperty(this, "pid");
         return pid;
     }
-    
+
     public void setProcessName(String value) {
         processNameProperty().set(value);
     }
@@ -149,13 +149,13 @@ public class ProcInfo implements Comparable<ProcInfo> {
     public static ProcInfo toProcessInfo(Map<Object, Object> propList) {
         Object processName = propList.get(REGISTERED_NAME_ATOM);
         Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
-        
+
         if(EMPTY_LIST.equals(processName)) {
             processName = "";
         }
-        
+
         ProcInfo processInfo;
-        
+
         processInfo = new ProcInfo();
         processInfo.setProcessName(Objects.toString(processName, ""));
         processInfo.setPid(Objects.toString(pid, ""));
@@ -164,7 +164,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
         processInfo.setHeapSize(toLong(propList.get(HEAP_SIZE_ATOM)));
         processInfo.setStackSize(toLong(propList.get(STACK_SIZE_ATOM)));
         processInfo.setTotalHeapSize(toLong(propList.get(TOTAL_HEAP_SIZE_ATOM)));
-        
+
         return processInfo;
     }
 
