@@ -28,7 +28,7 @@ import javafx.stage.WindowEvent;
 
 public class ErlyBerly extends Application {
 
-    private static final NodeAPI nodeAPI = new NodeAPI();
+    private static final NodeAPI NODE_API = new NodeAPI();
 
     private SplitPane splitPane;
 
@@ -91,7 +91,7 @@ public class ErlyBerly extends Application {
         applyCssToWIndow(scene);
 
         primaryStage.setScene(scene);
-        primaryStage.titleProperty().bind(nodeAPI.summaryProperty());
+        primaryStage.titleProperty().bind(NODE_API.summaryProperty());
         primaryStage.sizeToScene();
         primaryStage.setResizable(true);
         primaryStage.show();
@@ -194,7 +194,7 @@ public class ErlyBerly extends Application {
         connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent e) {
-                if(!nodeAPI.connectedProperty().get()) {
+                if(!NODE_API.connectedProperty().get()) {
                     Platform.exit();
                 }
 
@@ -205,7 +205,7 @@ public class ErlyBerly extends Application {
     }
 
     public static NodeAPI nodeAPI() {
-        return nodeAPI;
+        return NODE_API;
     }
 
     /**

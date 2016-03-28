@@ -29,8 +29,8 @@ public class OtpUtil {
 
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
     private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
-    private static final OtpErlangAtom call = new OtpErlangAtom("call");
-    private static final OtpErlangAtom user = new OtpErlangAtom("user");
+    private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
+    private static final OtpErlangAtom USER_ATOM = new OtpErlangAtom("user");
     private static final OtpErlangAtom ERROR_ATOM = atom("error");
     public static final OtpErlangAtom OK_ATOM = atom("ok");
 
@@ -153,7 +153,7 @@ public class OtpUtil {
     }
 
     public static void sendRPC(OtpConn conn, OtpMbox m, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
-        OtpErlangTuple rpcMessage = tuple(m.self(), tuple(call, mod, fun, args, user));
+        OtpErlangTuple rpcMessage = tuple(m.self(), tuple(CALL_ATOM, mod, fun, args, USER_ATOM));
 
         conn.send(m.self(), "rex", rpcMessage);
     }

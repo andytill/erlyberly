@@ -26,7 +26,7 @@ public class TraceLog implements Comparable<TraceLog> {
     private static final Object TIMESTAMP_CALL_ATOM = new OtpErlangAtom("timetamp_call_us");
     private static final Object TIMESTAMP_RETURN_ATOM = new OtpErlangAtom("timetamp_return_us");
 
-    private static final AtomicLong instanceCounter = new AtomicLong();
+    private static final AtomicLong INSTANCE_COUNTER = new AtomicLong();
 
     private final HashMap<Object, Object> map;
 
@@ -46,7 +46,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public TraceLog(HashMap<Object, Object> map) {
         this.map = map;
-        instanceNum = instanceCounter.incrementAndGet();
+        instanceNum = INSTANCE_COUNTER.incrementAndGet();
         pid = getPidString();
         registeredName = regNameString().intern();
         function =  appendModFuncArity(new StringBuilder()).toString().intern();
