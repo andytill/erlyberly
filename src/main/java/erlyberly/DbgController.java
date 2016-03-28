@@ -5,6 +5,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangTuple;
+
+import erlyberly.node.NodeAPI;
+import erlyberly.node.NodeAPI.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -12,20 +18,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
-import erlyberly.node.NodeAPI;
-import erlyberly.node.NodeAPI.RpcCallback;
-
 
 public class DbgController implements Initializable {
-    
+
     public final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
-    
+
     private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
-    
+
     private final ObservableList<SeqTraceLog> seqTraces = FXCollections.observableArrayList();
 
     private volatile boolean collectingTraces;
@@ -41,11 +40,11 @@ public class DbgController implements Initializable {
         new TraceCollectorThread().start();
         new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
     }
-    
+
     public ObservableList<TraceLog> getTraceLogs() {
         return traceLogs;
     }
-    
+
     public ObservableList<SeqTraceLog> getSeqTraceLogs() {
         return seqTraces;
     }
@@ -53,7 +52,7 @@ public class DbgController implements Initializable {
     public boolean isTraced(ModFunc function) {
         return traces.contains(function);
     }
-    
+
     public void toggleTraceModFunc(ModFunc function) {
         if(traces.contains(function))
             onRemoveTracer(null, function);
@@ -64,15 +63,15 @@ public class DbgController implements Initializable {
     private void traceModFunc(ModFunc function) {
         try {
             ErlyBerly.nodeAPI().startTrace(function);
-            
+
             traces.add(function);
-            
+
             setCollectingTraces(true);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
-    
+
     private void onRemoveTracer(ActionEvent e, ModFunc function) {
         try {
             ErlyBerly.nodeAPI().stopTrace(function);
@@ -86,35 +85,35 @@ public class DbgController implements Initializable {
 
     public void reapplyTraces() {
         ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
-        
+
         for (ModFunc function : tracesCopy) {
             try {
                 ErlyBerly.nodeAPI().startTrace(function);
             } catch (Exception e) {
                 e.printStackTrace();
-                
+
                 traces.remove(function);
             }
         }
     }
-    
-    // TODO: 
-    
+
+    // TODO:
+
     public void removeTraces() {
         ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
-        
+
         for (ModFunc function : tracesCopy) {
             // TODO: simply remove the GUI trace selection...
             // The back-end will be dealt with :)
             //ErlyBerly.nodeAPI().stopTrace(function);
-            traces.remove(function);    
+            traces.remove(function);
         }
     }
 
     public void addTraceListener(InvalidationListener listener) {
         traces.addListener(listener);
     }
-    
+
     public void requestModFuncs(NodeAPI.RpcCallback<OtpErlangList> rpcCallback) {
         new GetModulesThread(rpcCallback).start();
     }
@@ -134,20 +133,20 @@ public class DbgController implements Initializable {
             setDaemon(true);
             setName("Erlyberly Collect Traces");
         }
-        
+
         @Override
         public void run() {
             while (true) {
                 if(collectingTraces && ErlyBerly.nodeAPI().isConnected()) {
                     try {
                         final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
-                        
+
                         Platform.runLater(() -> { traceLogs.addAll(collectTraceLogs); });
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-                
+
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -162,11 +161,11 @@ public class DbgController implements Initializable {
 
         public SeqTraceCollectorThread(RpcCallback<SeqTraceLog> aCallback) {
             callback = aCallback;
-            
+
             setDaemon(true);
             setName("Erlyberly Collect Seq Traces");
         }
-        
+
         @Override
         public void run() {
             while (true) {
@@ -181,7 +180,7 @@ public class DbgController implements Initializable {
                         e.printStackTrace();
                     }
                 }
-                
+
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -190,29 +189,29 @@ public class DbgController implements Initializable {
             }
         }
     }
-    
+
     class GetModulesThread extends Thread {
         private final RpcCallback<OtpErlangList> rpcCallback;
 
         public GetModulesThread(RpcCallback<OtpErlangList> anRpcCallback) {
             rpcCallback = anRpcCallback;
-            
+
             setDaemon(true);
             setName("Erlyberly Get Modules");
         }
-        
+
         @Override
         public void run() {
             try {
                 OtpErlangList functions = ErlyBerly.nodeAPI().requestFunctions();
                 Platform.runLater(() -> { rpcCallback.callback(functions); });
-            } 
+            }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-    
+
     public String moduleFunctionSourceCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
         String moduleCode = ErlyBerly.nodeAPI().moduleFunctionSourceCode(module, function, arity);
         return moduleCode;
@@ -234,5 +233,5 @@ public class DbgController implements Initializable {
     public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> moduleLoadedCallback) {
         ErlyBerly.nodeAPI().setModuleLoadedCallback(moduleLoadedCallback);
     }
-    
+
 }

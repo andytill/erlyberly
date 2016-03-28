@@ -63,11 +63,11 @@ public class TopBarView implements Initializable {
     private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
 
     private static final KeyCodeCombination TOGGLE_HIDE_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN);
-    
+
     private static final KeyCodeCombination REFRESH_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
-    
+
     private final SimpleIntegerProperty unreadCrashReportsProperty = new SimpleIntegerProperty(0);
-    
+
     @FXML
     private ToggleButton hideProcessesButton;
     @FXML
@@ -86,13 +86,13 @@ public class TopBarView implements Initializable {
     private Button prefButton;
     @FXML
     private ToolBar topBox;
-    
+
     private EventHandler<ActionEvent> refreshModulesAction;
-    
+
     @Override
     public void initialize(URL url, ResourceBundle r) {
         topBox.getItems().add(crashReportsButton);
-        
+
         // TODO: Should we hide these buttons, when disconnected ?
         hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
         hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
@@ -109,7 +109,7 @@ public class TopBarView implements Initializable {
         refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
         refreshModulesButton.setGraphicTextGap(0d);
         refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
-        refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not()); 
+        refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
         erlangMemoryButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
         erlangMemoryButton.setContentDisplay(ContentDisplay.TOP);
@@ -117,7 +117,7 @@ public class TopBarView implements Initializable {
         erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
         erlangMemoryButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
-        // TODO: maybe make this button available, sometimes, there are crashes causing the node to go down, 
+        // TODO: maybe make this button available, sometimes, there are crashes causing the node to go down,
         // and then it's disabled when disconnected....( i would like to see the crashes ) :)
         crashReportsButton.setGraphic(crashReportsGraphic());
         crashReportsButton.setContentDisplay(ContentDisplay.LEFT);
@@ -137,7 +137,7 @@ public class TopBarView implements Initializable {
                         MenuItem menuItem;
                         menuItem = new MenuItem();
                         menuItem.setGraphic(new CrashReportGraphic(crashReport));
-                        menuItem.setOnAction((action) -> { 
+                        menuItem.setOnAction((action) -> {
                             unreadCrashReportsProperty.set(0);
                             ErlyBerly.showPane("Crash Report", ErlyBerly.wrapInPane(crashReportView(crashReport)));
                         });
@@ -166,46 +166,46 @@ public class TopBarView implements Initializable {
         tweetButton.setGraphicTextGap(0d);
         tweetButton.setOnAction((e) -> { tweet(); });
         tweetButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
-        
+
         disconnectButton.setGraphic(Icon.create().icon(AwesomeIcon.EJECT));
         disconnectButton.setContentDisplay(ContentDisplay.TOP);
         disconnectButton.setGraphicTextGap(0d);
         disconnectButton.setTooltip(new Tooltip("Disconnect"));
         disconnectButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
-        disconnectButton.setOnAction((e) -> { 
+        disconnectButton.setOnAction((e) -> {
             try {
                 disconnect();
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
         });
-        
+
         prefButton.setGraphic(Icon.create().icon(AwesomeIcon.GEARS));
         prefButton.setContentDisplay(ContentDisplay.TOP);
         prefButton.setGraphicTextGap(0d);
         prefButton.setTooltip(new Tooltip("Preferences"));
         prefButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
         prefButton.setOnAction((e) -> { displayPreferencesPane(); });
-        
+
         hideProcsProperty().addListener((Observable o) -> { toggleHideProcs(); });
         hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncs(); });
-        
+
         erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
-        
-        FxmlLoadable loader = processCountStat();   
-        
+
+        FxmlLoadable loader = processCountStat();
+
         topBox.getItems().add(new Separator(Orientation.VERTICAL));
         topBox.getItems().add(loader.fxmlNode);
 
         topBox.getItems().addAll(rhsSpacer(), tweetButton);
-        
+
         // let's store the ui preferences, as the end user changes them...
         PrefBind.bindBoolean("hideProcesses", hideProcessesButton.selectedProperty());
         PrefBind.bindBoolean("hideModules", hideFunctionsButton.selectedProperty());
-        
+
         boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
         boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
-        
+
         if(hideProcs){
             // click the hide button manually.
             hideProcessesButton.setSelected(true);
@@ -214,10 +214,10 @@ public class TopBarView implements Initializable {
             // click the hide button manually.
             hideFunctionsButton.setSelected(true);
         }
-        
+
         toggleHideProcs();
         toggleHideFuncs();
-        
+
         ErlyBerly.nodeAPI()
             .getCrashReports()
             .addListener(this::traceLogsChanged);
@@ -249,7 +249,7 @@ public class TopBarView implements Initializable {
     }
 
     private void tweet() {
-        String message = 
+        String message =
             "Using erlyberly to debug my node @erlyberlytips";
         URI uri;
         try {
@@ -276,39 +276,39 @@ public class TopBarView implements Initializable {
 
     private Parent crashReportsGraphic() {
         Icon icon;
-        
+
         icon = Icon.create().icon(AwesomeIcon.WARNING);
         icon.setPadding(new Insets(0, 5, 0, 5));
-        
+
         Label reportCountLabel;
-        
+
         reportCountLabel = new Label("122");
         reportCountLabel.setStyle("-fx-background-color:red; -fx-font-size:9; -fx-padding: 0 2 0 2; -fx-opacity:0.7");
         reportCountLabel.setTextFill(Color.WHITE);
-        
+
         reportCountLabel.setText(unreadCrashReportsProperty.getValue().toString());
         unreadCrashReportsProperty.addListener((o, oldv, newv) -> { reportCountLabel.setText(newv.toString()); });
         reportCountLabel.visibleProperty().bind(unreadCrashReportsProperty.greaterThan(0));
-        
+
         StackPane stackPane = new StackPane(icon, reportCountLabel);
         StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);
         return stackPane;
     }
-    
+
     private Parent xrefAnalysisGraphic() {
         Icon icon;
-        
+
         icon = Icon.create().icon(AwesomeIcon.TH_LARGE);
         icon.setPadding(new Insets(0, 5, 0, 5));
-        
+
         Label reportCountLabel;
-        
+
         reportCountLabel = new Label("ok");
         reportCountLabel.setStyle("-fx-background-color:green; -fx-font-size:9; -fx-padding: 0 2 0 2; -fx-opacity:0.9");
         reportCountLabel.setTextFill(Color.WHITE);
-        
+
         reportCountLabel.visibleProperty().bind(ErlyBerly.nodeAPI().xrefStartedProperty());
-        
+
         StackPane stackPane = new StackPane(icon, reportCountLabel);
         StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);
         return stackPane;
@@ -318,7 +318,7 @@ public class TopBarView implements Initializable {
         ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
 
         showPieChart(data);
-        
+
         ErlangMemoryThread emThread;
         emThread = new ErlangMemoryThread(data);
         emThread.start();
@@ -326,9 +326,9 @@ public class TopBarView implements Initializable {
 
     private void showPieChart(ObservableList<PieChart.Data> data) {
         String title = "Erlang Memory";
-        
+
         PieChart pieChart;
-        
+
         pieChart = new PieChart(data);
         pieChart.setTitle(title);
         ErlyBerly.showPane(title, ErlyBerly.wrapInPane(pieChart));
@@ -345,7 +345,7 @@ public class TopBarView implements Initializable {
             accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
         });
         Platform.runLater(() -> {
-            accelerators().put(REFRESH_MODULES_SHORTCUT, () -> { 
+            accelerators().put(REFRESH_MODULES_SHORTCUT, () -> {
                 if(refreshModulesAction != null)
                     refreshModulesAction.handle(null);
             });
@@ -354,102 +354,102 @@ public class TopBarView implements Initializable {
 
     private FxmlLoadable processCountStat() {
         FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
-        
+
         loader.load();
-        
+
         Parent fxmlNode;
-        
+
         fxmlNode = loader.fxmlNode;
         fxmlNode.getStyleClass().add("floaty-label");
 
         FloatyFieldView ffView;
-        
+
         ffView = (FloatyFieldView) loader.controller;
         ffView.promptTextProperty().set("Processes");
         ffView.textProperty().set("0");
         ffView.disableProperty().set(true);
 
         ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> { upateProcsStat(ffView, nv); });
-        
+
         return loader;
     }
-    
+
     private void upateProcsStat(FloatyFieldView ffView, AppProcs nv) {
         String dateString = nv.getDateTime().format(DateTimeFormatter.ISO_TIME);
-        
+
         ffView.textProperty().set(Integer.toString(nv.getProcCount()));
         ffView.promptTextProperty().set("Processes @ " + dateString);
     }
 
     private ObservableMap<KeyCombination, Runnable> accelerators() {
         Scene scene = hideProcessesButton.getScene();
-        
+
         assert scene != null : "button not added to scene";
-        
+
         return scene.getAccelerators();
     }
-    
+
     private void invertSelection(ToggleButton toggleButton) {
         toggleButton.setSelected(!toggleButton.isSelected());
     }
-    
+
     public BooleanProperty hideProcsProperty() {
         return hideProcessesButton.selectedProperty();
     }
-    
+
     public BooleanProperty hideFunctionsProperty() {
         return hideFunctionsButton.selectedProperty();
     }
-    
+
     private void toggleHideProcs() {
         String buttonText = "";
-        
+
         if(hideProcessesButton.isSelected())
             buttonText = "Show Processes";
         else
             buttonText = "Hide Processes";
-        
+
         hideProcessesButton.setText(buttonText);
     }
-    
+
     private void toggleHideFuncs() {
         String buttonText = "";
-        
+
         if(hideFunctionsButton.isSelected())
             buttonText = "Show Modules";
         else
             buttonText = "Hide Modules";
-        
+
         hideFunctionsButton.setText(buttonText);
     }
 
     public final void setOnRefreshModules(EventHandler<ActionEvent> e) {
         refreshModulesAction = e;
-        
+
         refreshModulesButton.setOnAction(refreshModulesAction);
     }
-    
+
     public void disconnect() throws IOException, OtpErlangException{
-        ErlyBerly.nodeAPI().manually_disconnect();
+        ErlyBerly.nodeAPI().manuallyDisconnect();
         ErlyBerly.nodeAPI().disconnect();
         Stage s = new Stage();
         displayConnectionPopup(s);
     }
-    
-    // TODO: (improve) lazy copy paste 
+
+    // TODO: (improve) lazy copy paste
     // TODO: THIS was a ugly copy paste effort
     private void displayConnectionPopup(Stage primaryStage) {
         Stage connectStage;
-        
+
         connectStage = new Stage();
         connectStage.initModality(Modality.WINDOW_MODAL);
         connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
         connectStage.setAlwaysOnTop(true);
-        
+
         // javafx vertical resizing is laughably ugly, lets just disallow it
         connectStage.setResizable(false);
         connectStage.setWidth(400);
-        
+
         // if the user closes the window without connecting then close the app
         connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -457,8 +457,8 @@ public class TopBarView implements Initializable {
                 if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
                     Platform.exit();
                 }
-                
-                Platform.runLater(() -> { 
+
+                Platform.runLater(() -> {
                     //primaryStage.setResizable(true);
                 });
             }});
@@ -472,30 +472,30 @@ public class TopBarView implements Initializable {
             ErlyBerly.wrapInPane(new FxmlLoadable("/erlyberly/preferences.fxml").load())
         );
     }
-    
+
     class ErlangMemoryThread extends Thread {
         private final ObservableList<Data> pieData;
 
         public ErlangMemoryThread(ObservableList<PieChart.Data> thePieData) {
             pieData = thePieData;
-            
+
             setName("Erlang Memory Thread");
             setDaemon(true);
         }
-        
+
         @Override
         public void run() {
             try {
                 final HashMap<Object, Object> erlangMemory = ErlyBerly.nodeAPI().erlangMemory();
-                
+
                 // remove stats which are combinations of other stats
                 erlangMemory.remove(OtpUtil.atom("maximum"));
                 erlangMemory.remove(OtpUtil.atom("total"));
                 erlangMemory.remove(OtpUtil.atom("system"));
                 erlangMemory.remove(OtpUtil.atom("processes_used"));
                 erlangMemory.remove(OtpUtil.atom("atom_used"));
-                
-                Platform.runLater(() -> {                   
+
+                Platform.runLater(() -> {
                     populatePieData(erlangMemory);
                 });
             }

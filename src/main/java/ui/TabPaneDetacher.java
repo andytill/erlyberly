@@ -1,6 +1,6 @@
 package ui;
 
-/* 
+/*
  * Copyright 2014 Jens Deters.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,9 +96,9 @@ public class TabPaneDetacher {
     }
 
     /**
-     * 
+     *
      * Sets whether detached Tabs should be always on top.
-     * 
+     *
      * @param alwaysOnTop The state to be set.
      * @return The current TabPaneDetacher instance.
      */
@@ -106,7 +106,7 @@ public class TabPaneDetacher {
         alwaysOnTopProperty().set(alwaysOnTop);
         return this;
     }
-    
+
     /**
      * Sets the stylesheets that should be assigend to the new created {@link Stage}.
      *

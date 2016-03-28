@@ -16,8 +16,8 @@ public class SeqTraceLog {
     private final Object message;
     private final Object timestamp;
 
-    public SeqTraceLog(Object msg_type, Object serial, Object from, Object to, Object message, Object timestamp) {
-        this.msgType = msg_type;
+    public SeqTraceLog(Object msgType, Object serial, Object from, Object to, Object message, Object timestamp) {
+        this.msgType = msgType;
         this.serial = serial;
         this.from = stringValue(from);
         this.to = stringValue(to);
@@ -26,15 +26,15 @@ public class SeqTraceLog {
     }
 
     public static SeqTraceLog build(HashMap<Object, Object> props) {
-        Object msg_type = props.get(OtpUtil.atom("msg_type"));
+        Object msgType = props.get(OtpUtil.atom("msg_type"));
         Object serial = props.get(OtpUtil.atom("serial"));
         Object from = props.get(OtpUtil.atom("from"));
         Object to = props.get(OtpUtil.atom("to"));
         Object message = props.get(OtpUtil.atom("message"));
         Object timestamp = props.get(OtpUtil.atom("timestamp"));
-        return new SeqTraceLog(msg_type, serial,  from, to, message, timestamp);
+        return new SeqTraceLog(msgType, serial,  from, to, message, timestamp);
     }
-    
+
     private String stringValue(Object obj) {
         if(obj instanceof OtpErlangString)
             return ((OtpErlangString) obj).stringValue();

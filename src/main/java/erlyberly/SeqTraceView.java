@@ -19,21 +19,21 @@ public class SeqTraceView extends VBox {
         table.setOnMouseClicked(this::onTraceClicked);
         table.setMaxHeight(Integer.MAX_VALUE);
         VBox.setVgrow(table, Priority.ALWAYS);
-        
+
         setupTableColumns();
-        
+
         getChildren().add(table);
-        
+
         seqTraceLogs.addListener(this::traceLogsChanged);
     }
 
     @SuppressWarnings("unchecked")
     private void setupTableColumns() {
         TableColumn<SeqTraceLog, String> msgType, serial, from, to, message, timestamp;
-        
+
         msgType = new TableColumn<>("Msg Type");
         msgType.setCellValueFactory(new PropertyValueFactory<>("msgType"));
-        
+
         timestamp = new TableColumn<>("Timestamp");
         timestamp.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
         timestamp.setPrefWidth(150d);
@@ -52,10 +52,10 @@ public class SeqTraceView extends VBox {
         message = new TableColumn<>("Message");
         message.setCellValueFactory(new PropertyValueFactory<>("message"));
         message.setPrefWidth(700d);
-        
+
         table.getColumns().addAll(msgType, timestamp, serial, from, to, message);
     }
-    
+
     private void traceLogsChanged(ListChangeListener.Change<? extends SeqTraceLog> e) {
         while(e.next()) {
             for (SeqTraceLog trace : e.getAddedSubList()) {
@@ -68,9 +68,9 @@ public class SeqTraceView extends VBox {
         if(me.getButton().equals(MouseButton.PRIMARY)) {
             if(me.getClickCount() == 2) {
                 SeqTraceLog selectedItem = table.getSelectionModel().getSelectedItem();
-                
+
                 if(selectedItem != null) {
-                    showTraceTermView(selectedItem); 
+                    showTraceTermView(selectedItem);
                 }
             }
         }
@@ -78,20 +78,20 @@ public class SeqTraceView extends VBox {
 
     private void showTraceTermView(final SeqTraceLog seqTraceLog) {
         TermTreeView argTermsTreeView;
-        
+
         argTermsTreeView = newTermTreeView();
         argTermsTreeView.populateFromTerm(seqTraceLog.getMessage());
-        
+
         ErlyBerly.showPane("Seq Trace", ErlyBerly.wrapInPane(argTermsTreeView));
     }
 
     private TermTreeView newTermTreeView() {
         TermTreeView termTreeView;
-        
+
         termTreeView = new TermTreeView();
         termTreeView.setMaxHeight(Integer.MAX_VALUE);
         VBox.setVgrow(termTreeView, Priority.ALWAYS);
-        
+
         return termTreeView;
     }
 }

@@ -14,7 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 
 public class PreferencesView implements Initializable {
-    
+
     @FXML
     private TextField nodeNameField;
     @FXML
@@ -31,11 +31,11 @@ public class PreferencesView implements Initializable {
     private RadioButton erlangTermsButton;
     @FXML
     private RadioButton lfeTermsButton;
-    
+
     @Override
     public void initialize(URL url, ResourceBundle r) {
         selectFormattingButton();
-        
+
         final ToggleGroup group;
         group = new ToggleGroup();
         group.selectedToggleProperty().addListener((Observable o) -> {
@@ -43,7 +43,7 @@ public class PreferencesView implements Initializable {
         });
         erlangTermsButton.setToggleGroup(group);
         lfeTermsButton.setToggleGroup(group);
-        
+
         PrefBind.bind("targetNodeName", nodeNameField.textProperty());
         PrefBind.bind("cookieName", cookieField.textProperty());
         PrefBind.bindBoolean("autoConnect", autoConnectField.selectedProperty());

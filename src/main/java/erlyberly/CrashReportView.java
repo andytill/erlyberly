@@ -18,13 +18,13 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 public class CrashReportView extends TabPane {
-    
+
     private final TermTreeView termTreeView = new TermTreeView();
     private final TermTreeView argsTreeView = new TermTreeView();
     private final ListView<StackTraceElement> stackTraceListView = new ListView<>();
     private final TableView<Object[]> crashInfoTable = new TableView<>();
 
-    public CrashReportView() {        
+    public CrashReportView() {
         VBox.setVgrow(termTreeView, Priority.ALWAYS);
 
         Label label;
@@ -40,7 +40,7 @@ public class CrashReportView extends TabPane {
         stackTraceTab.setContent(new VBox(crashInfoTable, label, stackTraceListView));
 
         getTabs().addAll(stackTraceTab, argsTermsTab, termsTab);
-        
+
         stackTraceListView.setCellFactory(new Callback<ListView<StackTraceElement>, ListCell<StackTraceElement>>() {
             @Override
             public ListCell<StackTraceElement> call(ListView<StackTraceElement> param) {
@@ -62,10 +62,10 @@ public class CrashReportView extends TabPane {
                                 );
                             } catch (Exception e1) {
                                 e1.printStackTrace();
-                            } 
+                            }
                         });
                     }
-                    
+
                     @Override
                     public void updateItem(StackTraceElement item, boolean empty) {
                         super.updateItem(item, empty);
@@ -96,7 +96,7 @@ public class CrashReportView extends TabPane {
             e.printStackTrace();
         }
         termTreeView.populateFromTerm(crashReport.getProps());
-        
+
         Object[][] crashProps = {
                 {"Pid", crashReport.getPid() },
                 {"Reg. Name", crashReport.getRegisteredName() },
@@ -105,7 +105,7 @@ public class CrashReportView extends TabPane {
 
         TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
         TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");
-        
+
         keyColumn.setCellValueFactory(new Callback<CellDataFeatures<Object[], Object>, ObservableValue<Object>>() {
             @Override
             public ObservableValue<Object> call(CellDataFeatures<Object[], Object> p) {
@@ -119,12 +119,12 @@ public class CrashReportView extends TabPane {
                 return new SimpleObjectProperty<>((p.getValue()[1]));
             }
         });
-        
+
         crashInfoTable.getColumns().add(keyColumn);
         crashInfoTable.getColumns().add(valueColumn);
 
         crashInfoTable.getItems().addAll(crashProps);
-        
+
         crashReport.getCallArgs().ifPresent((callArgs) -> {
             argsTreeView.populateFromListContents(callArgs);
         });

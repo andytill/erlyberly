@@ -9,19 +9,19 @@ class Formatting {
 
     /**
      * Append the binary term bytes to a string builder. It attempts to display character data
-     * as strings.  
+     * as strings.
      */
     public static void binaryToString(OtpErlangBinary bin, String sep, StringBuilder sb) {
         int length = sb.length();
         boolean inString = false;
-        
+
         for (int b : bin.binaryValue()) {
             if(isDisplayableChar(b)) {
                 if(!inString) {
                     if((sb.length() - length) > 0) {
                         sb.append(sep);
                     }
-                    
+
                     sb.append("\"");
                 }
                 inString = true;
@@ -32,7 +32,7 @@ class Formatting {
                     sb.append("\"");
                     inString = false;
                 }
-                
+
                 if((sb.length() - length) > 0) {
                     sb.append(sep);
                 }
@@ -43,7 +43,7 @@ class Formatting {
                 sb.append(Integer.toString(b));
             }
         }
-        
+
         if(inString) {
             sb.append("\"");
         }

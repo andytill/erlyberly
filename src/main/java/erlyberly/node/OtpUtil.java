@@ -27,29 +27,33 @@ public class OtpUtil {
 
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
+    public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
+        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
+    );
+
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
     private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
-    private static final OtpErlangAtom call = new OtpErlangAtom("call");
-    private static final OtpErlangAtom user = new OtpErlangAtom("user");
+    private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
+    private static final OtpErlangAtom USER_ATOM = new OtpErlangAtom("user");
     private static final OtpErlangAtom ERROR_ATOM = atom("error");
     public static final OtpErlangAtom OK_ATOM = atom("ok");
-    
-    
+
+
     public static OtpErlangTuple tuple(Object... elements) {
         OtpErlangObject[] tuple = toOtpElementArray(elements);
-        
+
         return new OtpErlangTuple(tuple);
     }
-    
+
     public static OtpErlangList list(Object... elements) {
         OtpErlangObject[] tuple = toOtpElementArray(elements);
-        
+
         return new OtpErlangList(tuple);
     }
 
     private static OtpErlangObject[] toOtpElementArray(Object... elements) {
         OtpErlangObject[] tuple = new OtpErlangObject[elements.length];
-        
+
         for(int i=0; i < elements.length; i++) {
             Object e = elements[i];
             if(e instanceof Integer) {
@@ -92,10 +96,10 @@ public class OtpUtil {
         }
         return map;
     }
-    
+
     public static OtpErlangObject[] elementsForTerm(OtpErlangObject obj) {
         assert obj != null;
-        
+
         if(obj instanceof OtpErlangTuple)
             return ((OtpErlangTuple) obj).elements();
         else if(obj instanceof OtpErlangList)
@@ -103,7 +107,7 @@ public class OtpUtil {
         else
             throw new RuntimeException("No brackets for type " + obj.getClass());
     }
-    
+
 
 
     public static boolean isTupleTagged(OtpErlangObject tag, OtpErlangObject result) {
@@ -112,12 +116,12 @@ public class OtpUtil {
 
     public static boolean isTupleTagged(OtpErlangObject tag, int index, OtpErlangObject result) {
         boolean r = false;
-        
+
         if(result instanceof OtpErlangTuple) {
             OtpErlangTuple resultTuple = (OtpErlangTuple) result;
             r = resultTuple.arity() > 0 && resultTuple.elementAt(0).equals(tag);
         }
-        
+
         return r;
     }
 
@@ -132,7 +136,7 @@ public class OtpUtil {
     public static boolean isErlyberlyRecordField(OtpErlangObject obj) {
         return isTupleTagged(ERLYBERLY_RECORD_FIELD_ATOM, obj);
     }
-    
+
     public static boolean isErrorReason(OtpErlangObject reason, OtpErlangObject error) {
         assert isTupleTagged(ERROR_ATOM, error) : "tuple " + error + "is not tagged with 'error'";
         return isTupleTagged(reason, 1, error);
@@ -144,24 +148,24 @@ public class OtpUtil {
         }
         else if(obj instanceof OtpErlangString) {
             OtpErlangString s = (OtpErlangString) obj;
-            
+
             return new OtpErlangList(s.stringValue());
         }
         else {
             throw new ClassCastException("" + obj + " cannot be converted to an OtpErlangList");
         }
     }
-    
+
     public static void sendRPC(OtpConn conn, OtpMbox m, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
-        OtpErlangTuple rpcMessage = tuple(m.self(), tuple(call, mod, fun, args, user));
-        
+        OtpErlangTuple rpcMessage = tuple(m.self(), tuple(CALL_ATOM, mod, fun, args, USER_ATOM));
+
         conn.send(m.self(), "rex", rpcMessage);
     }
-    
+
     public static OtpErlangTuple receiveRPC(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException  {
         return receiveRPC(mbox,5000);
     }
-    
+
     public static OtpErlangTuple receiveRPC(OtpMbox mbox ,long timeout) throws OtpErlangExit, OtpErlangDecodeException {
         return (OtpErlangTuple) mbox.receive(timeout);
     }
@@ -179,34 +183,30 @@ public class OtpUtil {
             OtpErlangString s = (OtpErlangString) obj;
             return new OtpErlangList(s.stringValue()).elements();
         }
-        else
+        else {
             throw new RuntimeException("" + obj + " cannot return OtpErlangObject[]");
-            
+        }
     }
-    
-    public static HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
-        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
-    );
-    
+
     /**
      * A short term can be displayed on a single line and does not have to be
      * broken down further.
      */
     public static boolean isLittleTerm(OtpErlangObject obj) {
         OtpErlangObject[] elements;
-        
+
         if(LARGE_TERM_TYPES.contains(obj.getClass())) {
             elements = iterableElements(obj);
         }
         else {
             return true;
         }
-        
+
         // short lists and tuples which do not contain other short lists or
         // tuples are ok
         if(elements.length > 3)
             return false;
-        
+
         for (OtpErlangObject e : elements) {
             if(LARGE_TERM_TYPES.contains(e.getClass())) {
                 return false;
@@ -221,7 +221,7 @@ public class OtpUtil {
                 if(binaryLength > 50)
                     return true;
             }
-            
+
         }
         return true;
     }

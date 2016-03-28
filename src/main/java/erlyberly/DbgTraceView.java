@@ -33,33 +33,33 @@ import javafx.scene.layout.VBox;
 
 
 public class DbgTraceView extends VBox {
-    
+
     private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
-    
+
     private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traceLogs);
-    
+
     private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
 
     private final TableView<TraceLog> tracesBox;
-    
+
     /**
      * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
      * make traces be inserted at the top of the list.
      */
     private boolean insertTracesAtTop;
-    
+
     public DbgTraceView(DbgController dbgController) {
         setSpacing(5d);
         setStyle("-fx-background-insets: 5;");
         setMaxHeight(Double.MAX_VALUE);
-        
+
         insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
-        
+
         tracesBox = new TableView<TraceLog>();
         tracesBox.setOnMouseClicked(this::onTraceClicked);
         tracesBox.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(tracesBox, Priority.ALWAYS);
-        
+
         putTableColumns();
 
         // #47 double wrapping the filtered list in another sorted list, otherwise
@@ -84,7 +84,7 @@ public class DbgTraceView extends VBox {
         TableColumn<TraceLog,Long> seqColumn;
         seqColumn = new TableColumn<TraceLog,Long>("Seq.");
         seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
-        
+
         TableColumn<TraceLog,String> pidColumn;
         pidColumn = new TableColumn<TraceLog,String>("Pid");
         pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
@@ -104,11 +104,11 @@ public class DbgTraceView extends VBox {
         TableColumn<TraceLog,String> argsColumn;
         argsColumn = new TableColumn<TraceLog,String>("Args");
         argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
-        
+
         TableColumn<TraceLog,String> resultColumn;
         resultColumn = new TableColumn<TraceLog,String>("Result");
         resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
-        
+
         tracesBox.getColumns().setAll(
             seqColumn, pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
         );
@@ -130,8 +130,8 @@ public class DbgTraceView extends VBox {
             });
             return row ;
         });
-        
-        tracesBox.setRowFactory(tv -> {  
+
+        tracesBox.setRowFactory(tv -> {
             TableRow<TraceLog> row = new TableRow<>();
             ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
                 row.pseudoClassStateChanged(exceptionClass, row.getItem().isExceptionThrower());
@@ -160,7 +160,7 @@ public class DbgTraceView extends VBox {
         traceContextMenu.setItems(traceLogs);
         traceContextMenu
                 .setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
-        
+
         tracesBox.setContextMenu(traceContextMenu);
         tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
     }
@@ -168,71 +168,71 @@ public class DbgTraceView extends VBox {
     private void onTraceClicked(MouseEvent me) {
         if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
             TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-            
+
             if(selectedItem != null && selectedItem != null) {
-                showTraceTermView(selectedItem); 
+                showTraceTermView(selectedItem);
             }
         }
     }
 
     private TermTreeView newTermTreeView() {
         TermTreeView termTreeView;
-        
+
         termTreeView = new TermTreeView();
         termTreeView.setMaxHeight(Integer.MAX_VALUE);
         VBox.setVgrow(termTreeView, Priority.ALWAYS);
-        
+
         return termTreeView;
     }
 
 
     private void showTraceTermView(final TraceLog traceLog) {
-        OtpErlangObject args = traceLog.getArgsList(); 
+        OtpErlangObject args = traceLog.getArgsList();
         OtpErlangObject result = traceLog.getResultFromMap();
-        
+
         TermTreeView resultTermsTreeView, argTermsTreeView;
-        
+
         resultTermsTreeView = newTermTreeView();
-        
+
         if(result != null) {
-            resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap()); 
+            resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
         }
         else {
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
                 if(newV)
-                    resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap()); 
+                    resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
             });
 
             traceLog.isCompleteProperty().addListener(listener);
         }
-        
+
         argTermsTreeView = newTermTreeView();
         argTermsTreeView.populateFromListContents((OtpErlangList)args);
-        
+
         SplitPane splitPane;
-        
+
         splitPane = new SplitPane();
         splitPane.getItems().addAll(
-            labelledTreeView("Function arguments", argTermsTreeView), 
+            labelledTreeView("Function arguments", argTermsTreeView),
             labelledTreeView("Result", resultTermsTreeView)
         );
-        
+
         StringBuilder sb = new StringBuilder(traceLog.getPidString());
         sb.append(" ");
         traceLog.appendModFuncArity(sb);
-        
+
         ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPane));
     }
-    
-    private Node labelledTreeView(String label, TermTreeView node) {        
+
+    private Node labelledTreeView(String label, TermTreeView node) {
         return new VBox(new Label(label), node);
     }
-    
+
     private void onTraceFilterChange(String searchText) {
         BasicSearch basicSearch = new BasicSearch(searchText);
         filteredTraces.setPredicate((t) -> {
             String logText = t.toString();
-            return basicSearch.matches(logText); 
+            return basicSearch.matches(logText);
         });
     }
 

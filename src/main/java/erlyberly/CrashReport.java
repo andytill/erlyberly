@@ -17,7 +17,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import erlyberly.node.OtpUtil;
 
 public class CrashReport {
-    
+
     private static final OtpErlangAtom ATOM_INITIAL_CALL = OtpUtil.atom("initial_call");
 
     private static final OtpErlangAtom ATOM_PID = OtpUtil.atom("pid");
@@ -27,9 +27,9 @@ public class CrashReport {
     private static final OtpErlangAtom ATOM_ERROR_INFO = OtpUtil.atom("error_info");
 
     private static final OtpErlangAtom ATOM_FILE = OtpUtil.atom("file");
-    
+
     private static final OtpErlangAtom ATOM_LINE = OtpUtil.atom("line");
-    
+
     private final HashMap<Object, Object> crashProps;
 
     private final String registeredName;
@@ -39,12 +39,12 @@ public class CrashReport {
     private final OtpErlangTuple errorInfo;
 
     private final LocalDateTime date = LocalDateTime.now();
-    
+
     public CrashReport(OtpErlangObject obj) {
         this.terms = obj;
         crashProps  = OtpUtil.propsToMap((OtpErlangList) obj);
         errorInfo = (OtpErlangTuple) crashProps.get(ATOM_ERROR_INFO);
-        
+
         // pull out the register name of the crashing process
         Object aRegName = crashProps.get(ATOM_REGISTERED_NAME);
         if(OtpUtil.list().equals(aRegName)) {
@@ -54,11 +54,11 @@ public class CrashReport {
             registeredName = aRegName.toString();
         }
     }
-    
+
     <T> List<T> mapStackTraces(StackTraceFn<T> fn) {
         OtpErlangList stackTrace = (OtpErlangList) errorInfo.elementAt(2);
         ArrayList<T> result = new ArrayList<T>();
-        
+
         for (OtpErlangObject obj : stackTrace) {
             OtpErlangTuple tuple = (OtpErlangTuple) obj;
             OtpErlangAtom module = (OtpErlangAtom) tuple.elementAt(0);
@@ -75,14 +75,14 @@ public class CrashReport {
             HashMap<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
             OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
             OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
-            
+
             result.add(
                 fn.invoke(module, function, arity, file.stringValue(), line)
             );
         }
         return result;
     }
-    
+
     public interface StackTraceFn<T> {
         T invoke(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity, String file, OtpErlangLong line);
     }
