@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpConn;
@@ -94,7 +95,6 @@ public class NodeAPI {
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
 
     private boolean manuallyDisconnected = false;
-    //private final AtomicBoolean connected = new AtomicBoolean();
 
     private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
 
@@ -249,10 +249,13 @@ public class NodeAPI {
         receiveRPC();
     }
 
+    private static final AtomicLong CHECK_ALIVE_THREAD_COUNTER = new AtomicLong();
+
     class CheckAliveThread extends Thread {
+
         public CheckAliveThread() {
             setDaemon(true);
-            setName("Erlyberly Check Alive"+ System.currentTimeMillis());
+            setName("Erlyberly Check Alive "+ CHECK_ALIVE_THREAD_COUNTER.incrementAndGet());
         }
 
         @Override
@@ -364,6 +367,9 @@ public class NodeAPI {
     public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
         assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 
+        if(connection == null || !connected.get())
+            return;
+
         OtpErlangObject receiveRPC = null;
 
         try {
@@ -377,19 +383,24 @@ public class NodeAPI {
                     HashMap<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
                     processes.add(ProcInfo.toProcessInfo(propsToMap));
                 }
-            }
-
+                }
             Platform.runLater(() -> { appProcs.set(new AppProcs(processes.size(), LocalDateTime.now())); });
-        } catch (ClassCastException e) {
+        }
+        catch (ClassCastException e) {
             throw new RuntimeException("unexpected result: " + receiveRPC, e);
         }
     }
 
-    private boolean ensureAlive() {
+    private synchronized boolean ensureAlive() {
         try {
             receiveRPC(0);
-            if(connection.isAlive()) return true;
-        } catch (OtpErlangException | IOException e1) {
+            if(connection != null && connection.isAlive())
+                return true;
+        }
+        catch(OtpErlangExit oee) {
+            // an exit is what we're checking for so no need to log it
+        }
+        catch (OtpErlangException | IOException e1) {
             e1.printStackTrace();
         }
 
