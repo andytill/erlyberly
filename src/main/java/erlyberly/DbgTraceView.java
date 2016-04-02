@@ -77,6 +77,13 @@ public class DbgTraceView extends VBox {
         getChildren().addAll(p, tracesBox);
 
         dbgController.getTraceLogs().addListener(this::traceLogsChanged);
+
+        ErlyBerly.nodeAPI().connectedProperty().addListener(
+            (o, oldV, newV) -> {
+                if(oldV && !newV) {
+                    traceLogs.add(TraceLog.newNodeDown());
+                }
+            });
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -116,21 +123,7 @@ public class DbgTraceView extends VBox {
         // based on http://stackoverflow.com/questions/27015961/tableview-row-style
         PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
         PseudoClass notCompletedClass = PseudoClass.getPseudoClass("not-completed");
-        tracesBox.setRowFactory(tv -> {
-            TableRow<TraceLog> row = new TableRow<>();
-            row.itemProperty().addListener((obs, oldTl, tl) -> {
-                if (tl != null) {
-                    row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
-                    row.pseudoClassStateChanged(notCompletedClass, !tl.isComplete());
-                }
-                else {
-                    row.pseudoClassStateChanged(exceptionClass, false);
-                    row.pseudoClassStateChanged(notCompletedClass, false);
-                }
-            });
-            return row ;
-        });
-
+        PseudoClass breakerRowClass = PseudoClass.getPseudoClass("breaker-row");
         tracesBox.setRowFactory(tv -> {
             TableRow<TraceLog> row = new TableRow<>();
             ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
@@ -142,13 +135,22 @@ public class DbgTraceView extends VBox {
                     oldTl.isCompleteProperty().removeListener(completeListener);
                 }
                 if (tl != null) {
-                    tl.isCompleteProperty().addListener(completeListener);
-                    row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
-                    row.pseudoClassStateChanged(notCompletedClass, !tl.isComplete());
+                    if("breaker-row".equals(tl.getCssClass())) {
+                        row.pseudoClassStateChanged(breakerRowClass, true);
+
+                        row.pseudoClassStateChanged(exceptionClass, false);
+                        row.pseudoClassStateChanged(notCompletedClass, false);
+                    }
+                    else {
+                        tl.isCompleteProperty().addListener(completeListener);
+                        row.pseudoClassStateChanged(breakerRowClass, false);
+                        row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
+                    }
                 }
                 else {
                     row.pseudoClassStateChanged(exceptionClass, false);
                     row.pseudoClassStateChanged(notCompletedClass, false);
+                    row.pseudoClassStateChanged(breakerRowClass, false);
                 }
             });
             return row ;

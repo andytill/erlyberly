@@ -44,6 +44,8 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final String pid, registeredName, function, argsString;
 
+    private final String cssClass;
+
     public TraceLog(HashMap<Object, Object> map) {
         this.map = map;
         instanceNum = INSTANCE_COUNTER.incrementAndGet();
@@ -51,6 +53,18 @@ public class TraceLog implements Comparable<TraceLog> {
         registeredName = regNameString().intern();
         function =  appendModFuncArity(new StringBuilder()).toString().intern();
         argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
+
+        cssClass = null;
+    }
+
+    public TraceLog(String aCssClass, String text) {
+        function = text;
+        instanceNum = INSTANCE_COUNTER.incrementAndGet();
+        map = new HashMap<>(0);
+        cssClass = aCssClass;
+        pid = "";
+        registeredName = "";
+        argsString = "";
     }
 
     public long getInstanceNum() {
@@ -259,5 +273,17 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public SimpleStringProperty resultProperty() {
         return result;
+    }
+
+    public String getCssClass() {
+        return cssClass;
+    }
+
+    public static TraceLog newBreakLog() {
+        return new TraceLog("breaker-row", "BREAK");
+    }
+
+    public static TraceLog newNodeDown() {
+        return new TraceLog("breaker-row", "NODE DOWN");
     }
 }
