@@ -1,5 +1,32 @@
 
-/* 
+/*
+ * a break row, to show a change of state between traces.
+ */
+
+.table-row-cell:breaker-row {
+    -fx-background-color: lightslategray;
+}
+.table-row-cell:breaker-row > .table-cell {
+    -fx-text-fill: whitesmoke;
+}
+
+.table-row-cell:breaker-row:odd {
+    -fx-background-color: slategrey;
+}
+.table-row-cell:breaker-row:odd > .table-cell {
+    -fx-text-fill: whitesmoke;
+}
+
+.table-row-cell:breaker-row:selected {
+    /* invert the colours when the cell is selected */
+    -fx-background-color: gainsboro;
+}
+.table-row-cell:breaker-row:selected > .table-cell {
+    /* invert the colours when the cell is selected */
+    -fx-text-fill: grey;
+}
+
+/*
  * used to show trace logs for functions that returned errors.
  */
 

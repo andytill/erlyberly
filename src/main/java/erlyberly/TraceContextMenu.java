@@ -23,6 +23,7 @@ public class TraceContextMenu extends ContextMenu {
         getItems().add(new SeparatorMenuItem());
         getItems().add(menuItem("Delete", "delete", this::onDelete));
         getItems().add(menuItem("Delete All", "shortcut+n", this::onDeleteAll));
+        getItems().add(menuItem("Add Breaker", "shortcut+b", this::onAddBreaker));
     }
 
     private MenuItem menuItem(String text, String accelerator, EventHandler<ActionEvent> e) {
@@ -83,5 +84,9 @@ public class TraceContextMenu extends ContextMenu {
 
     public void setItems(ObservableList<TraceLog> items2) {
         items = items2;
+    }
+
+    private void onAddBreaker(ActionEvent e) {
+        items.add(TraceLog.newBreakLog());
     }
 }
