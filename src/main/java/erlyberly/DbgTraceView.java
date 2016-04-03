@@ -56,6 +56,7 @@ public class DbgTraceView extends VBox {
         insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
 
         tracesBox = new TableView<TraceLog>();
+        tracesBox.getStyleClass().add("trace-log-table");
         tracesBox.setOnMouseClicked(this::onTraceClicked);
         tracesBox.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(tracesBox, Priority.ALWAYS);

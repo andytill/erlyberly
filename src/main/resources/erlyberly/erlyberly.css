@@ -1,4 +1,30 @@
 
+@font-face {
+    src: url('/erlyberly/SourceCodePro-Medium.ttf');
+}
+
+.erlyberly-code {
+    -fx-font-family: "Source Code Pro";
+}
+
+.term-tree .tree-cell {
+    -fx-font-family: "Source Code Pro";
+}
+
+.trace-log-table .table-cell {
+    -fx-font-family: "Source Code Pro";
+}
+
+.hex-column {
+    -fx-alignment: CENTER;
+    -fx-font-family: "Source Code Pro";
+}
+
+.hex-address-column {
+    -fx-alignment: CENTER-RIGHT;
+    -fx-font-family: "Source Code Pro";
+}
+
 /*
  * a break row, to show a change of state between traces.
  */
