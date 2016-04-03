@@ -14,6 +14,7 @@ import erlyberly.node.OtpUtil;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 public class TraceLog implements Comparable<TraceLog> {
@@ -34,7 +35,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final SimpleStringProperty summary = new SimpleStringProperty("");
 
-    private final SimpleStringProperty duration = new SimpleStringProperty("");
+    private final SimpleLongProperty duration = new SimpleLongProperty(0L);
 
     private final SimpleStringProperty result = new SimpleStringProperty("");
 
@@ -124,26 +125,21 @@ public class TraceLog implements Comparable<TraceLog> {
         }
         sb.append(" ");
 
-        appendTimeStampToString(sb);
+        sb.append("+").append(durationFromMap()).append("us");
 
         appendModFuncArity(sb);
 
         return sb;
     }
 
-    private StringBuilder appendTimeStampToString(StringBuilder sb) {
+    private long durationFromMap() {
         Object tsCall = map.get(TIMESTAMP_CALL_ATOM);
         Object tsReturn = map.get(TIMESTAMP_RETURN_ATOM);
 
         if(tsCall == null|| tsReturn == null)
-            return sb;
+            return 0;
 
-        long us = ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
-
-        sb.append("+")
-          .append(us)
-          .append("us ");
-        return sb;
+        return ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
     }
 
     private OtpErlangTuple getFunctionFromMap() {
@@ -221,7 +217,7 @@ public class TraceLog implements Comparable<TraceLog> {
         if(ts != null)
             map.put(TIMESTAMP_RETURN_ATOM, ts);
 
-        duration.set(appendTimeStampToString(new StringBuilder()).toString());
+        duration.set(durationFromMap());
 
         Platform.runLater(() -> { summary.set(toString()); complete.set(true); });
     }
@@ -251,11 +247,11 @@ public class TraceLog implements Comparable<TraceLog> {
         return registeredName;
     }
 
-    public String getDuration() {
+    public long getDuration() {
         return duration.get();
     }
 
-    public SimpleStringProperty durationProperty() {
+    public SimpleLongProperty durationProperty() {
         return duration;
     }
 

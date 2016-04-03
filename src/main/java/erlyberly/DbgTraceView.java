@@ -102,7 +102,7 @@ public class DbgTraceView extends VBox {
         regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
 
         TableColumn<TraceLog,String> durationNameColumn;
-        durationNameColumn = new TableColumn<TraceLog,String>("Duration");
+        durationNameColumn = new TableColumn<TraceLog,String>("Duration (microseconds)");
         durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
 
         TableColumn<TraceLog,String> functionnNameColumn;
