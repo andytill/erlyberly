@@ -14,7 +14,6 @@ import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import erlyberly.node.AppProcs;
 import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
@@ -58,6 +57,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import ui.FAIcon;
 
 public class TopBarView implements Initializable {
     private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
@@ -94,24 +94,24 @@ public class TopBarView implements Initializable {
         topBox.getItems().add(crashReportsButton);
 
         // TODO: Should we hide these buttons, when disconnected ?
-        hideProcessesButton.setGraphic(Icon.create().icon(AwesomeIcon.RANDOM));
+        hideProcessesButton.setGraphic(FAIcon.create().icon(AwesomeIcon.RANDOM));
         hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
         hideProcessesButton.setGraphicTextGap(0d);
         hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes (ctrl+p)"));
 
         // TODO: Should we hide these buttons, when disconnected ?
-        hideFunctionsButton.setGraphic(Icon.create().icon(AwesomeIcon.CUBE));
+        hideFunctionsButton.setGraphic(FAIcon.create().icon(AwesomeIcon.CUBE));
         hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
         hideFunctionsButton.setGraphicTextGap(0d);
         hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules (ctrl+m)"));
 
-        refreshModulesButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
+        refreshModulesButton.setGraphic(FAIcon.create().icon(AwesomeIcon.ROTATE_LEFT));
         refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
         refreshModulesButton.setGraphicTextGap(0d);
         refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
         refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
-        erlangMemoryButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+        erlangMemoryButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
         erlangMemoryButton.setContentDisplay(ContentDisplay.TOP);
         erlangMemoryButton.setGraphicTextGap(0d);
         erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
@@ -161,13 +161,13 @@ public class TopBarView implements Initializable {
 
         Button tweetButton;
         tweetButton = new Button("Tweet");
-        tweetButton.setGraphic(Icon.create().icon(AwesomeIcon.TWITTER));
+        tweetButton.setGraphic(FAIcon.create().icon(AwesomeIcon.TWITTER));
         tweetButton.setContentDisplay(ContentDisplay.TOP);
         tweetButton.setGraphicTextGap(0d);
         tweetButton.setOnAction((e) -> { tweet(); });
         tweetButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
 
-        disconnectButton.setGraphic(Icon.create().icon(AwesomeIcon.EJECT));
+        disconnectButton.setGraphic(FAIcon.create().icon(AwesomeIcon.EJECT));
         disconnectButton.setContentDisplay(ContentDisplay.TOP);
         disconnectButton.setGraphicTextGap(0d);
         disconnectButton.setTooltip(new Tooltip("Disconnect"));
@@ -180,7 +180,7 @@ public class TopBarView implements Initializable {
             }
         });
 
-        prefButton.setGraphic(Icon.create().icon(AwesomeIcon.GEARS));
+        prefButton.setGraphic(FAIcon.create().icon(AwesomeIcon.GEARS));
         prefButton.setContentDisplay(ContentDisplay.TOP);
         prefButton.setGraphicTextGap(0d);
         prefButton.setTooltip(new Tooltip("Preferences"));
@@ -275,9 +275,9 @@ public class TopBarView implements Initializable {
     }
 
     private Parent crashReportsGraphic() {
-        Icon icon;
+        FAIcon icon;
 
-        icon = Icon.create().icon(AwesomeIcon.WARNING);
+        icon = FAIcon.create().icon(AwesomeIcon.WARNING);
         icon.setPadding(new Insets(0, 5, 0, 5));
 
         Label reportCountLabel;
@@ -296,9 +296,9 @@ public class TopBarView implements Initializable {
     }
 
     private Parent xrefAnalysisGraphic() {
-        Icon icon;
+        FAIcon icon;
 
-        icon = Icon.create().icon(AwesomeIcon.TH_LARGE);
+        icon = FAIcon.create().icon(AwesomeIcon.TH_LARGE);
         icon.setPadding(new Insets(0, 5, 0, 5));
 
         Label reportCountLabel;
