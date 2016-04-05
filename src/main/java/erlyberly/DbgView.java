@@ -77,6 +77,7 @@ public class DbgView implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle r) {
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
+        modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
         modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
         modulesTree
             .getSelectionModel()

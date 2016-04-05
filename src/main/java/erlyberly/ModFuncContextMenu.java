@@ -45,6 +45,8 @@ public class ModFuncContextMenu extends ContextMenu {
      */
     private final SimpleObjectProperty<TreeItem<ModFunc>> rootProperty;
 
+    private MenuItem moduleTraceMenuItem;
+
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
         return selectedTreeItem;
     }
@@ -78,7 +80,7 @@ public class ModFuncContextMenu extends ContextMenu {
             }
         });
 
-        MenuItem functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
+        MenuItem functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
@@ -303,5 +305,9 @@ public class ModFuncContextMenu extends ContextMenu {
             }
         }
         return funs;
+    }
+
+    public void setModuleTraceMenuText(String menuText) {
+        moduleTraceMenuItem.setText(menuText);
     }
 }
