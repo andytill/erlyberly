@@ -88,7 +88,6 @@ public class ModFuncContextMenu extends ContextMenu {
         exportsTraceMenuItem = new MenuItem("Exported Function Trace");
         exportsTraceMenuItem.setOnAction(this::onExportedFunctionTrace);
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
-        exportsTraceMenuItem.disableProperty().bind(isSelectionModule.not());
 
         traceAllMenuItem = new MenuItem("Trace All");
         traceAllMenuItem.setOnAction((e) -> { toggleTracesToAllFunctions(); });
@@ -97,7 +96,6 @@ public class ModFuncContextMenu extends ContextMenu {
 
         moduleTraceMenuItem = new MenuItem("Recursive Trace");
         moduleTraceMenuItem.setOnAction(this::onModuleTrace);
-        moduleTraceMenuItem.disableProperty().bind(isSelectionModule.not());
 
         seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
         seqTraceMenuItem.setOnAction(this::onSeqTrace);
@@ -166,6 +164,10 @@ public class ModFuncContextMenu extends ContextMenu {
 
         if(selectedItem == null)
             return;
+        if(selectedItem.getValue() == null)
+            return;
+        if(!selectedItem.getValue().isModule())
+            selectedItem = selectedItem.getParent();
 
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();
         recurseModFuncItems(selectedItem, funcs);
@@ -198,7 +200,7 @@ public class ModFuncContextMenu extends ContextMenu {
     private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {
         if(item == null)
             return;
-        if(item.getValue() == null || !item.getValue().isModule())
+        if(item.getValue() == null || (!item.getValue().isModule() && !item.getValue().isModuleInfo()))
             funcs.add(item.getValue());
 
         for (TreeItem<ModFunc> childItem : item.getChildren()) {
