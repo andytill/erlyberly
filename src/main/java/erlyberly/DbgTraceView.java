@@ -247,7 +247,7 @@ public class DbgTraceView extends VBox {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search trace logs");
+        ffView.promptTextProperty().set("Filter trace logs");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 

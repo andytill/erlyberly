@@ -123,7 +123,7 @@ public class DbgView implements Initializable {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search functions i.e. gen_s:call or #t for all traces");
+        ffView.promptTextProperty().set("Filter functions i.e. gen_s:call or #t for all traces");
 
         loader.fxmlNode.setStyle("-fx-padding: 5 5 0 5;");
 

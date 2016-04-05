@@ -159,7 +159,7 @@ public class ProcView implements Initializable {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search on process pid and registered name");
+        ffView.promptTextProperty().set("Filter on process pid and registered name");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 
