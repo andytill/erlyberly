@@ -1,13 +1,13 @@
 package erlyberly;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import ui.CellController;
+import ui.FAIcon;
 
 class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
@@ -52,13 +52,13 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         );
     }
 
-    private Icon exportIconGraphic() {
+    private FAIcon exportIconGraphic() {
         Tooltip tooltip;
 
         tooltip = new Tooltip();
         tooltip.textProperty().bind(exportToolTipText);
 
-        Icon treeIcon;
+        FAIcon treeIcon;
 
         treeIcon = treeIcon(AwesomeIcon.SQUARE);
         treeIcon.textProperty().bind(exportIconText);
@@ -66,10 +66,10 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         return treeIcon;
     }
 
-    private Icon traceIcon() {
-        Icon traceIcon;
+    private FAIcon traceIcon() {
+        FAIcon traceIcon;
 
-        traceIcon = Icon.create().style(ICON_STYLE);
+        traceIcon = FAIcon.create().style(ICON_STYLE);
         traceIcon.textProperty().bind(tracedIconText);
         traceIcon.visibleProperty().bind(tracable);
         traceIcon.setTooltip(new Tooltip("Toggle tracing, double click on this star or ctrl+t when selected"));
@@ -90,8 +90,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         return label;
     }
 
-    private Icon treeIcon(AwesomeIcon treeIcon) {
-        return Icon.create().icon(treeIcon).style(ICON_STYLE);
+    private FAIcon treeIcon(AwesomeIcon treeIcon) {
+        return FAIcon.create().icon(treeIcon).style(ICON_STYLE);
     }
 
     @Override

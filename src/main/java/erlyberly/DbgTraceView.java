@@ -56,6 +56,7 @@ public class DbgTraceView extends VBox {
         insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
 
         tracesBox = new TableView<TraceLog>();
+        tracesBox.getStyleClass().add("trace-log-table");
         tracesBox.setOnMouseClicked(this::onTraceClicked);
         tracesBox.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(tracesBox, Priority.ALWAYS);
@@ -101,7 +102,7 @@ public class DbgTraceView extends VBox {
         regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
 
         TableColumn<TraceLog,String> durationNameColumn;
-        durationNameColumn = new TableColumn<TraceLog,String>("Duration");
+        durationNameColumn = new TableColumn<TraceLog,String>("Duration (microseconds)");
         durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
 
         TableColumn<TraceLog,String> functionnNameColumn;
@@ -246,7 +247,7 @@ public class DbgTraceView extends VBox {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search trace logs");
+        ffView.promptTextProperty().set("Filter trace logs");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 

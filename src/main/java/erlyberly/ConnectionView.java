@@ -8,7 +8,6 @@ import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpErlangException;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
@@ -18,6 +17,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import ui.FAIcon;
 
 /**
  * Connection details control to connect to the remote node.
@@ -85,8 +85,8 @@ public class ConnectionView implements Initializable {
         messageLabel.setText(message);
     }
 
-    private Icon bannedIcon() {
-        return Icon.create()
+    private FAIcon bannedIcon() {
+        return FAIcon.create()
                 .icon(AwesomeIcon.BAN)
                 .style("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
     }

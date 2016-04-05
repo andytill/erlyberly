@@ -42,10 +42,10 @@ public class HexstarView extends TableView<DataRow> {
         column("Text", "text");
 
         getColumns().forEach(c -> {
-            c.setStyle("-fx-alignment: CENTER; -fx-font-family: monospace;");
+            c.getStyleClass().add("hex-column");
             c.setSortable(false);
         });
-        getColumns().get(0).setStyle("-fx-alignment: CENTER-RIGHT; -fx-font-family: monospace;");
+        getColumns().get(0).getStyleClass().add("hex-address-column");
     }
 
     public void setBinary(OtpErlangBinary binary) {

@@ -18,7 +18,6 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.VBox;
 
 @SuppressWarnings("rawtypes")
 public class TermTreeView extends TreeView<TermTreeItem> {
@@ -27,6 +26,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
     public TermTreeView() {
+        getStyleClass().add("term-tree");
         setRoot(new TreeItem<TermTreeItem>());
 
         MenuItem copyMenuItem = new MenuItem("Copy");
@@ -50,7 +50,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             HexstarView hexstarView;
             hexstarView = new HexstarView();
             hexstarView.setBinary(binary);
-            ErlyBerly.showPane("Hex View", new VBox(hexstarView));
+            ErlyBerly.showPane("Hex View", ErlyBerly.wrapInPane(hexstarView));
         }
     }
 

@@ -7,7 +7,6 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -34,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import ui.FAIcon;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}.
@@ -85,27 +85,27 @@ public class ProcView implements Initializable {
 
         ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 
-        heapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+        heapPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
         heapPieButton.getStyleClass().add("erlyberly-icon-button");
         heapPieButton.setStyle("-fx-background-color: transparent;");
         heapPieButton.setText("");
         heapPieButton.disableProperty().bind(notConnected);
 
-        stackPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+        stackPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
         stackPieButton.setStyle("-fx-background-color: transparent;");
         stackPieButton.setText("");
         stackPieButton.disableProperty().bind(notConnected);
 
-        totalHeapPieButton.setGraphic(Icon.create().icon(AwesomeIcon.PIE_CHART));
+        totalHeapPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
         totalHeapPieButton.setStyle("-fx-background-color: transparent;");
         totalHeapPieButton.setText("");
         totalHeapPieButton.disableProperty().bind(notConnected);
 
-        refreshButton.setGraphic(Icon.create().icon(AwesomeIcon.ROTATE_LEFT));
+        refreshButton.setGraphic(FAIcon.create().icon(AwesomeIcon.ROTATE_LEFT));
         refreshButton.setGraphicTextGap(8d);
         refreshButton.disableProperty().bind(procController.pollingProperty().or(notConnected));
 
-        pollButton.setGraphic(Icon.create().icon(AwesomeIcon.REFRESH));
+        pollButton.setGraphic(FAIcon.create().icon(AwesomeIcon.REFRESH));
         pollButton.setGraphicTextGap(9d);
         pollButton.disableProperty().bind(notConnected);
 
@@ -159,7 +159,7 @@ public class ProcView implements Initializable {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search on process pid and registered name");
+        ffView.promptTextProperty().set("Filter on process pid and registered name");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 

@@ -13,7 +13,6 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.fontawesome.Icon;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -37,6 +36,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ui.FAIcon;
 import ui.TabPaneDetacher;
 
 
@@ -77,6 +77,7 @@ public class DbgView implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle r) {
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
+        modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
         modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
         modulesTree
             .getSelectionModel()
@@ -123,7 +124,7 @@ public class DbgView implements Initializable {
         FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Search functions i.e. gen_s:call or #t for all traces");
+        ffView.promptTextProperty().set("Filter functions i.e. gen_s:call or #t for all traces");
 
         loader.fxmlNode.setStyle("-fx-padding: 5 5 0 5;");
 
@@ -319,8 +320,8 @@ public class DbgView implements Initializable {
     }
 
 
-    private Icon treeIcon(AwesomeIcon treeIcon) {
-        return Icon.create().icon(treeIcon).style(ICON_STYLE);
+    private FAIcon treeIcon(AwesomeIcon treeIcon) {
+        return FAIcon.create().icon(treeIcon).style(ICON_STYLE);
     }
 
     private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) {

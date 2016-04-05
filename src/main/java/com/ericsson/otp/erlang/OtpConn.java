@@ -19,7 +19,7 @@ public class OtpConn extends AbstractConnection {
 
     @Override
     public void deliver(final Exception e) {
-        e.printStackTrace();
+
     }
 
     @Override
