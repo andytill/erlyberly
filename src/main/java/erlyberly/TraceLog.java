@@ -204,10 +204,14 @@ public class TraceLog implements Comparable<TraceLog> {
         tracePropsToString = null;
         Object e = resultMap.get(EXCEPTION_FROM_ATOM);
         Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
+        Object r = resultMap.get(RESULT_ATOM);
         if(e != null) {
             map.put(EXCEPTION_FROM_ATOM, e);
+            if(r == null) {
+                r = e;
+            }
         }
-        Object r = getResultFromMap();
+
         if(r != null) {
             map.put(RESULT_ATOM, r);
             String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
