@@ -56,6 +56,29 @@
 
   <build>
     <plugins>
+      <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.11</version>
+          <configuration>
+              <header>src/etc/license_header</header>
+              <properties>
+                  <owner>Andy Till</owner>
+                  <year>2016</year>
+                  <email>kittyburrito@googlemail.com</email>
+              </properties>
+              <excludes>
+                  <exclude>**/pom.xml</exclude>
+                  <exclude>**/checkstyle.xml</exclude>
+                  <exclude>**/README</exclude>
+                  <exclude>**/mvnw</exclude>
+                  <exclude>**/.mvn/**</exclude>
+                  <exclude>src/etc/**</exclude>
+                  <exclude>src/test/resources/**</exclude>
+                  <exclude>src/main/resources/**</exclude>
+              </excludes>
+          </configuration>
+      </plugin>
 
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
