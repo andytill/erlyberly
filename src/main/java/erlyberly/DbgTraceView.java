@@ -109,33 +109,40 @@ public class DbgTraceView extends VBox {
         TableColumn<TraceLog,Long> seqColumn;
         seqColumn = new TableColumn<TraceLog,Long>("Seq.");
         seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
+        configureColumnWidth("seqColumnWidth", seqColumn);
 
         TableColumn<TraceLog,String> pidColumn;
         pidColumn = new TableColumn<TraceLog,String>("Pid");
         pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
+        configureColumnWidth("pidColumnWidth", pidColumn);
 
         TableColumn<TraceLog,String> regNameColumn;
         regNameColumn = new TableColumn<TraceLog,String>("Reg. Name");
         regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
+        configureColumnWidth("regNameColumnWidth", regNameColumn);
 
         TableColumn<TraceLog,String> durationNameColumn;
         durationNameColumn = new TableColumn<TraceLog,String>("Duration (microseconds)");
         durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
+        configureColumnWidth("durationNameColumnWidth", durationNameColumn);
 
-        TableColumn<TraceLog,String> functionnNameColumn;
-        functionnNameColumn = new TableColumn<TraceLog,String>("Function");
-        functionnNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
+        TableColumn<TraceLog,String> functionNameColumn;
+        functionNameColumn = new TableColumn<TraceLog,String>("Function");
+        functionNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
+        configureColumnWidth("functionNameColumnWidth", functionNameColumn);
 
         TableColumn<TraceLog,String> argsColumn;
         argsColumn = new TableColumn<TraceLog,String>("Args");
         argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
+        configureColumnWidth("argsColumnWidth", argsColumn);
 
         TableColumn<TraceLog,String> resultColumn;
         resultColumn = new TableColumn<TraceLog,String>("Result");
         resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
+        configureColumnWidth("resultColumnWidth", resultColumn);
 
         tracesBox.getColumns().setAll(
-            seqColumn, pidColumn, regNameColumn, durationNameColumn, functionnNameColumn, argsColumn, resultColumn
+            seqColumn, pidColumn, regNameColumn, durationNameColumn, functionNameColumn, argsColumn, resultColumn
         );
 
         // based on http://stackoverflow.com/questions/27015961/tableview-row-style
@@ -172,6 +179,13 @@ public class DbgTraceView extends VBox {
                 }
             });
             return row ;
+        });
+    }
+
+    private void configureColumnWidth(String widthProperty, TableColumn<TraceLog, ?> functionNameColumn) {
+        functionNameColumn.setPrefWidth(PrefBind.getOrDefaultDouble(widthProperty, functionNameColumn.getPrefWidth()));
+        functionNameColumn.widthProperty().addListener((o, ov, nv) -> {
+            PrefBind.set(widthProperty, nv.toString());
         });
     }
 

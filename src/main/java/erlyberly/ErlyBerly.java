@@ -76,7 +76,8 @@ public class ErlyBerly extends Application {
         FxmlLoadable dbgFxml;
         dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
         dbgFxml.load();
-        tabPane = ((DbgView)dbgFxml.controller).getTabPane();
+        DbgView dbgView = (DbgView)dbgFxml.controller;
+        tabPane = dbgView.getTabPane();
 
         splitPane = new SplitPane();
         entopPane = (Region) loadEntopPane();
@@ -93,7 +94,6 @@ public class ErlyBerly extends Application {
         Scene scene;
         scene = new Scene(rootView);
         scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-
             @Override
             public void handle(KeyEvent t) {
                 if (KeyCode.W.equals(t.getCode()) && t.isShortcutDown()) {
@@ -129,7 +129,7 @@ public class ErlyBerly extends Application {
                 System.exit(0);
             }
         });
-
+        dbgView.sizeSplitPanes();
     }
 
     public static void applyCssToWIndow(Scene scene) {
