@@ -3,9 +3,17 @@
 
 [![Build Status](https://travis-ci.org/andytill/erlyberly.svg?branch=master)](https://travis-ci.org/andytill/erlyberly)
 
-**erlyberly** is a debugger for erlang and [elixir](https://twitter.com/andy_till/status/539566833515626497) using erlang tracing. It is probably the easiest and quickest way to start debugging your erlang nodes.
+**erlyberly** is a debugger for erlang, [elixir](https://twitter.com/andy_till/status/539566833515626497) and LFE using erlang tracing. It is probably the easiest and quickest way to start debugging your nodes.
 
 If you are using `io:format/2` or lager for debugging then erlyberly can save you time.  Tracing requires no code changes and no recompliation to see function calls and results. **erlyberly** makes debugging smoother by reapplying traces when modules are reloaded and when the node restarts.
+
+### Quick start
+
+A one liner to go from zero to erlyberly user.  You will need **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+
+```
+git clone git@github.com:andytill/erlyberly.git && cd erlyberly && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
+```
 
 ### Compiling
 
