@@ -59,9 +59,10 @@ import ui.TabPaneDetacher;
 
 
 public class DbgView implements Initializable {
+
     private static final String MODULES_TREE_PREF_WIDTH_CONFIG_KEY = "modulesTreePrefWidth";
 
-    private static final int MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT = 300;
+    private static final double MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT = 300;
 
     private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
 
@@ -392,8 +393,6 @@ public class DbgView implements Initializable {
     }
 
     private double configuredModulesWidth() {
-        String modulesTreePrefWidth = PrefBind.getOrDefault(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT).toString();
-        double modulesTreePrefWidthDouble = Double.parseDouble(modulesTreePrefWidth);
-        return modulesTreePrefWidthDouble;
+        return PrefBind.getOrDefaultDouble(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT);
     }
 }

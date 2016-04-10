@@ -114,6 +114,10 @@ public class PrefBind {
         return props.getOrDefault(key, theDefault);
     }
 
+    public static double getOrDefaultDouble(String key, Double theDefault) {
+        return Double.parseDouble(PrefBind.getOrDefault(key, theDefault).toString());
+    }
+
     public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
         return Boolean.parseBoolean(PrefBind.getOrDefault("showSourceInSystemEditor", false).toString());
     }
