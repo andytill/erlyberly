@@ -59,6 +59,9 @@ import ui.TabPaneDetacher;
 
 
 public class DbgView implements Initializable {
+    private static final String MODULES_TREE_PREF_WIDTH_CONFIG_KEY = "modulesTreePrefWidth";
+
+    private static final int MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT = 300;
 
     private static final String ICON_STYLE = "-fx-font-family: FontAwesome; -fx-font-size: 1em;";
 
@@ -130,7 +133,6 @@ public class DbgView implements Initializable {
         traceViewTab.setClosable(false);
         getTabPane().getTabs().add(traceViewTab);
         dbgSplitPane.getItems().add(getTabPane());
-
     }
 
     private FxmlLoadable addModulesFloatySearchControl() {
@@ -369,5 +371,29 @@ public class DbgView implements Initializable {
 
     public TabPane getTabPane() {
         return tabPane;
+    }
+
+    public void sizeSplitPanes() {
+        assert dbgSplitPane.getScene() != null;
+        assert dbgSplitPane.getScene().getWidth() > 0.0d;
+        try {
+            double percent = (configuredModulesWidth() / dbgSplitPane.getScene().getWidth());
+            // the split pane divider position can only be set as a percentage of the split pane
+            dbgSplitPane.setDividerPosition(0, percent);
+        }
+        catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        // whenever the width of the pane changes, write it to configuration
+        // this is buffered so rapid writes do not cause rapid writes to disk
+        modulesBox.widthProperty().addListener((o, ov, nv) -> {
+            PrefBind.set(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, nv.toString());
+        });
+    }
+
+    private double configuredModulesWidth() {
+        String modulesTreePrefWidth = PrefBind.getOrDefault(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT).toString();
+        double modulesTreePrefWidthDouble = Double.parseDouble(modulesTreePrefWidth);
+        return modulesTreePrefWidthDouble;
     }
 }
