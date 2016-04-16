@@ -244,7 +244,7 @@ public class NodeAPI {
         receiveRPC();
     }
 
-    private void addErrorLoggerHandler() throws IOException, OtpErlangException {
+    private synchronized void addErrorLoggerHandler() throws IOException, OtpErlangException {
         OtpErlangList args = OtpUtil.list(mbox.self());
         sendRPC(
             "error_logger", "add_report_handler",
@@ -255,7 +255,7 @@ public class NodeAPI {
         receiveRPC();
     }
 
-    private void removeErrorLoggerHandler() throws IOException, OtpErlangException {
+    private synchronized void removeErrorLoggerHandler() throws IOException, OtpErlangException {
         OtpErlangList args = OtpUtil.list(mbox.self());
         sendRPC(
             "error_logger", "delete_report_handler",
@@ -482,7 +482,7 @@ public class NodeAPI {
         receiveRPC();
     }
 
-    public void stopAllTraces() throws IOException, OtpErlangException {
+    public synchronized void stopAllTraces() throws IOException, OtpErlangException {
         sendRPC("erlyberly", "stop_traces", list());
         receiveRPC();
     }
@@ -662,7 +662,7 @@ public class NodeAPI {
         }
     }
 
-    public OtpErlangList dictToPropslist(OtpErlangObject dict) throws IOException, OtpErlangException {
+    public synchronized OtpErlangList dictToPropslist(OtpErlangObject dict) throws IOException, OtpErlangException {
         sendRPC("dict", "to_list", list(dict));
         return (OtpErlangList) receiveRPC(5000);
     }
