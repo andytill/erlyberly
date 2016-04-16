@@ -45,7 +45,6 @@ public class FilterFocusManager {
     }
 
     private static void nextFilter() {
-        System.out.println("next filter");
         if(FILTERS.isEmpty())
             return;
 
