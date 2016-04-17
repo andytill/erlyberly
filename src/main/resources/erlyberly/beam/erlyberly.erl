@@ -229,9 +229,10 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
    end.
 %%
 tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Traces } = TC) ->
-    dbg:tpl(Mod, Func, Arity, cx),
-    dbg:p(all, [c, timestamp]),
+    Match_spec = [{'_', [], [{message,{process_dump}}, {exception_trace}]}],
     Trace_spec = {Mod, Func, Arity},
+    dbg:tpl(Trace_spec, Match_spec),
+    dbg:p(all, [c, timestamp]),
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
@@ -285,13 +286,16 @@ trace_to_props({trace_ts, Pid, call, {Mod, Func_name, [Req, State]}, _, Timestam
     call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp);
 trace_to_props({trace_ts, Pid, call, {Mod, handle_call, [Req, From, State]}, _, Timestamp}) ->
     call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp);
-trace_to_props({trace_ts, Pid, call, Func, _, Timestamp}) ->
+trace_to_props({trace_ts, Pid, call, Func, Msg, Timestamp}) ->
+    io:format("<<<<<<<<<<<<<<<>> ~p~n", [stak(Msg)]),
+
     % call handler for everything else
     call_trace_props(Pid, Func, Timestamp);
 trace_to_props({trace_ts, Pid, return_from, {Mod, Func_name, _}, {noreply, Rec}, Timestamp}) when Func_name == handle_info orelse
                                                                                                   Func_name == handle_cast orelse
                                                                                                   Func_name == handle_call ->
     return_from_trace_props(Pid, {noreply, format_record(Rec, Mod)}, Timestamp);
+
 trace_to_props({trace_ts, Pid, return_from, {Mod, handle_call, _}, {reply, Reply, Rec}, Timestamp}) ->
     return_from_trace_props(Pid, {reply, Reply, format_record(Rec, Mod)}, Timestamp);
 trace_to_props({trace_ts, Pid, return_from, _Func, Result, Timestamp}) ->
@@ -304,7 +308,8 @@ trace_to_props({trace_ts, Pid, exception_from, Func, {Class, Value}, Timestamp})
           {fn, Func},
           {exception_from, {Class, Value}},
           {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
-trace_to_props({trace, Pid, call, Func, _}) ->
+trace_to_props({trace, Pid, call, Func, Msg}) ->
+    io:format(">>>>>> ~p~n", [stak(Msg)]),
     {call, 
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
@@ -633,7 +638,6 @@ abstract_code(Module, ExecFun) ->
 %%% ============================================================================
 
 
-
 -record(err_state, { node }).
 
 init([Node]) ->
@@ -656,3 +660,34 @@ handle_info(_Info, State) -> {ok, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+
+%%% ============================================================================
+%%% redbug process_dump call stack parsing
+%%% ============================================================================
+
+
+stak(Bin) ->
+  lists:foldl(fun munge/2,[],string:tokens(binary_to_list(Bin),"\n")).
+
+munge(I,Out) ->
+  case lists:reverse(I) of
+    "..."++_ -> [truncated|Out];
+    _ ->
+      case string:str(I, "Return addr") of
+        0 ->
+          case string:str(I, "cp = ") of
+            0 -> Out;
+            _ -> [mfaf(I)|Out]
+          end;
+        _ ->
+          case string:str(I, "erminate process normal") of
+            0 -> [mfaf(I)|Out];
+            _ -> Out
+          end
+      end
+  end.
+
+mfaf(I) ->
+  [_, C|_] = string:tokens(I,"()+"),
+  C.
