@@ -302,4 +302,11 @@ public class TraceLog implements Comparable<TraceLog> {
     public static TraceLog newNodeDown() {
         return new TraceLog("breaker-row", "NODE DOWN");
     }
+
+    public OtpErlangList getStackTrace() {
+        OtpErlangList stacktrace = (OtpErlangList) map.get(OtpUtil.atom("stack_trace"));
+        if(stacktrace == null)
+            stacktrace = new OtpErlangList();
+        return stacktrace;
+    }
 }
