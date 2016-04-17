@@ -3,6 +3,10 @@
     src: url('/erlyberly/SourceCodePro-Medium.ttf');
 }
 
+/*
+ * mono space font classes
+ */
+
 .erlyberly-code {
     -fx-font-family: "Source Code Pro";
 }
@@ -25,6 +29,13 @@
     -fx-font-family: "Source Code Pro";
 }
 
+.hyperlink:selected{
+   -fx-text-fill: white;
+}
+
+.list-cell:selected > .hyperlink {
+    -fx-text-fill: white;
+}
 /*
  * a break row, to show a change of state between traces.
  */
