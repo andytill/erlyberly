@@ -265,12 +265,12 @@ maybe_add_log(Log, Logs)  -> [Log | Logs].
 
 %% Convert a 'call' trace (a normal function call, before return) to a
 %% {call, proplists()} that erlyberly can understand.
-call_trace_props(Pid, Func, Timestamp)  ->
+call_trace_props(Pid, Func, Timestamp, Extra_props)  ->
     {call, 
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func},
-          {timetamp_call_us, timestamp_to_us(Timestamp)} ]}.
+          {timetamp_call_us, timestamp_to_us(Timestamp)} | Extra_props ]}.
 
 %% Covert a 'return_from' trace into proplists erlyberly can understand
 return_from_trace_props(Pid, Result, Timestamp) ->
@@ -283,14 +283,20 @@ return_from_trace_props(Pid, Result, Timestamp) ->
 %%
 trace_to_props({trace_ts, Pid, call, {Mod, Func_name, [Req, State]}, _, Timestamp}) when Func_name == handle_info orelse
                                                                                          Func_name == handle_cast ->
-    call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp);
+    call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp, []);
 trace_to_props({trace_ts, Pid, call, {Mod, handle_call, [Req, From, State]}, _, Timestamp}) ->
-    call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp);
+    call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp, []);
 trace_to_props({trace_ts, Pid, call, Func, Msg, Timestamp}) ->
-    io:format("<<<<<<<<<<<<<<<>> ~p~n", [stak(Msg)]),
-
+    Stack_trace =
+        try
+            [{stack_trace, stak(Msg)}]
+        catch
+            _C:_Error ->
+                % io:format("ERROR ~p~n", [_Error])
+                []
+        end,
     % call handler for everything else
-    call_trace_props(Pid, Func, Timestamp);
+    call_trace_props(Pid, Func, Timestamp, Stack_trace);
 trace_to_props({trace_ts, Pid, return_from, {Mod, Func_name, _}, {noreply, Rec}, Timestamp}) when Func_name == handle_info orelse
                                                                                                   Func_name == handle_cast orelse
                                                                                                   Func_name == handle_call ->
@@ -308,9 +314,8 @@ trace_to_props({trace_ts, Pid, exception_from, Func, {Class, Value}, Timestamp})
           {fn, Func},
           {exception_from, {Class, Value}},
           {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
-trace_to_props({trace, Pid, call, Func, Msg}) ->
-    io:format(">>>>>> ~p~n", [stak(Msg)]),
-    {call, 
+trace_to_props({trace, Pid, call, Func, _}) ->
+    {call,
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func} ]};
@@ -690,4 +695,14 @@ munge(I,Out) ->
 
 mfaf(I) ->
   [_, C|_] = string:tokens(I,"()+"),
-  C.
+  stack_to_mfa(C).
+
+stack_to_mfa(String) ->
+    case string:tokens(String, ":/") of
+        [Mod, Func, Arity] ->
+            {list_to_existing_atom(Mod),
+             list_to_existing_atom(Func),
+             list_to_integer(string:strip(Arity))};
+        _ ->
+            String
+    end.
