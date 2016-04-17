@@ -136,7 +136,11 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
 
         @Override
         public String toString() {
-            return modFunc.toFullString() + "  (" + file + ":" + line +")";
+            String display = modFunc.toFullString();
+            if(file != null && !file.isEmpty()) {
+                display += "  (" + file + ":" + line +")";
+            }
+            return display;
         }
     }
 }

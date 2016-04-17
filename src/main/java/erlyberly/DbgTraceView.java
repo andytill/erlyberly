@@ -257,7 +257,8 @@ public class DbgTraceView extends VBox {
         StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
         stackTraceView.populateFromMfaList(traceLog.getStackTrace());
-        TitledPane titledPane = new TitledPane("Stack Trace", stackTraceView);
+        String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
+        TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
         splitPaneH = new SplitPane();
         splitPaneH.setOrientation(Orientation.VERTICAL);
         splitPaneH.getItems().addAll(splitPane, titledPane);

@@ -673,7 +673,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 
 stak(Bin) ->
-  lists:foldl(fun munge/2,[],string:tokens(binary_to_list(Bin),"\n")).
+  lists:foldr(fun munge/2,[],string:tokens(binary_to_list(Bin),"\n")).
 
 munge(I,Out) ->
   case lists:reverse(I) of
