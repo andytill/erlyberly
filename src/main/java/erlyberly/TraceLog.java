@@ -71,7 +71,6 @@ public class TraceLog implements Comparable<TraceLog> {
         registeredName = regNameString().intern();
         function =  appendModFuncArity(new StringBuilder()).toString().intern();
         argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
-        System.out.println("STACK TRACE: " + map.get(OtpUtil.atom("stack_trace")));
         cssClass = null;
     }
 
