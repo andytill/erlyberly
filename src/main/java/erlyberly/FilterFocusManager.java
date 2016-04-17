@@ -54,9 +54,11 @@ public class FilterFocusManager {
     }
 
     private static Control findNextFilter() {
+        // if we know about a filter control that was focused last but does not currently
+        // have focus then return to it. The filter must be visible and attached to the scene.
         if(lastFocusedIndex != -1) {
             Control lastFocused = FILTERS.get(lastFocusedIndex);
-            if(!lastFocused.isFocused()) {
+            if(!lastFocused.isFocused() && lastFocused.isVisible() && lastFocused.getScene() != null) {
                 return lastFocused;
             }
         }
@@ -66,21 +68,18 @@ public class FilterFocusManager {
         if(focused == -1) {
             focused = 0;
         }
-        else {
-            // iterate the filters until we find one that is part of the scene or we run out of filters
-            int iterations = 0;
-            while(iterations < FILTERS.size()) {
-                iterations++;
-                focused++;
-                if(focused >= FILTERS.size()) {
-                    focused = 0;
-                }
-                boolean isFocusable = FILTERS.get(focused).getScene() != null;
-                if(isFocusable)
-                    break;
+        // iterate the filters until we find one that is part of the scene or we run out of filters
+        int iterations = 0;
+        while(iterations < FILTERS.size()) {
+            iterations++;
+            focused++;
+            if(focused >= FILTERS.size()) {
+                focused = 0;
             }
+            boolean isFocusable = FILTERS.get(focused).getScene() != null;
+            if(isFocusable)
+                break;
         }
-
         return FILTERS.get(focused);
     }
 
