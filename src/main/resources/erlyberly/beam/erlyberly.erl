@@ -700,9 +700,12 @@ mfaf(I) ->
 stack_to_mfa(String) ->
     case string:tokens(String, ":/") of
         [Mod, Func, Arity] ->
-            {list_to_existing_atom(Mod),
-             list_to_existing_atom(Func),
-             list_to_integer(string:strip(Arity))};
+            {list_to_existing_atom(fix_elixir_strings(Mod)),
+             list_to_existing_atom(fix_elixir_strings(Func)),
+             list_to_integer(string:strip(fix_elixir_strings(Arity)))};
         _ ->
             String
     end.
+
+fix_elixir_strings(String) ->
+    re:replace(String, "\"|\'", "", [global, {return, list}]).
