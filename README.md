@@ -1,6 +1,8 @@
 
 # erlyberly
 
+**I'll be speaking about tracing and erlyberly at the Glasgow Elixir group on the 25th of April, hope to see you there! Event information [here](https://www.eventbrite.co.uk/e/glasgow-elixir-elixirerlanglfebeam-and-fp-meetup-registration-24351179032?).**
+
 [![Build Status](https://travis-ci.org/andytill/erlyberly.svg?branch=master)](https://travis-ci.org/andytill/erlyberly)
 
 **erlyberly** is a debugger for erlang, [elixir](https://twitter.com/andy_till/status/539566833515626497) and LFE using erlang tracing. It is probably the easiest and quickest way to start debugging your nodes.
