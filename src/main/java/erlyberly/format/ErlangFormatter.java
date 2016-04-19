@@ -121,7 +121,7 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String modFuncArityToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
-        OtpErlangList argsList = (OtpErlangList) mfa.elementAt(2);
+        OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
         sb.append(mfa.elementAt(0))
           .append(":")
           .append(mfa.elementAt(1))
