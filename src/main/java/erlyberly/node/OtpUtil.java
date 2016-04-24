@@ -27,6 +27,8 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangExternalFun;
+import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangMap;
@@ -45,7 +47,7 @@ public class OtpUtil {
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
     public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
-        Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class)
+        Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class, OtpErlangFun.class, OtpErlangExternalFun.class)
     );
 
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);

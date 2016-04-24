@@ -39,6 +39,7 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
@@ -675,5 +676,11 @@ public class NodeAPI {
      */
     public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> aModuleLoadedCallback) {
         moduleLoadedCallback = aModuleLoadedCallback;
+    }
+
+    public String decompileFun(OtpErlangFun fun) throws IOException, OtpErlangException {
+        sendRPC("erlyberly", "saleyn_fun_src", list(fun));
+        OtpErlangString otpString = (OtpErlangString) receiveRPC(5000);
+        return otpString.stringValue();
     }
 }

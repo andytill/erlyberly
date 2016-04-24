@@ -5,6 +5,7 @@
 -export([collect_trace_logs/0]).
 -export([ensure_dbg_started/1]).
 -export([ensure_xref_started/0]).
+-export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
@@ -656,3 +657,74 @@ handle_info(_Info, State) -> {ok, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+
+%%% ============================================================================
+%%% erlang fun decompiler
+%%% ============================================================================
+
+
+
+%% @doc Decompile a function to its source text
+saleyn_fun_src(Fun) when is_function(Fun) ->
+    saleyn_fun_src(Fun, []).
+
+%% @doc Decompile a function to its source text
+-spec saleyn_fun_src(function(), Options :: [verbose | ast]) -> string().
+saleyn_fun_src(Fun, Options) when is_function(Fun), is_list(Options) ->
+    {module, Mod} = erlang:fun_info(Fun, module),
+    {name, Name}  = erlang:fun_info(Fun, name),
+    {ok, Module, Beam, Forms} = saleyn_get_abstract_code(Mod),
+    {F, Arity, Pos} = fun_name(Name),
+%    print(verbose, Options, "Module: ~w, Beam: ~s, Name: ~w (~w)\n",
+%        [Module, Beam, Name, F]),
+    saleyn_fun_src(Module, Name, F, Arity, Pos, Forms, Fun, Options).
+
+saleyn_fun_src(erl_eval, _Name, expr, _Arity, _Pos, _Forms, Fun, Options) ->
+    case erlang:fun_info(Fun, env) of
+        {env, [_, _, _, Abst | _]} ->
+            ok;
+        {env,[{[], _, _, Abst}]} ->
+            ok
+    end,
+    Ast = erl_syntax:form_list(Abst),
+    saleyn_fun_src2(format, Ast, Options);
+saleyn_fun_src(_Module, _Name, F, Arity, Pos, Forms, _Fun, Options) ->
+    Clauses = [Cs || {function, _, Fun, A, Cs} <- Forms, Fun == F, A == Arity],
+    Funs    = funs(lists:concat(Clauses)),
+    Ast     = lists:nth(Pos, Funs),
+    saleyn_fun_src2(undefined, Ast, Options).
+
+saleyn_fun_src2(Envelope, Ast, Options) ->
+    %print(ast, Options, "Ast: ~p\n", [Ast]),
+    Text = erl_prettypr:format(Ast),
+    case Envelope of
+    format ->
+        "fun " ++ Text ++ " end.";
+    _ ->
+        Text ++ "."
+    end.
+
+fun_name(Name) ->
+    [Fs, As, _, Rs] = string:tokens(atom_to_list(Name), "-/"),
+    {list_to_atom(Fs), list_to_integer(As), list_to_integer(Rs)+1}.
+
+funs(L) ->
+    lists:reverse(lists:foldl(fun
+        ({'fun',_,_} = F, A)    -> [F | A];
+        (T, A) when is_tuple(T) -> funs(lists:flatten(tuple_to_list(T))) ++ A;
+        (_, A)                  -> A
+    end, [],  L)).
+
+saleyn_get_abstract_code(Module) when is_atom(Module) ->
+    {module,_} = code:ensure_loaded(Module),
+    Beam = code:which(Module),
+    saleyn_get_abstract_code(Beam);
+saleyn_get_abstract_code(Beam) when is_list(Beam) ->
+    Basename = filename:basename(Beam, ".beam"),
+    case beam_lib:chunks(Beam, [abstract_code]) of
+    {ok, {Module,[{abstract_code,{_,AC}}]}} ->
+       {ok, Module, Basename, AC};
+    Other ->
+       Other
+    end.
