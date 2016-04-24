@@ -45,7 +45,7 @@ public class OtpUtil {
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
     public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
-        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
+        Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class)
     );
 
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
@@ -212,7 +212,11 @@ public class OtpUtil {
     public static boolean isLittleTerm(OtpErlangObject obj) {
         OtpErlangObject[] elements;
 
-        if(LARGE_TERM_TYPES.contains(obj.getClass())) {
+        if(obj instanceof OtpErlangList) {
+            // if the list is empty consider it a little term
+            return ((OtpErlangList)obj).arity() == 0;
+        }
+        else if(LARGE_TERM_TYPES.contains(obj.getClass())) {
             elements = iterableElements(obj);
         }
         else {
