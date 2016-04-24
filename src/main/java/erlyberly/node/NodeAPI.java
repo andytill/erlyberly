@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -107,7 +106,7 @@ public class NodeAPI {
 
     private OtpMbox mbox;
 
-    private final AtomicBoolean connected = new AtomicBoolean();
+    private volatile boolean connected = false;
 
     private final ObservableList<OtpErlangObject> crashReports = FXCollections.observableArrayList();
 
@@ -122,7 +121,7 @@ public class NodeAPI {
         connectedProperty.addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> obv, Boolean o, Boolean n) {
-                connected.set(n);
+                connected = n;
             }});
         summary = new SimpleStringProperty("erlyberly not connected");
 
@@ -336,14 +335,14 @@ public class NodeAPI {
         }
         else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, receive)) {
             Platform.runLater(() -> { crashReports.add(receive.elementAt(1)); });
-            return receiveRPC();
+            return receiveRPC(timeout);
         }
         else if(isTupleTagged(ERLYBERLY_MODULE_RELOADED_ATOM, receive)) {
             Platform.runLater(() -> {
                 if(moduleLoadedCallback != null)
                     moduleLoadedCallback.callback((OtpErlangTuple) receive.elementAt(2));
             });
-            return receiveRPC();
+            return receiveRPC(timeout);
         }
         else if(!isTupleTagged(atom("rex"), receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
@@ -352,11 +351,11 @@ public class NodeAPI {
 
         // hack to support certain projects, don't ask...
         if(isTupleTagged(BET_SERVICES_MSG_ATOM, result)) {
-            result = receiveRPC();
+            result = receiveRPC(timeout);
         }
         else if(isTupleTagged(ERLYBERLY_XREF_STARTED_ATOM, result)) {
             Platform.runLater(() -> { xrefStartedProperty.set(true); });
-            return receiveRPC();
+            return receiveRPC(timeout);
         }
 
         return result;
@@ -384,7 +383,7 @@ public class NodeAPI {
     public synchronized void retrieveProcessInfo(ArrayList<ProcInfo> processes) throws Exception {
         assert !Platform.isFxApplicationThread() : "cannot run this method from the FX thread";
 
-        if(connection == null || !connected.get())
+        if(connection == null || !connected)
             return;
 
         OtpErlangObject receiveRPC = null;
@@ -511,18 +510,14 @@ public class NodeAPI {
 
     public synchronized ArrayList<TraceLog> collectTraceLogs() throws Exception {
         sendRPC("erlyberly", "collect_trace_logs", new OtpErlangList());
-
         OtpErlangObject prcResult = receiveRPC();
-
         if(!isTupleTagged(OK_ATOM, prcResult)) {
             if(prcResult != null) {
                 System.out.println(prcResult);
             }
             return new ArrayList<TraceLog>();
         }
-
         OtpErlangList traceLogs = (OtpErlangList) ((OtpErlangTuple) prcResult).elementAt(1);
-
         return traceManager.collateTraces(traceLogs);
     }
 
@@ -602,7 +597,7 @@ public class NodeAPI {
     }
 
     public boolean isConnected() {
-        return connected.get();
+        return connected;
     }
 
     public boolean manuallyDisconnected(){
