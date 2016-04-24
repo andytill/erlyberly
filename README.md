@@ -11,7 +11,7 @@ If you are using `io:format/2` or lager for debugging then erlyberly can save yo
 
 ### Quick start
 
-A one liner to go from zero to erlyberly user.  You will need erlc (erlang compiler) on the path and **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+A one liner to go from zero to erlyberly user.  You will need erlc (erlang compiler) on the path and **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). More compile instructions are in the [wiki page](https://github.com/andytill/erlyberly/wiki/Compiling)
 
 ```
 git clone git@github.com:andytill/erlyberly.git && cd erlyberly && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
@@ -22,32 +22,6 @@ If you already have erlyberly and want to update to have the latest features, ru
 ```
 git pull origin && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
 ```
-
-### Compiling
-
-Tags will no longer have binary releases, compile from master to get the latest features and bug fixes. This is easy with the one step build.  You will need **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
-
-Now, git clone the repo:
-
-    git clone https://github.com/andytill/erlyberly.git
-
-`cd` into the erlyberly repo directory and run:
-
-    ./mvnw clean compile install assembly:single
-
-This will install dependencies locally and build the runnable jar, run erlyberly:
-
-    java -jar target/erlyberly-<version>-runnable.jar
-
-Make sure to run the jar marked runnable, this has all it's dependencies included to make it portable.  Otherwise `ClassNotFoundException` will be thrown. If the jar wasn't compiled from a tag it will have SNAPSHOT in the jar name.
-
-### Compiling for dev work
-
-To recompile erlyberly.erl or java source after modifications but not recreate the jar:
-
-    ./mvnw compile
-
-Note usage of `./mvnw`. erlyberly uses [maven-wrapper](https://github.com/takari/maven-wrapper) so that maven does not need to be installed to compile.
 
 ### Features and How To
 
@@ -191,14 +165,6 @@ erlyberly must have epmd running on the machine as it is running.  Otherwise it 
 
 ##### Cannot start, `NoSuchMethodException` is thrown
 This happens when java version 8 is installed but the update is less than 20. Please update your version of java. See issue [#39](https://github.com/andytill/erlyberly/issues/39).
-
-### Creating a tag
-
-If you have admin rights on the repo:
-
-	git release:prepare
-
-The tag name should be the tag version. The new development tag should be an incremented version prepended with `-SNAPSHOT`.
 
 ### Roadmap
 
