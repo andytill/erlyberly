@@ -69,13 +69,16 @@
               </properties>
               <excludes>
                   <exclude>**/pom.xml</exclude>
+                  <exclude>**/LICENSE</exclude>
                   <exclude>**/checkstyle.xml</exclude>
                   <exclude>**/README</exclude>
                   <exclude>**/mvnw</exclude>
+                  <exclude>**/.checkstule</exclude>
                   <exclude>**/.mvn/**</exclude>
                   <exclude>src/etc/**</exclude>
                   <exclude>src/test/resources/**</exclude>
                   <exclude>src/main/resources/**</exclude>
+                  <exclude>**/src/main/java/hexstar/HexstarView.java</exclude>
               </excludes>
           </configuration>
       </plugin>
