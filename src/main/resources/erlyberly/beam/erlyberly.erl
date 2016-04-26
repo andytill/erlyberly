@@ -666,11 +666,19 @@ terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
-
-%%% ============================================================================
-%%% redbug process_dump call stack parsing
-%%% ============================================================================
-
+%%% https://github.com/massemanet/eper/blob/f7a1b4504f5eefc61fb9da7101fdaccc687021cd/src/redbug.erl
+%%%
+%%% Copyright (c) 2008-2013 mats cronqvist
+%%% 
+%%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%%% of this software and associated documentation files (the "Software"), to deal
+%%% in the Software without restriction, including without limitation the rights
+%%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%%% copies of the Software, and to permit persons to whom the Software is
+%%% furnished to do so, subject to the following conditions:
+%%% 
+%%% The above copyright notice and this permission notice shall be included in
+%%% all copies or substantial portions of the Software.
 
 stak(Bin) ->
   lists:foldr(fun munge/2,[],string:tokens(binary_to_list(Bin),"\n")).
