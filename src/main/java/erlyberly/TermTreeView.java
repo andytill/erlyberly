@@ -232,9 +232,14 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     private void onCopyCalls(ActionEvent e) {
         StringBuilder sbuilder = new StringBuilder();
+        for (TreeItem item : getSelectionModel().getSelectedItems()) {
+            copyTerms(item, sbuilder);
+        }
+    }
 
-        for (TreeItem obj : getSelectionModel().getSelectedItems()) {
-            sbuilder.append(obj.getValue()).append("\n");
+    private void copyTerms(TreeItem item, StringBuilder sbuilder) {
+        for (Object obj : item.getChildren()) {
+            copyTerms((TreeItem) obj, sbuilder);
         }
         copyToClipboard(sbuilder);
     }

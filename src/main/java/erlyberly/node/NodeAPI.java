@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -66,6 +67,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class NodeAPI {
+    private static final OtpErlangAtom ERLYBERLY_TRACE_LOG = atom("erlyberly_trace_log");
+
     private static final OtpErlangAtom ERLYBERLY_XREF_STARTED_ATOM = atom("erlyberly_xref_started");
 
     private static final OtpErlangAtom ERLYBERLY_ERROR_REPORT_ATOM = atom("erlyberly_error_report");
@@ -115,6 +118,13 @@ public class NodeAPI {
     private boolean manuallyDisconnected = false;
 
     private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
+
+    /**
+     * Called when a trace log is received.
+     * <br/>
+     * Should only accessed from the FX thread.
+     */
+    private RpcCallback<TraceLog> traceLogCallback;
 
     public NodeAPI() {
         traceManager = new TraceManager();
@@ -335,6 +345,10 @@ public class NodeAPI {
         if(receive == null) {
             return null;
         }
+        else if(isTupleTagged(ERLYBERLY_TRACE_LOG, receive)) {
+            traceLogNotification(receive);
+            return receiveRPC(timeout);
+        }
         else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, receive)) {
             Platform.runLater(() -> { crashReports.add(receive.elementAt(1)); });
             return receiveRPC();
@@ -361,6 +375,18 @@ public class NodeAPI {
         }
 
         return result;
+    }
+
+    private void traceLogNotification(OtpErlangTuple receive) {
+        Platform.runLater(() -> {
+            OtpErlangTuple traceLog = (OtpErlangTuple) ((OtpErlangTuple) receive).elementAt(1);
+            ArrayList<TraceLog> collatedTraces = traceManager.collateTraceSingle(traceLog);
+            if(traceLogCallback != null) {
+                for (TraceLog log : collatedTraces) {
+                    traceLogCallback.callback(log);
+                }
+            }
+        });
     }
 
     private static byte[] loadBeamFile() throws IOException {
@@ -678,9 +704,23 @@ public class NodeAPI {
         moduleLoadedCallback = aModuleLoadedCallback;
     }
 
-    public String decompileFun(OtpErlangFun fun) throws IOException, OtpErlangException {
+    public synchronized String decompileFun(OtpErlangFun fun) throws IOException, OtpErlangException {
         sendRPC("erlyberly", "saleyn_fun_src", list(fun));
-        OtpErlangString otpString = (OtpErlangString) receiveRPC(5000);
-        return otpString.stringValue();
+        OtpErlangObject received = receiveRPC(5000);
+        if(received instanceof OtpErlangString) {
+            OtpErlangString otpString = (OtpErlangString) received;
+            return otpString.stringValue();
+        }
+        else {
+            throw new OtpErlangException(Objects.toString(received));
+        }
+    }
+
+    public RpcCallback<TraceLog> getTraceLogCallback() {
+        return traceLogCallback;
+    }
+
+    public void setTraceLogCallback(RpcCallback<TraceLog> traceLogCallback) {
+        this.traceLogCallback = traceLogCallback;
     }
 }

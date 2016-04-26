@@ -44,17 +44,13 @@ public class DbgController implements Initializable {
 
     private final ObservableList<SeqTraceLog> seqTraces = FXCollections.observableArrayList();
 
-    private volatile boolean collectingTraces;
-
     private volatile boolean collectingSeqTraces;
-
-    public void setCollectingTraces(boolean collecting) {
-        collectingTraces = collecting;
-    }
 
     @Override
     public void initialize(URL url, ResourceBundle r) {
-        new TraceCollectorThread().start();
+        ErlyBerly.nodeAPI().setTraceLogCallback((traceLog) -> {
+            traceLogs.add(traceLog);
+        });
         new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
     }
 
@@ -82,9 +78,8 @@ public class DbgController implements Initializable {
             ErlyBerly.nodeAPI().startTrace(function);
 
             traces.add(function);
-
-            setCollectingTraces(true);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -129,34 +124,6 @@ public class DbgController implements Initializable {
         }
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    class TraceCollectorThread extends Thread {
-        public TraceCollectorThread() {
-            setDaemon(true);
-            setName("Erlyberly Collect Traces");
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                if(collectingTraces && ErlyBerly.nodeAPI().isConnected()) {
-                    try {
-                        final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
-
-                        Platform.runLater(() -> { traceLogs.addAll(collectTraceLogs); });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
