@@ -199,6 +199,10 @@ public class ModFuncContextMenu extends ContextMenu {
 
         if(selectedItem == null)
             return;
+        if(selectedItem.getValue() == null)
+            return;
+        if(!selectedItem.getValue().isModule())
+            selectedItem = selectedItem.getParent();
 
         // get all the functions we may trace
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();

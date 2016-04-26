@@ -242,4 +242,23 @@ public class OtpUtil {
         }
         return true;
     }
+
+    /**
+     * jinterface interprets lists of integers OtpErlangString whatever
+     * might be the intent, for example a list of function arguments `[10]`.
+     *
+     * This can cause ClassCastExceptions when something that is normally an
+     * OtpErlangList comes back as an OtpErlangString, which does not inherit
+     * from OtpErlangList!
+     */
+    public static OtpErlangList toErlangList(OtpErlangObject obj) {
+        if(obj instanceof OtpErlangString) {
+            return new OtpErlangList(((OtpErlangString)obj).stringValue());
+        }
+        else {
+            // we have done our best to convert the nobbly string objects to
+            // lists, if it fails just throw a ClassCastException
+            return (OtpErlangList)obj;
+        }
+    }
 }

@@ -157,7 +157,6 @@ public class DbgController implements Initializable {
                 if(collectingTraces && ErlyBerly.nodeAPI().isConnected()) {
                     try {
                         final ArrayList<TraceLog> collectTraceLogs = ErlyBerly.nodeAPI().collectTraceLogs();
-
                         Platform.runLater(() -> { traceLogs.addAll(collectTraceLogs); });
                     } catch (Exception e) {
                         e.printStackTrace();

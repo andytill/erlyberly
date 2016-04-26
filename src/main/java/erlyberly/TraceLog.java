@@ -132,7 +132,7 @@ public class TraceLog implements Comparable<TraceLog> {
     private StringBuilder toCallString(StringBuilder sb, boolean appendArity) {
         OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
 
-        if(!ATOM_UNDEFINED.equals(regName)) {
+        if(regName != null && !ATOM_UNDEFINED.equals(regName)) {
             sb.append(regName.atomValue());
         }
         else {
