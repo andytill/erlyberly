@@ -211,4 +211,4 @@ The following people have contributed code to erlyberly:
 + [@ruanpienaar](https://github.com/ruanpienaar)
 + [@horvand ](https://github.com/horvand)
 
-The hex editor originated from [hexstar](https://github.com/Velocity-/Hexstar).
+The hex editor originated from [hexstar](https://github.com/Velocity-/Hexstar). The stack trace parsing is taken from [redbug](https://github.com/massemanet/eper). Tab pane drag to window is from [shichimifx](https://bitbucket.org/Jerady/shichimifx).
