@@ -73,7 +73,7 @@
                   <exclude>**/checkstyle.xml</exclude>
                   <exclude>**/README</exclude>
                   <exclude>**/mvnw</exclude>
-                  <exclude>**/.checkstule</exclude>
+                  <exclude>**/.checkstyle</exclude>
                   <exclude>**/.mvn/**</exclude>
                   <exclude>src/etc/**</exclude>
                   <exclude>src/test/resources/**</exclude>
