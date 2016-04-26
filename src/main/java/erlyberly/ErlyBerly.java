@@ -119,12 +119,12 @@ public class ErlyBerly extends Application {
             PrefBind.set("windowHeight", nv.toString());
         });
 
-        primaryStage.show();
 
         applyCssToWIndow(scene);
         primaryStage.setScene(scene);
         primaryStage.titleProperty().bind(NODE_API.summaryProperty());
         primaryStage.setResizable(true);
+        primaryStage.show();
 
         displayConnectionPopup(primaryStage);
 
