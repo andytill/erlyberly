@@ -71,7 +71,6 @@ public class TraceLog implements Comparable<TraceLog> {
         registeredName = regNameString().intern();
         function =  appendModFuncArity(new StringBuilder()).toString().intern();
         argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
-
         cssClass = null;
     }
 
@@ -304,5 +303,12 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public static TraceLog newNodeDown() {
         return new TraceLog("breaker-row", "NODE DOWN");
+    }
+
+    public OtpErlangList getStackTrace() {
+        OtpErlangList stacktrace = (OtpErlangList) map.get(OtpUtil.atom("stack_trace"));
+        if(stacktrace == null)
+            stacktrace = new OtpErlangList();
+        return stacktrace;
     }
 }

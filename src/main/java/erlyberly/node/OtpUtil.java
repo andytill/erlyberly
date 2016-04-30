@@ -274,4 +274,11 @@ public class OtpUtil {
             return (OtpErlangList)obj;
         }
     }
+
+    public static OtpErlangTuple toTuple(OtpErlangObject obj) {
+        if(!(obj instanceof OtpErlangTuple)) {
+            throw new ClassCastException(obj + " cannot be case to OtpErlangTuple.");
+        }
+        return (OtpErlangTuple) obj;
+    }
 }

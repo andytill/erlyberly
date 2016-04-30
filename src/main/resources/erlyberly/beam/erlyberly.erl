@@ -256,9 +256,10 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
 
 %%
 tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Traces } = TC) ->
-    dbg:tpl(Mod, Func, Arity, cx),
-    dbg:p(all, [c, timestamp]),
+    Match_spec = [{'_', [], [{message,{process_dump}}, {exception_trace}]}],
     Trace_spec = {Mod, Func, Arity},
+    dbg:tpl(Trace_spec, Match_spec),
+    dbg:p(all, [c, timestamp]),
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
@@ -290,12 +291,12 @@ notify_erlyberly_trace_log(Trace_log, #tcollector{ ui_pid = Pid }) ->
 
 %% Convert a 'call' trace (a normal function call, before return) to a
 %% {call, proplists()} that erlyberly can understand.
-call_trace_props(Pid, Func, Timestamp)  ->
+call_trace_props(Pid, Func, Timestamp, Extra_props)  ->
     {call, 
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func},
-          {timetamp_call_us, timestamp_to_us(Timestamp)} ]}.
+          {timetamp_call_us, timestamp_to_us(Timestamp)} | Extra_props ]}.
 
 %% Covert a 'return_from' trace into proplists erlyberly can understand
 return_from_trace_props(Pid, Result, Timestamp) ->
@@ -308,16 +309,25 @@ return_from_trace_props(Pid, Result, Timestamp) ->
 %%
 trace_to_props({trace_ts, Pid, call, {Mod, Func_name, [Req, State]}, _, Timestamp}) when Func_name == handle_info orelse
                                                                                          Func_name == handle_cast ->
-    call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp);
+    call_trace_props(Pid, {Mod, Func_name, [Req, format_record(State, Mod)]}, Timestamp, []);
 trace_to_props({trace_ts, Pid, call, {Mod, handle_call, [Req, From, State]}, _, Timestamp}) ->
-    call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp);
-trace_to_props({trace_ts, Pid, call, Func, _, Timestamp}) ->
+    call_trace_props(Pid, {Mod, handle_call, [Req, From, format_record(State, Mod)]}, Timestamp, []);
+trace_to_props({trace_ts, Pid, call, Func, Msg, Timestamp}) ->
+    Stack_trace =
+        try
+            [{stack_trace, stak(Msg)}]
+        catch
+            _C:_Error ->
+                % io:format("ERROR ~p~n", [_Error])
+                []
+        end,
     % call handler for everything else
-    call_trace_props(Pid, Func, Timestamp);
+    call_trace_props(Pid, Func, Timestamp, Stack_trace);
 trace_to_props({trace_ts, Pid, return_from, {Mod, Func_name, _}, {noreply, Rec}, Timestamp}) when Func_name == handle_info orelse
                                                                                                   Func_name == handle_cast orelse
                                                                                                   Func_name == handle_call ->
     return_from_trace_props(Pid, {noreply, format_record(Rec, Mod)}, Timestamp);
+
 trace_to_props({trace_ts, Pid, return_from, {Mod, handle_call, _}, {reply, Reply, Rec}, Timestamp}) ->
     return_from_trace_props(Pid, {reply, Reply, format_record(Rec, Mod)}, Timestamp);
 trace_to_props({trace_ts, Pid, return_from, _Func, Result, Timestamp}) ->
@@ -331,7 +341,7 @@ trace_to_props({trace_ts, Pid, exception_from, Func, {Class, Value}, Timestamp})
           {exception_from, {Class, Value}},
           {timetamp_return_us, timestamp_to_us(Timestamp)} ]};
 trace_to_props({trace, Pid, call, Func, _}) ->
-    {call, 
+    {call,
         [ {pid, pid_to_list(Pid)},
           {reg_name, get_registered_name(Pid)},
           {fn, Func} ]};
@@ -659,7 +669,6 @@ abstract_code(Module, ExecFun) ->
 %%% ============================================================================
 
 
-
 -record(err_state, { node }).
 
 init([Node]) ->
@@ -683,6 +692,61 @@ terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
+%%% ============================================================================
+%%% tracing `process_dump` parser from redbug
+%%% ============================================================================
+
+%%% https://github.com/massemanet/eper/blob/f7a1b4504f5eefc61fb9da7101fdaccc687021cd/src/redbug.erl
+%%%
+%%% Copyright (c) 2008-2013 mats cronqvist
+%%% 
+%%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%%% of this software and associated documentation files (the "Software"), to deal
+%%% in the Software without restriction, including without limitation the rights
+%%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%%% copies of the Software, and to permit persons to whom the Software is
+%%% furnished to do so, subject to the following conditions:
+%%% 
+%%% The above copyright notice and this permission notice shall be included in
+%%% all copies or substantial portions of the Software.
+
+stak(Bin) ->
+  lists:foldr(fun munge/2,[],string:tokens(binary_to_list(Bin),"\n")).
+
+munge(I,Out) ->
+  case lists:reverse(I) of
+    "..."++_ -> [truncated|Out];
+    _ ->
+      case string:str(I, "Return addr") of
+        0 ->
+          case string:str(I, "CP:") of
+            0 -> Out;
+            _ -> [mfaf(I)|Out]
+          end;
+        _ ->
+          case string:str(I, "erminate process normal") of
+            0 -> [mfaf(I)|Out];
+            _ -> Out
+          end
+      end
+  end.
+
+mfaf(I) ->
+  [_, C|_] = string:tokens(I,"()+"),
+  stack_to_mfa(C).
+
+stack_to_mfa(String) ->
+    case string:tokens(String, ":/") of
+        [Mod, Func, Arity] ->
+            {list_to_existing_atom(fix_elixir_strings(Mod)),
+             list_to_existing_atom(fix_elixir_strings(Func)),
+             list_to_integer(string:strip(fix_elixir_strings(Arity)))};
+        _ ->
+            String
+    end.
+
+fix_elixir_strings(String) ->
+    re:replace(String, "\"|\'", "", [global, {return, list}]).
 
 %%% ============================================================================
 %%% erlang fun decompiler

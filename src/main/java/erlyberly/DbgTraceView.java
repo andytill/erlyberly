@@ -31,6 +31,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Control;
@@ -40,6 +41,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -243,19 +245,30 @@ public class DbgTraceView extends VBox {
         argTermsTreeView = newTermTreeView();
         argTermsTreeView.populateFromListContents((OtpErlangList)args);
 
-        SplitPane splitPane;
+        SplitPane splitPane, splitPaneH;
 
         splitPane = new SplitPane();
+        splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.getItems().addAll(
             labelledTreeView("Function arguments", argTermsTreeView),
             labelledTreeView("Result", resultTermsTreeView)
         );
 
+        StackTraceView stackTraceView;
+        stackTraceView = new StackTraceView();
+        stackTraceView.populateFromMfaList(traceLog.getStackTrace());
+        String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
+        TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
+        titledPane.setExpanded(!stackTraceView.isStackTracesEmpty());
+        splitPaneH = new SplitPane();
+        splitPaneH.setOrientation(Orientation.VERTICAL);
+        splitPaneH.getItems().addAll(splitPane, titledPane);
+
         StringBuilder sb = new StringBuilder(traceLog.getPidString());
         sb.append(" ");
         traceLog.appendModFuncArity(sb);
 
-        ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPane));
+        ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPaneH));
     }
 
     private Node labelledTreeView(String label, TermTreeView node) {
