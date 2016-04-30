@@ -22,7 +22,7 @@ import javafx.scene.control.TextArea;
 public class CodeView extends TextArea {
 
     {
-        getStyleClass().add("mod-src");
+        getStyleClass().add("erlyberly-code");
         setEditable(false);
     }
 

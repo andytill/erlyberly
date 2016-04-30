@@ -22,9 +22,11 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
+import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.StackTraceView.ErlyberlyStackTraceElement;
+import erlyberly.node.OtpUtil;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -47,6 +49,8 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
                         functionLink.setOnAction((e) -> {
                             ErlyberlyStackTraceElement stackElement = getItem();
                             if(stackElement == null)
+                                return;
+                            if(stackElement.isError())
                                 return;
                             ModFunc mf = stackElement.getModFunc();
                             try {
@@ -103,13 +107,26 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
     }
 
     public void populateFromMfaList(OtpErlangList stackTrace) {
-        for (OtpErlangObject obj : stackTrace) {
-            OtpErlangTuple tuple = (OtpErlangTuple) obj;
-            OtpErlangAtom module = (OtpErlangAtom) tuple.elementAt(0);
-            OtpErlangAtom function = (OtpErlangAtom) tuple.elementAt(1);
-            OtpErlangLong arity = (OtpErlangLong) tuple.elementAt(2);
-            ModFunc modFunc = mfaToModFunc(module, function, arity);
-            getItems().add(new ErlyberlyStackTraceElement(modFunc , "", 0L));
+        try {
+            for (OtpErlangObject obj : stackTrace) {
+                if(obj instanceof OtpErlangString) {
+                    OtpErlangString errorMessage = (OtpErlangString) obj;
+                    getItems().add(new ErlyberlyStackTraceElement(errorMessage.stringValue()));
+                }
+                else {
+                    OtpErlangTuple tuple = OtpUtil.toTuple(obj);
+                    OtpErlangAtom module = (OtpErlangAtom) tuple.elementAt(0);
+                    OtpErlangAtom function = (OtpErlangAtom) tuple.elementAt(1);
+                    OtpErlangLong arity = (OtpErlangLong) tuple.elementAt(2);
+                    ModFunc modFunc = mfaToModFunc(module, function, arity);
+                    getItems().add(new ErlyberlyStackTraceElement(modFunc, "", 0L));
+                }
+            }
+        }
+        catch (Exception e) {
+            // try/catch so if there is a problem decoding the process_dump, it won't
+            // stop the trace log from being shown.
+            e.printStackTrace();
         }
     }
 
@@ -125,19 +142,35 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
         private final ModFunc modFunc;
         private final long line;
         private final String file;
+        private final String error;
 
         public ErlyberlyStackTraceElement(ModFunc modFunc, String file, long line) {
             this.modFunc = modFunc;
             this.file = file;
             this.line = line;
+            this.error = null;
+        }
+
+        public ErlyberlyStackTraceElement(String anError) {
+            this.modFunc = null;
+            this.file = null;
+            this.line = -1L;
+            this.error = anError;
         }
 
         public ModFunc getModFunc() {
             return modFunc;
         }
 
+        public boolean isError() {
+            return error != null;
+        }
+
         @Override
         public String toString() {
+            if(isError()) {
+                return error;
+            }
             String display = modFunc.toFullString();
             if(file != null && !file.isEmpty()) {
                 display += "  (" + file + ":" + line +")";

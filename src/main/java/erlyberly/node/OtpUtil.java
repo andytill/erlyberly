@@ -27,6 +27,8 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangExternalFun;
+import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangMap;
@@ -44,8 +46,13 @@ public class OtpUtil {
 
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
+    public static final HashSet<Class<?>> CONTAINER_TERM_TYPES = new HashSet<Class<?>>(
+        Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class, OtpErlangList.class)
+    );
+
+
     public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
-        Arrays.asList(OtpErlangList.class, OtpErlangTuple.class, OtpErlangMap.class)
+        Arrays.asList(OtpErlangFun.class, OtpErlangExternalFun.class)
     );
 
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
@@ -212,20 +219,26 @@ public class OtpUtil {
     public static boolean isLittleTerm(OtpErlangObject obj) {
         OtpErlangObject[] elements;
 
-        if(LARGE_TERM_TYPES.contains(obj.getClass())) {
-            elements = iterableElements(obj);
+        if(obj instanceof OtpErlangList) {
+            // if the list is empty consider it a little term
+            return ((OtpErlangList)obj).arity() == 0;
         }
+        else if(LARGE_TERM_TYPES.contains(obj.getClass())) {
+            return false;
+        }
+        else if(CONTAINER_TERM_TYPES.contains(obj.getClass())) {
+            elements = iterableElements(obj);
+            // short lists and tuples which do not contain other short lists or
+            // tuples are ok
+            if(elements.length > 3)
+                return false;
+            }
         else {
             return true;
         }
 
-        // short lists and tuples which do not contain other short lists or
-        // tuples are ok
-        if(elements.length > 3)
-            return false;
-
         for (OtpErlangObject e : elements) {
-            if(LARGE_TERM_TYPES.contains(e.getClass())) {
+            if(LARGE_TERM_TYPES.contains(e.getClass()) || CONTAINER_TERM_TYPES.contains(e.getClass())) {
                 return false;
             }
             else if(e instanceof OtpErlangString) {
@@ -260,5 +273,12 @@ public class OtpUtil {
             // lists, if it fails just throw a ClassCastException
             return (OtpErlangList)obj;
         }
+    }
+
+    public static OtpErlangTuple toTuple(OtpErlangObject obj) {
+        if(!(obj instanceof OtpErlangTuple)) {
+            throw new ClassCastException(obj + " cannot be case to OtpErlangTuple.");
+        }
+        return (OtpErlangTuple) obj;
     }
 }

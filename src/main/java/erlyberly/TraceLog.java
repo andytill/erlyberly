@@ -137,7 +137,10 @@ public class TraceLog implements Comparable<TraceLog> {
         }
         else {
             OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-            sb.append(pidString.stringValue());
+            if(pidString == null)
+                sb.append("<NULL PID>");
+            else
+                sb.append(pidString.stringValue());
         }
         sb.append(" ");
 
