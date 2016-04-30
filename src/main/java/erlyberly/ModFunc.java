@@ -35,8 +35,8 @@ public class ModFunc implements Comparable<ModFunc> {
     private final boolean synthetic;
 
     public ModFunc(String moduleName, String funcName, int arity, boolean exported, boolean synthetic) {
-        this.moduleName = moduleName;
-        this.funcName = funcName;
+        this.moduleName = (moduleName != null) ? moduleName.replace("'", "") : null;
+        this.funcName = (funcName != null) ? funcName.replace("'", "") : null;
         this.arity = arity;
         this.exported = exported;
         this.synthetic = synthetic;

@@ -689,7 +689,7 @@ munge(I,Out) ->
     _ ->
       case string:str(I, "Return addr") of
         0 ->
-          case string:str(I, "cp = ") of
+          case string:str(I, "CP:") of
             0 -> Out;
             _ -> [mfaf(I)|Out]
           end;

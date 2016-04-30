@@ -31,8 +31,6 @@ import javafx.scene.control.ListView;
 import javafx.util.Callback;
 
 public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
-
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public StackTraceView() {
         applyStackTraceCellFactory((ListView)this);
@@ -113,6 +111,10 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
             ModFunc modFunc = mfaToModFunc(module, function, arity);
             getItems().add(new ErlyberlyStackTraceElement(modFunc , "", 0L));
         }
+    }
+
+    public boolean isStackTracesEmpty() {
+        return getItems().isEmpty();
     }
 
     /**

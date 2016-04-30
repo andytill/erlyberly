@@ -104,9 +104,9 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String modFuncArgsToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
-        sb.append(mfa.elementAt(0))
+        sb.append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
           .append(":")
-          .append(mfa.elementAt(1))
+          .append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
           .append("(");
         OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
         ArrayList<String> stringArgs = new ArrayList<>();
@@ -116,6 +116,10 @@ public class ErlangFormatter implements TermFormatter {
         sb.append(String.join(", ", stringArgs));
         sb.append(")");
         return sb.toString();
+    }
+
+    private String atomToStringNoQuotes(OtpErlangAtom atom) {
+        return atom.atomValue();
     }
 
     @Override
