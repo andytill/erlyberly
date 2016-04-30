@@ -105,11 +105,24 @@ public class ErlyBerly extends Application {
                 }
             }
         });
-        applyCssToWIndow(scene);
 
+        // the window size needs to be set before the scene is added or else it
+        // counts as a window resize and that also resizes the split panes
+        final double windowWidth = PrefBind.getOrDefaultDouble("windowWidth", 800D);
+        primaryStage.setWidth(windowWidth);
+        primaryStage.widthProperty().addListener((o, ov, nv) -> {
+            PrefBind.set("windowWidth", nv.toString());
+        });
+        final double windowHeight = PrefBind.getOrDefaultDouble("windowHeight", 600D);
+        primaryStage.setHeight(windowHeight);
+        primaryStage.heightProperty().addListener((o, ov, nv) -> {
+            PrefBind.set("windowHeight", nv.toString());
+        });
+
+
+        applyCssToWIndow(scene);
         primaryStage.setScene(scene);
         primaryStage.titleProperty().bind(NODE_API.summaryProperty());
-        primaryStage.sizeToScene();
         primaryStage.setResizable(true);
         primaryStage.show();
 
@@ -129,7 +142,11 @@ public class ErlyBerly extends Application {
                 System.exit(0);
             }
         });
-        dbgView.sizeSplitPanes();
+        // run this later because it requires the control's scene to be set, which
+        // may not have happened yet.
+        Platform.runLater(() -> {
+            dbgView.sizeSplitPanes();
+        });
     }
 
     public static void applyCssToWIndow(Scene scene) {

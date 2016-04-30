@@ -50,6 +50,12 @@ public class TraceManager {
         return traceList;
     }
 
+    public ArrayList<TraceLog> collateTraceSingle(OtpErlangTuple traceLog) {
+        final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
+        decodeTraceLog(traceLog, traceList);
+        return traceList;
+    }
+
     private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
         OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
         OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);

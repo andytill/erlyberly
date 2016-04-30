@@ -1,10 +1,27 @@
 
+%%% erlyberly, erlang trace debugger
+%%% Copyright (C) 2016 Andy Till
+%%%
+%%% This program is free software: you can redistribute it and/or modify
+%%% it under the terms of the GNU General Public License as published by
+%%% the Free Software Foundation, either version 3 of the License, or
+%%% (at your option) any later version.
+%%%
+%%% This program is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+%%% GNU General Public License for more details.
+%%%
+%%% You should have received a copy of the GNU General Public License
+%%% along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 -module(erlyberly).
 
 -export([collect_seq_trace_logs/0]).
 -export([collect_trace_logs/0]).
 -export([ensure_dbg_started/1]).
 -export([ensure_xref_started/0]).
+-export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
@@ -205,6 +222,7 @@ erlyberly_tcollector(Node, Pid) ->
     dbg:tp(code, x),
 
     erlyberly_tcollector2(#tcollector{ ui_pid = Pid }).
+
 %%
 erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
@@ -224,9 +242,18 @@ erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             Pid ! {trace_logs, lists:reverse(Logs)},
             erlyberly_tcollector2(TC#tcollector{ logs = []});
         Log ->
-            TC1 = collect_log(Log, TC),
-            erlyberly_tcollector2(TC1)
+            case collect_log(Log) of
+                skip ->
+                    ok;
+                {erlyberly_module_loaded, Loaded_module} ->
+                    ok = reapply_traces(Loaded_module, TC#tcollector.traces),
+                    ok = notify_erlyberly_module_loaded(Loaded_module, TC);
+                Trace_log ->
+                    notify_erlyberly_trace_log(Trace_log, TC)
+            end,
+            erlyberly_tcollector2(TC)
    end.
+
 %%
 tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Traces } = TC) ->
     dbg:tpl(Mod, Func, Arity, cx),
@@ -235,32 +262,31 @@ tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Tr
     TC#tcollector{ traces = [Trace_spec | Traces] }.
 
 %%
-collect_log({trace_ts, _, return_from, {code, ensure_loaded, _}, _}, TC) ->
+collect_log({trace_ts, _, return_from, {code, ensure_loaded, _}, _}) ->
     % ensure loaded can be called many times for one reload so just skip it
-    TC;
-collect_log({trace_ts, _, return_from, {code, _, _}, {module, Loaded_module}, _}, TC) ->
+    skip;
+collect_log({trace_ts, _, return_from, {code, _, _}, {module, Loaded_module}, _}) ->
     % if we trace that a module is reloaded then reapply traces to it
-    ok = reapply_traces(Loaded_module, TC#tcollector.traces),
-    ok = notify_erlyberly_module_loaded(Loaded_module, TC),
-    TC;
-collect_log({trace_ts, _, _, {code, _, _}, _}, TC) ->
-    TC;
-collect_log({trace_ts, _, _, {code, _, _}}, TC) ->
-    TC;
-collect_log(Trace, #tcollector{ logs = Logs } = TC) when element(1, Trace) == trace_ts orelse element(1, Trace) == trace ->
-    Logs_1 = maybe_add_log(trace_to_props(Trace), Logs),
-    TC#tcollector{ logs = Logs_1 };
-collect_log(U, TC) ->
+    %ok = reapply_traces(Loaded_module, TC#tcollector.traces),
+    %ok = notify_erlyberly_module_loaded(Loaded_module, TC),
+    {erlyberly_module_loaded, Loaded_module};
+collect_log({trace_ts, _, _, {code, _, _}, _}) ->
+    skip;
+collect_log({trace_ts, _, _, {code, _, _}}) ->
+    skip;
+collect_log(Trace) when element(1, Trace) == trace_ts orelse element(1, Trace) == trace ->
+    trace_to_props(Trace);
+collect_log(U) ->
     io:format("unknown trace ~p~n", [U]),
-    TC.
+    skip.
 
 notify_erlyberly_module_loaded(Loaded_module, #tcollector{ ui_pid = Pid }) ->
     Pid ! {erlyberly_module_loaded, Loaded_module, module_functions2(Loaded_module)},
     ok.
 
-%%
-maybe_add_log(skip, Logs) -> Logs;
-maybe_add_log(Log, Logs)  -> [Log | Logs].
+notify_erlyberly_trace_log(Trace_log, #tcollector{ ui_pid = Pid }) ->
+    Pid ! {erlyberly_trace_log, Trace_log},
+    ok.
 
 %% Convert a 'call' trace (a normal function call, before return) to a
 %% {call, proplists()} that erlyberly can understand.
@@ -656,3 +682,82 @@ handle_info(_Info, State) -> {ok, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+
+%%% ============================================================================
+%%% erlang fun decompiler
+%%% ============================================================================
+
+%%% Copyright (c) 2009 Serge Aleynikov
+%%%
+%%% Permission is hereby granted, free of charge, to any person
+%%% obtaining a copy of this software and associated documentation
+%%% files (the "Software"), to deal in the Software without restriction,
+%%% including without limitation the rights to use, copy, modify, merge,
+%%% publish, distribute, sublicense, and/or sell copies of the Software,
+%%% and to permit persons to whom the Software is furnished to do
+%%% so, subject to the following conditions:
+%%%
+%%% The above copyright notice and this permission notice shall be included
+%%% in all copies or substantial portions of the Software.
+
+%% @doc Decompile a function to its source text
+saleyn_fun_src(Fun) when is_function(Fun) ->
+    saleyn_fun_src(Fun, []).
+
+%% @doc Decompile a function to its source text
+-spec saleyn_fun_src(function(), Options :: [verbose | ast]) -> string().
+saleyn_fun_src(Fun, Options) when is_function(Fun), is_list(Options) ->
+    {module, Mod} = erlang:fun_info(Fun, module),
+    {name, Name}  = erlang:fun_info(Fun, name),
+    {ok, Module, _Beam, Forms} = saleyn_get_abstract_code(Mod),
+    {F, Arity, Pos} = fun_name(Name),
+    saleyn_fun_src(Module, Name, F, Arity, Pos, Forms, Fun, Options).
+
+saleyn_fun_src(erl_eval, _Name, expr, _Arity, _Pos, _Forms, Fun, Options) ->
+    case erlang:fun_info(Fun, env) of
+        {env, [_, _, _, Abst | _]} ->
+            ok;
+        {env,[{[], _, _, Abst}]} ->
+            ok
+    end,
+    Ast = erl_syntax:form_list(Abst),
+    saleyn_fun_src2(format, Ast, Options);
+saleyn_fun_src(_Module, _Name, F, Arity, Pos, Forms, _Fun, Options) ->
+    Clauses = [Cs || {function, _, Fun, A, Cs} <- Forms, Fun == F, A == Arity],
+    Funs    = funs(lists:concat(Clauses)),
+    Ast     = lists:nth(Pos, Funs),
+    saleyn_fun_src2(undefined, Ast, Options).
+
+saleyn_fun_src2(Envelope, Ast, _Options) ->
+    Text = erl_prettypr:format(Ast),
+    case Envelope of
+        format ->
+            "fun " ++ Text ++ " end.";
+        _ ->
+            Text ++ "."
+    end.
+
+fun_name(Name) ->
+    [Fs, As, _, Rs] = string:tokens(atom_to_list(Name), "-/"),
+    {list_to_atom(Fs), list_to_integer(As), list_to_integer(Rs)+1}.
+
+funs(L) ->
+    lists:reverse(lists:foldl(fun
+        ({'fun',_,_} = F, A)    -> [F | A];
+        (T, A) when is_tuple(T) -> funs(lists:flatten(tuple_to_list(T))) ++ A;
+        (_, A)                  -> A
+    end, [],  L)).
+
+saleyn_get_abstract_code(Module) when is_atom(Module) ->
+    {module,_} = code:ensure_loaded(Module),
+    Beam = code:which(Module),
+    saleyn_get_abstract_code(Beam);
+saleyn_get_abstract_code(Beam) when is_list(Beam) ->
+    Basename = filename:basename(Beam, ".beam"),
+    case beam_lib:chunks(Beam, [abstract_code]) of
+    {ok, {Module,[{abstract_code,{_,AC}}]}} ->
+       {ok, Module, Basename, AC};
+    Other ->
+       Other
+    end.

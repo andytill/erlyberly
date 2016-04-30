@@ -17,8 +17,12 @@
  */
 package erlyberly;
 
+import java.io.IOException;
+
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -53,11 +57,13 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         MenuItem dictMenuItem = new MenuItem("Dict to List");
         dictMenuItem.setOnAction(this::onViewDict);
 
-
         MenuItem hexViewMenuItem = new MenuItem("Hex View");
         hexViewMenuItem.setOnAction(this::onHexView);
 
-        setContextMenu(new ContextMenu(copyMenuItem, dictMenuItem, hexViewMenuItem));
+        MenuItem decompileFunContextMenu = new MenuItem("Decompile Fun");
+        decompileFunContextMenu.setOnAction(this::onDecompileFun);
+
+        setContextMenu(new ContextMenu(copyMenuItem, dictMenuItem, decompileFunContextMenu, hexViewMenuItem));
     }
 
     public void onHexView(ActionEvent e) {
@@ -68,6 +74,21 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             hexstarView = new HexstarView();
             hexstarView.setBinary(binary);
             ErlyBerly.showPane("Hex View", ErlyBerly.wrapInPane(hexstarView));
+        }
+    }
+
+    public void onDecompileFun(ActionEvent e) {
+        TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
+        if(item != null && item.getValue().getObject() instanceof OtpErlangFun) {
+            OtpErlangFun fun = (OtpErlangFun)item.getValue().getObject();
+            try {
+                String funSource = ErlyBerly.nodeAPI().decompileFun(fun);
+                ErlyBerly.showPane(fun + " Source Code", ErlyBerly.wrapInPane(new CodeView(funSource)));
+            } catch (OtpErlangException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -211,9 +232,14 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     private void onCopyCalls(ActionEvent e) {
         StringBuilder sbuilder = new StringBuilder();
+        for (TreeItem item : getSelectionModel().getSelectedItems()) {
+            copyTerms(item, sbuilder);
+        }
+    }
 
-        for (TreeItem obj : getSelectionModel().getSelectedItems()) {
-            sbuilder.append(obj.getValue()).append("\n");
+    private void copyTerms(TreeItem item, StringBuilder sbuilder) {
+        for (Object obj : item.getChildren()) {
+            copyTerms((TreeItem) obj, sbuilder);
         }
         copyToClipboard(sbuilder);
     }
