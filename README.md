@@ -1,8 +1,6 @@
 
 # erlyberly
 
-**I'll be speaking about tracing and erlyberly at the Glasgow Elixir group on the 25th of April, hope to see you there! Event information [here](https://www.eventbrite.co.uk/e/glasgow-elixir-elixirerlanglfebeam-and-fp-meetup-registration-24351179032?).**
-
 [![Build Status](https://travis-ci.org/andytill/erlyberly.svg?branch=master)](https://travis-ci.org/andytill/erlyberly)
 
 **erlyberly** is a debugger for erlang, [elixir](https://twitter.com/andy_till/status/539566833515626497) and LFE using erlang tracing. It is probably the easiest and quickest way to start debugging your nodes.
@@ -11,7 +9,7 @@ If you are using `io:format/2` or lager for debugging then erlyberly can save yo
 
 ### Quick start
 
-A one liner to go from zero to erlyberly user.  You will need erlc (erlang compiler) on the path and **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). More compile instructions are in the [wiki page](https://github.com/andytill/erlyberly/wiki/Compiling)
+A one liner to go from zero to erlyberly user.  You will need erlc (erlang compiler) on the path and **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), see instructions for command line java installs for some operating systems [here](https://github.com/andytill/erlyberly/wiki/Java-install).  More compile instructions are in the [wiki page](https://github.com/andytill/erlyberly/wiki/Compiling)
 
 ```
 git clone git@github.com:andytill/erlyberly.git && cd erlyberly && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
@@ -22,6 +20,8 @@ If you already have erlyberly and want to update to have the latest features, ru
 ```
 git pull origin && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
 ```
+
+Please raise an issue if you are unable to build that includes the OS, java version and erlang versions.
 
 ### Features and How To
 
