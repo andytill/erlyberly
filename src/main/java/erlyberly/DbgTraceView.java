@@ -162,6 +162,8 @@ public class DbgTraceView extends VBox {
                     oldTl.isCompleteProperty().removeListener(completeListener);
                 }
                 if (tl != null) {
+
+                    row.pseudoClassStateChanged(notCompletedClass, !row.getItem().isComplete());
                     if("breaker-row".equals(tl.getCssClass())) {
                         row.pseudoClassStateChanged(breakerRowClass, true);
 
