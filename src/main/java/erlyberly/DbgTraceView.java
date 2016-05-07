@@ -72,7 +72,7 @@ public class DbgTraceView extends VBox {
         setStyle("-fx-background-insets: 5;");
         setMaxHeight(Double.MAX_VALUE);
 
-        insertTracesAtTop = PrefBind.getOrDefault("insertTracesAtTop", "false").equals("true");
+        insertTracesAtTop = PrefBind.getOrDefaultBoolean("insertTracesAtTop", false);
 
         tracesBox = new TableView<TraceLog>();
         tracesBox.getStyleClass().add("trace-log-table");
@@ -187,7 +187,7 @@ public class DbgTraceView extends VBox {
     private void configureColumnWidth(String widthProperty, TableColumn<TraceLog, ?> functionNameColumn) {
         functionNameColumn.setPrefWidth(PrefBind.getOrDefaultDouble(widthProperty, functionNameColumn.getPrefWidth()));
         functionNameColumn.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set(widthProperty, nv.toString());
+            PrefBind.set(widthProperty, nv);
         });
     }
 

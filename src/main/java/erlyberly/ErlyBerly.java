@@ -111,12 +111,12 @@ public class ErlyBerly extends Application {
         final double windowWidth = PrefBind.getOrDefaultDouble("windowWidth", 800D);
         primaryStage.setWidth(windowWidth);
         primaryStage.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowWidth", nv.toString());
+            PrefBind.set("windowWidth", nv);
         });
         final double windowHeight = PrefBind.getOrDefaultDouble("windowHeight", 600D);
         primaryStage.setHeight(windowHeight);
         primaryStage.heightProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowHeight", nv.toString());
+            PrefBind.set("windowHeight", nv);
         });
 
 
@@ -175,11 +175,11 @@ public class ErlyBerly extends Application {
             dbgView.setFunctionsVisibility(nb);
         });
 
-        boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
+        boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
         if(hideProcs){
             hideProcsPane();
         }
-        boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
+        boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
         if(hideMods){
             dbgView.setFunctionsVisibility(true);
         }

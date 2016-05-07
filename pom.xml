@@ -50,7 +50,12 @@
       <groupId>com.github.andytill</groupId>
       <artifactId>floaty-field</artifactId>
       <version>1.0.1</version>
-  </dependency>
+    </dependency>
+    <dependency>
+      <groupId>com.moandjiezana.toml</groupId>
+      <artifactId>toml4j</artifactId>
+      <version>0.5.1</version>
+    </dependency>
 
   </dependencies>
 

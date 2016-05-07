@@ -220,8 +220,8 @@ public class TopBarView implements Initializable {
         PrefBind.bindBoolean("hideProcesses", hideProcessesButton.selectedProperty());
         PrefBind.bindBoolean("hideModules", hideFunctionsButton.selectedProperty());
 
-        boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
-        boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
+        boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
+        boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
 
         if(hideProcs){
             // click the hide button manually.

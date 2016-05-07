@@ -21,9 +21,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.moandjiezana.toml.Toml;
+import com.moandjiezana.toml.TomlWriter;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -42,7 +45,7 @@ public class PrefBind {
 
     private static Timer timer = new Timer(true);
 
-    private static Properties props;
+    private static Map<String, Object> props;
 
     private static File erlyberlyConfig;
 
@@ -52,7 +55,7 @@ public class PrefBind {
         if(props == null) {
             return;
         }
-        String storedValue = props.getProperty(propName);
+        String storedValue = (String) props.get(propName);
         if(storedValue != null) {
             stringProp.set(storedValue);
         }
@@ -65,20 +68,21 @@ public class PrefBind {
         if(props == null) {
             return;
         }
-        String storedValue = props.getProperty(propName);
-        Boolean b = Boolean.valueOf(storedValue);
+        Boolean storedValue = (Boolean) props.get(propName);
         if(storedValue != null) {
-            boolProp.set(b);
+            boolProp.set(storedValue);
         }
         boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-                set(propName, newValue.toString());
+            set(propName, newValue);
         });
     }
 
     static void store() {
         try {
-            props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
-        } catch (IOException e) {
+            //props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
+            new TomlWriter().write(props, new FileOutputStream(erlyberlyConfig));
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
         awaitingStore = false;
@@ -98,12 +102,10 @@ public class PrefBind {
         erlyberlyConfig = new File(homeDir, ".erlyberly");
         erlyberlyConfig.createNewFile();
 
-        Properties properties;
-
-        properties = new Properties();
-        properties.load(new FileInputStream(erlyberlyConfig));
-
-        props = properties;
+        Toml toml;
+        toml = new Toml();
+        toml.read(new FileInputStream(erlyberlyConfig));
+        props = toml.to(Map.class);
     }
 
     public static Object get(Object key) {
@@ -119,11 +121,11 @@ public class PrefBind {
     }
 
     public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
-        return Boolean.parseBoolean(PrefBind.getOrDefault("showSourceInSystemEditor", false).toString());
+        return Boolean.parseBoolean(PrefBind.getOrDefault(key, theDefault).toString());
     }
 
-    public static void set(String propName, String newValue) {
-        props.setProperty(propName, newValue.toString());
+    public static void set(String propName, Object newValue) {
+        props.put(propName, newValue);
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
