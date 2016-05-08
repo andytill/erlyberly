@@ -54,7 +54,7 @@
     <dependency>
       <groupId>com.github.andytill</groupId>
       <artifactId>toml4j</artifactId>
-      <version>0.5.2</version>
+      <version>0.6.1</version>
     </dependency>
   </dependencies>
 

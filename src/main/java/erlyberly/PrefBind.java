@@ -105,7 +105,7 @@ public class PrefBind {
         Toml toml;
         toml = new Toml();
         toml.read(new FileInputStream(erlyberlyConfig));
-        props = toml.to(Map.class);
+        props = toml.getKeyValues();
     }
 
     public static Object get(Object key) {
