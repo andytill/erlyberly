@@ -52,11 +52,10 @@
       <version>1.0.1</version>
     </dependency>
     <dependency>
-      <groupId>com.moandjiezana.toml</groupId>
+      <groupId>com.github.andytill</groupId>
       <artifactId>toml4j</artifactId>
-      <version>0.5.1</version>
+      <version>0.5.2</version>
     </dependency>
-
   </dependencies>
 
   <build>
