@@ -163,6 +163,14 @@ On OSX all shortcuts use `cmd` instead of `ctrl`.
 ##### Cannot connect or Name server errors on connection
 erlyberly must have epmd running on the machine as it is running. Otherwise it will not be able to connect to the remote node with an error about Name Servers. The easiest way to run epmd is to run the following command in the shell `erl -sname hi`, this requires erlang to be installed and on the `PATH`.
 
+This can also happen if erls `-name` parameter is used but without a hostname, see [#108](https://github.com/andytill/erlyberly/issues/108). For example.
+
+    erl -name mynode
+
+The fix is to specify the hostname or user `-sname`.
+
+    erl -name mynode@localhost
+
 ##### Cannot start, `NoSuchMethodException` is thrown
 This happens when java version 8 is installed but the update is less than 20. Please update your version of java. See issue [#39](https://github.com/andytill/erlyberly/issues/39).
 
@@ -185,4 +193,4 @@ The following people have contributed code to erlyberly:
 + [@ruanpienaar](https://github.com/ruanpienaar)
 + [@horvand ](https://github.com/horvand)
 
-The hex editor originated from [hexstar](https://github.com/Velocity-/Hexstar). The stack trace parsing is taken from [redbug](https://github.com/massemanet/eper). Fun decompiling is from (saleyn/util)[https://github.com/saleyn/util]. Tab pane drag to window is from [shichimifx](https://bitbucket.org/Jerady/shichimifx).
+The hex editor originated from [hexstar](https://github.com/Velocity-/Hexstar). The stack trace parsing is taken from [redbug](https://github.com/massemanet/eper). Fun decompiling is from [saleyn/util](https://github.com/saleyn/util). Tab pane drag to window is from [shichimifx](https://bitbucket.org/Jerady/shichimifx).
