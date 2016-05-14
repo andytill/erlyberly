@@ -99,7 +99,7 @@ public class PrefBind {
             homeDir = dotConfigDir;
         }
 
-        erlyberlyConfig = new File(homeDir, ".erlyberly");
+        erlyberlyConfig = new File(homeDir, ".erlyberly2");
         erlyberlyConfig.createNewFile();
 
         Toml toml;
