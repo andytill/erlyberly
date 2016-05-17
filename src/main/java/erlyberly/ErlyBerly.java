@@ -111,12 +111,12 @@ public class ErlyBerly extends Application {
         final double windowWidth = PrefBind.getOrDefaultDouble("windowWidth", 800D);
         primaryStage.setWidth(windowWidth);
         primaryStage.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowWidth", nv.toString());
+            PrefBind.set("windowWidth", nv);
         });
         final double windowHeight = PrefBind.getOrDefaultDouble("windowHeight", 600D);
         primaryStage.setHeight(windowHeight);
         primaryStage.heightProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowHeight", nv.toString());
+            PrefBind.set("windowHeight", nv);
         });
 
 
@@ -145,6 +145,7 @@ public class ErlyBerly extends Application {
         // run this later because it requires the control's scene to be set, which
         // may not have happened yet.
         Platform.runLater(() -> {
+            sizeSplitPanes(splitPane);
             dbgView.sizeSplitPanes();
         });
     }
@@ -175,11 +176,11 @@ public class ErlyBerly extends Application {
             dbgView.setFunctionsVisibility(nb);
         });
 
-        boolean hideProcs = PrefBind.getOrDefault("hideProcesses", "false").equals("true");
+        boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
         if(hideProcs){
             hideProcsPane();
         }
-        boolean hideMods = PrefBind.getOrDefault("hideModules", "false").equals("true");
+        boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
         if(hideMods){
             dbgView.setFunctionsVisibility(true);
         }
@@ -271,5 +272,31 @@ public class ErlyBerly extends Application {
 
     public static void setTermFormatter(TermFormatter aTermFormatter) {
         termFormatter = aTermFormatter;
+    }
+
+    public void sizeSplitPanes(SplitPane splitpane) {
+        assert splitpane.getScene() != null;
+        assert splitpane.getScene().getWidth() > 0.0d;
+        try {
+            double configuredProcessesWidth = configuredProcessesWidth();
+            double sceneWidth = splitpane.getScene().getWidth();
+            double percent = (configuredProcessesWidth / sceneWidth);
+            // the split pane divider position can only be set as a percentage of the split pane
+            splitpane.setDividerPosition(0, percent);
+            splitpane.setDividerPosition(1, 1D - percent);
+        }
+        catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        // whenever the width of the pane changes, write it to configuration
+        // this is buffered so rapid writes do not cause rapid writes to disk
+        entopPane.widthProperty().addListener((o, ov, nv) -> {
+            PrefBind.set("processesWidth", nv);
+        });
+    }
+
+    private double configuredProcessesWidth() {
+        double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
+        return w;
     }
 }

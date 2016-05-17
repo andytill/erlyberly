@@ -388,7 +388,7 @@ public class DbgView implements Initializable {
         // whenever the width of the pane changes, write it to configuration
         // this is buffered so rapid writes do not cause rapid writes to disk
         modulesBox.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, nv.toString());
+            PrefBind.set(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, nv);
         });
     }
 
