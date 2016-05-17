@@ -28,7 +28,6 @@ import java.util.TimerTask;
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
 
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
@@ -43,12 +42,29 @@ import javafx.beans.value.ObservableValue;
  */
 public class PrefBind {
 
-    private static Timer timer = new Timer(true);
+    private static final long WRITE_TO_DISK_DELAY = 500L;
+
+    private static final boolean IS_DAEMON = true;
+    private static Timer timer = new Timer(IS_DAEMON);
+
+    static {
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (AWAIT_STORE_LOCK) {
+                    if(!awaitingStore)
+                        return;
+                    awaitingStore = false;
+                }
+                store();
+            }}, WRITE_TO_DISK_DELAY, WRITE_TO_DISK_DELAY);
+    }
 
     private static Map<String, Object> props;
 
     private static File erlyberlyConfig;
 
+    private static final Object AWAIT_STORE_LOCK = new Object();
     private static boolean awaitingStore;
 
     public static void bind(final String propName, StringProperty stringProp) {
@@ -85,7 +101,6 @@ public class PrefBind {
         catch (IOException e) {
             e.printStackTrace();
         }
-        awaitingStore = false;
     }
 
     public static void setup() throws IOException {
@@ -126,13 +141,8 @@ public class PrefBind {
 
     public static void set(String propName, Object newValue) {
         props.put(propName, newValue);
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if(!awaitingStore) {
-                    Platform.runLater(PrefBind::store);
-                    awaitingStore = true;
-                }
-            }}, 1000);
+        synchronized (AWAIT_STORE_LOCK) {
+            awaitingStore = true;
+        }
     }
 }

@@ -145,6 +145,7 @@ public class ErlyBerly extends Application {
         // run this later because it requires the control's scene to be set, which
         // may not have happened yet.
         Platform.runLater(() -> {
+            sizeSplitPanes(splitPane);
             dbgView.sizeSplitPanes();
         });
     }
@@ -271,5 +272,31 @@ public class ErlyBerly extends Application {
 
     public static void setTermFormatter(TermFormatter aTermFormatter) {
         termFormatter = aTermFormatter;
+    }
+
+    public void sizeSplitPanes(SplitPane splitpane) {
+        assert splitpane.getScene() != null;
+        assert splitpane.getScene().getWidth() > 0.0d;
+        try {
+            double configuredProcessesWidth = configuredProcessesWidth();
+            double sceneWidth = splitpane.getScene().getWidth();
+            double percent = (configuredProcessesWidth / sceneWidth);
+            // the split pane divider position can only be set as a percentage of the split pane
+            splitpane.setDividerPosition(0, percent);
+            splitpane.setDividerPosition(1, 1D - percent);
+        }
+        catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        // whenever the width of the pane changes, write it to configuration
+        // this is buffered so rapid writes do not cause rapid writes to disk
+        entopPane.widthProperty().addListener((o, ov, nv) -> {
+            PrefBind.set("processesWidth", nv);
+        });
+    }
+
+    private double configuredProcessesWidth() {
+        double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
+        return w;
     }
 }
