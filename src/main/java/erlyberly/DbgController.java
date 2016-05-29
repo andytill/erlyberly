@@ -52,6 +52,12 @@ public class DbgController implements Initializable {
         ErlyBerly.nodeAPI().setTraceLogCallback((traceLog) -> {
             traceLogs.add(traceLog);
         });
+        ErlyBerly.nodeAPI().suspendedProperty().addListener((o, oldv, suspended) -> {
+            // an un-suspended is similar to a node coming back online, reapply our known traces
+            if(!suspended && ErlyBerly.nodeAPI().isConnected()) {
+                reapplyTraces();
+            }
+        });
         new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
     }
 
