@@ -69,6 +69,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class NodeAPI {
+    private static final OtpErlangAtom ERLYBERLY_TRACE_OVERLOAD_ATOM = atom("erlyberly_trace_overload");
+
     private static final String ERLYBERLY = "erlyberly";
 
     private static final String CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD = "cannot run this method from the FX thread";
@@ -406,6 +408,10 @@ public class NodeAPI {
                     moduleLoadedCallback.callback((OtpErlangTuple) receive.elementAt(2));
             });
             return receiveRPC(timeout);
+        }
+        else if(isTupleTagged(ERLYBERLY_TRACE_OVERLOAD_ATOM, receive)) {
+            Platform.runLater(() -> { suspendedProperty.set(true); });
+
         }
         else if(!isTupleTagged(atom("rex"), receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);

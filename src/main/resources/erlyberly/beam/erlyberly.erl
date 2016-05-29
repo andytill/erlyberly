@@ -224,7 +224,17 @@ erlyberly_tcollector(Node, Pid) ->
     erlyberly_tcollector2(#tcollector{ ui_pid = Pid }).
 
 %%
-erlyberly_tcollector2(#tcollector{ logs = Logs, traces = Traces } = TC) ->
+erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid } = TC) ->
+    case process_info(self(), message_queue_len) of
+        {message_queue_len, Queue_len} when Queue_len > 500 ->
+            io:format("STOPPING TRACING"),
+            ok = dbg:stop_clear(),
+            UI_pid ! {erlyberly_trace_overload, Queue_len};
+        _ ->
+            receive_next_trace(TC)
+    end.
+
+receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
         {start_trace, _, _, _} = Eb_spec ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
