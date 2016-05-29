@@ -183,3 +183,11 @@
 .mod-src{
     -fx-font: 1.0em "monospace";
 }
+
+.button-suspended {
+    -fx-base: #EE2211;
+}
+.button-suspended:hover {
+    -fx-base: #EE2211;
+    -fx-text-fill: white;
+}

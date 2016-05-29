@@ -95,7 +95,7 @@ public class FAIcon extends Label {
     }
 
     public FAIcon style(String style) {
-        setStyle(style);
+        setStyle(getStyle() + style);
         return this;
     }
 
