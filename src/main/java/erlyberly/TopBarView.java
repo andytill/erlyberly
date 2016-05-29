@@ -102,6 +102,8 @@ public class TopBarView implements Initializable {
     @FXML
     private Button prefButton;
     @FXML
+    private Button suspendButton;
+    @FXML
     private ToolBar topBox;
 
     private EventHandler<ActionEvent> refreshModulesAction;
@@ -146,6 +148,7 @@ public class TopBarView implements Initializable {
                 .or(Bindings.size(crashReportsButton.getItems()).isEqualTo(2)));
         crashReportsButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
         crashReportsButton.getItems().addAll(removeCrashReportsMenuItem(), new SeparatorMenuItem());
+
         ErlyBerly.nodeAPI().getCrashReports()
             .addListener((ListChangeListener.Change<? extends OtpErlangObject> e) -> {
                 while(e.next()) {
@@ -204,6 +207,20 @@ public class TopBarView implements Initializable {
         prefButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
         prefButton.setOnAction((e) -> { displayPreferencesPane(); });
 
+        suspendButton.setContentDisplay(ContentDisplay.TOP);
+        suspendButton.setGraphicTextGap(0d);
+        suspendButton.setTooltip(new Tooltip("Toggle Trace Suspension"));
+        suspendButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+        suspendButton.setOnAction((e) -> { suspendTraces(); });
+        // make the width the same as the preferences button, since this button is quite small comparably
+        suspendButton.prefWidthProperty().bind(prefButton.widthProperty());
+        // set the default text and icon
+        onSuspendedStateChanged(false);
+        // listen to when tracing is suspend or not, and update the button text and icon
+        ErlyBerly.nodeAPI().suspendedProperty().addListener((o,oldv,suspended) -> {
+            onSuspendedStateChanged(suspended);
+        });
+
         hideProcsProperty().addListener((Observable o) -> { toggleHideProcs(); });
         hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncs(); });
 
@@ -238,6 +255,27 @@ public class TopBarView implements Initializable {
         ErlyBerly.nodeAPI()
             .getCrashReports()
             .addListener(this::traceLogsChanged);
+    }
+
+    private void onSuspendedStateChanged(Boolean suspended) {
+        if(suspended) {
+            suspendButton.setText("Un-Suspend");
+            suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PLAY));
+        }
+        else {
+            suspendButton.setText("Suspend");
+            suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PAUSE));
+        }
+    }
+
+    private void suspendTraces() {
+        try {
+            ErlyBerly.nodeAPI().toggleSuspended();
+        } catch (OtpErlangException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private MenuItem removeCrashReportsMenuItem() {

@@ -44,6 +44,7 @@ import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.ericsson.otp.erlang.OtpMbox;
@@ -125,6 +126,12 @@ public class NodeAPI {
      */
     private RpcCallback<TraceLog> traceLogCallback;
 
+    /**
+     * When tracing is paused, NodeAPI will stop all traces. When tracing is un-suspended
+     * the DbgController must reapply all the traces.
+     */
+    private final SimpleBooleanProperty suspendedProperty;
+
     public NodeAPI() {
         traceManager = new TraceManager();
 
@@ -141,6 +148,8 @@ public class NodeAPI {
         connectedProperty.addListener(this::summaryUpdater);
 
         xrefStartedProperty = new SimpleBooleanProperty(false);
+
+        suspendedProperty = new SimpleBooleanProperty();
     }
 
     public NodeAPI connectionInfo(String remoteNodeName, String cookie) {
@@ -232,6 +241,8 @@ public class NodeAPI {
         }
         connection = null;
         self = null;
+        connected = false;
+        suspendedProperty.set(false);
     }
 
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
@@ -482,7 +493,10 @@ public class NodeAPI {
 
     public synchronized void startTrace(ModFunc mf) throws Exception {
         assert mf.getFuncName() != null : "function name cannot be null";
-
+        // if tracing is suspended, we can't apply a new trace because that will
+        // leave us in a state where some traces are active and others are not
+        if(isSuspended())
+            return;
         sendRPC("erlyberly", "start_trace", toTraceTuple(mf));
 
         OtpErlangObject result = receiveRPC();
@@ -498,6 +512,10 @@ public class NodeAPI {
 
     public synchronized void stopTrace(ModFunc mf) throws Exception {
         assert mf.getFuncName() != null : "function name cannot be null";
+        // if tracing is suspended, do not attempt to remove a trace, it should already
+        // be removed
+        if(isSuspended())
+            return;
         sendRPC("erlyberly", "stop_trace",
             list(
                 OtpUtil.atom(mf.getModuleName()),
@@ -514,8 +532,10 @@ public class NodeAPI {
     }
 
     private OtpErlangList toTraceTuple(ModFunc mf) {
+        String node = self.node();
+        OtpErlangPid self2 = mbox.self();
         return list(
-            tuple(OtpUtil.atom(self.node()), mbox.self()),
+            tuple(OtpUtil.atom(node), self2),
             atom(mf.getModuleName()),
             atom(mf.getFuncName()),
             mf.getArity(),
@@ -717,5 +737,20 @@ public class NodeAPI {
 
     public void setTraceLogCallback(RpcCallback<TraceLog> traceLogCallback) {
         this.traceLogCallback = traceLogCallback;
+    }
+
+    public void toggleSuspended() throws OtpErlangException, IOException {
+        if(!isSuspended())
+            stopAllTraces();
+        suspendedProperty.set(!isSuspended());
+    }
+
+    public boolean isSuspended() {
+        return suspendedProperty.get();
+    }
+
+    public SimpleBooleanProperty suspendedProperty() {
+        assert Platform.isFxApplicationThread();
+        return suspendedProperty;
     }
 }
