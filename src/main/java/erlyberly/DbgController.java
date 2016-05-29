@@ -20,6 +20,7 @@ package erlyberly;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import com.ericsson.otp.erlang.OtpErlangException;
@@ -148,7 +149,7 @@ public class DbgController implements Initializable {
             while (true) {
                 if(collectingSeqTraces && ErlyBerly.nodeAPI().isConnected()) {
                     try {
-                        final ArrayList<SeqTraceLog> seqTraceLogs = ErlyBerly.nodeAPI().collectSeqTraceLogs();
+                        final List<SeqTraceLog> seqTraceLogs = ErlyBerly.nodeAPI().collectSeqTraceLogs();
 
                         for (SeqTraceLog seqTraceLog : seqTraceLogs) {
                             Platform.runLater(() -> { callback.callback(seqTraceLog); });

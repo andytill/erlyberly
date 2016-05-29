@@ -23,7 +23,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
@@ -541,7 +541,7 @@ public class TopBarView implements Initializable {
         @Override
         public void run() {
             try {
-                final HashMap<Object, Object> erlangMemory = ErlyBerly.nodeAPI().erlangMemory();
+                final Map<Object, Object> erlangMemory = ErlyBerly.nodeAPI().erlangMemory();
 
                 // remove stats which are combinations of other stats
                 erlangMemory.remove(OtpUtil.atom("maximum"));
@@ -559,7 +559,7 @@ public class TopBarView implements Initializable {
             }
         }
 
-        private void populatePieData(final HashMap<Object, Object> erlangMemory) {
+        private void populatePieData(final Map<Object, Object> erlangMemory) {
             for (Entry<Object, Object> entry : erlangMemory.entrySet()) {
                 long kb = (long) (Double.parseDouble(entry.getValue().toString()) / 1024);
                 String label = entry.getKey().toString() + " (" + kb + " KB)";
