@@ -212,8 +212,6 @@ public class TopBarView implements Initializable {
         suspendButton.setTooltip(new Tooltip("Toggle Trace Suspension"));
         suspendButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
         suspendButton.setOnAction((e) -> { suspendTraces(); });
-        // make the width the same as the preferences button, since this button is quite small comparably
-        suspendButton.prefWidthProperty().bind(prefButton.widthProperty());
         // set the default text and icon
         onSuspendedStateChanged(false);
         // listen to when tracing is suspend or not, and update the button text and icon
@@ -259,7 +257,7 @@ public class TopBarView implements Initializable {
 
     private void onSuspendedStateChanged(Boolean suspended) {
         if(suspended) {
-            suspendButton.setText("Un-Suspend");
+            suspendButton.setText("Unsuspend");
             suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PLAY));
         }
         else {

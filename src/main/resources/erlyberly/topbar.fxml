@@ -42,7 +42,7 @@
             <Font size="10.0" />
          </font>
       </Button>
-      <Button fx:id="suspendButton" mnemonicParsing="false" text="Suspend">
+      <Button fx:id="suspendButton" mnemonicParsing="false" text="Unsuspend">
          <font>
             <Font size="10.0" />
          </font>
