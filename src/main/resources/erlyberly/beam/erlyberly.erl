@@ -18,7 +18,6 @@
 -module(erlyberly).
 
 -export([collect_seq_trace_logs/0]).
--export([collect_trace_logs/0]).
 -export([ensure_dbg_started/1]).
 -export([ensure_xref_started/0]).
 -export([saleyn_fun_src/1]).
@@ -51,6 +50,11 @@
 %%% ============================================================================
 %%% process info
 %%% ============================================================================
+
+%%% Load regulation constants
+-define(LOGS_PER_TICK, 10).
+-define(LOGS_SUSPEND_THRESHOLD, 100).
+-define(LOGS_LOAD_CHECK_TICK_MS, 3000).
 
 %% Asynchronously load all modules on the path where the app directory matches
 %% the given regular expression.
@@ -183,7 +187,8 @@ ensure_dbg_started({Eb_Node, Eb_pid}) ->
     StartFn = 
         fun() -> 
             Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid]),
-            register(erlyberly_tcollector, Pid)
+            register(erlyberly_tcollector, Pid),
+            erlang:send_after(?LOGS_LOAD_CHECK_TICK_MS, Pid, load_check)
         end,
 
     when_process_is_unregistered(erlyberly_tcollector, StartFn),
@@ -204,8 +209,14 @@ store_trace(Trace) ->
 -record(tcollector, {
     ui_pid,
 
-    %%
-    logs = [],
+    %% Under high load temporarily store logs to prevent gui overload
+    logs = queue:new(),
+
+    %% Number of logs waiting to be sent to gui
+    log_waiting = 0,
+
+    %% Number of logs sent to gui in the timeframe
+    log_sent = 0,
 
     %%
     traces = []
@@ -226,15 +237,15 @@ erlyberly_tcollector(Node, Pid) ->
 %%
 erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid } = TC) ->
     case process_info(self(), message_queue_len) of
-        {message_queue_len, Queue_len} when Queue_len > 500 ->
+        {message_queue_len, Queue_len} when Queue_len > 50000 ->
             io:format("STOPPING TRACING"),
             ok = dbg:stop_clear(),
             UI_pid ! {erlyberly_trace_overload, Queue_len};
         _ ->
             receive_next_trace(TC)
-    end.
+        end.
 
-receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
+receive_next_trace(#tcollector{ traces = Traces } = TC) ->
     receive
         {start_trace, _, _, _} = Eb_spec ->
             TC1 = tcollector_start_trace(Eb_spec, TC),
@@ -248,20 +259,24 @@ receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             ok = dbg:stop_clear();
         {nodedown, _Node} ->
             ok = dbg:stop_clear();
-        {take_logs, Pid} ->
-            Pid ! {trace_logs, lists:reverse(Logs)},
-            erlyberly_tcollector2(TC#tcollector{ logs = []});
+        load_check ->
+            TC1 = load_check_tick(TC),
+            erlang:send_after(?LOGS_LOAD_CHECK_TICK_MS, self(), load_check), 
+            erlyberly_tcollector2(TC1);
         Log ->
-            case collect_log(Log) of
-                skip ->
-                    ok;
-                {erlyberly_module_loaded, Loaded_module} ->
-                    ok = reapply_traces(Loaded_module, TC#tcollector.traces),
-                    ok = notify_erlyberly_module_loaded(Loaded_module, TC);
-                Trace_log ->
-                    notify_erlyberly_trace_log(Trace_log, TC)
-            end,
-            erlyberly_tcollector2(TC)
+            TC1 = case collect_log(Log) of
+                        skip ->
+                            TC;
+                        {erlyberly_module_loaded, Loaded_module} ->
+                            ok = reapply_traces(Loaded_module, TC#tcollector.traces),
+                            ok = notify_erlyberly_module_loaded(Loaded_module, TC),
+                            TC;
+                        Trace_log ->
+                          io:format("Trace_log : ~p ~n", [Trace_log ]),
+                          io:format("Waiting: ~p ~n", [TC#tcollector.log_waiting]),
+                            notify_erlyberly_trace_log(Trace_log, TC)
+                    end,
+            erlyberly_tcollector2(TC1)
    end.
 
 %%
@@ -295,9 +310,48 @@ notify_erlyberly_module_loaded(Loaded_module, #tcollector{ ui_pid = Pid }) ->
     Pid ! {erlyberly_module_loaded, Loaded_module, module_functions2(Loaded_module)},
     ok.
 
-notify_erlyberly_trace_log(Trace_log, #tcollector{ ui_pid = Pid }) ->
+notify_erlyberly_trace_log({return_from, _} = Trace_log, #tcollector{ ui_pid = Pid, log_waiting = Waiting, logs = Logs } = TC) when Waiting == ?LOGS_SUSPEND_THRESHOLD orelse
+                                                                                                                                    Waiting == ?LOGS_SUSPEND_THRESHOLD + 1 ->
+    %% Threshold reached but let the last return tracelog through
+    io:format("Queueing last return. Waiting:~p ~n", [Waiting]),
+    suspend_tracing(Pid),
+    TC#tcollector{ log_waiting = Waiting + 1, logs = queue:in(Trace_log, Logs) };
+notify_erlyberly_trace_log(_Trace_log, #tcollector{ ui_pid = Pid, log_waiting = Waiting } = TC) when Waiting > ?LOGS_SUSPEND_THRESHOLD ->
+    %% Suspend tracing if too many waiting
+    suspend_tracing(Pid),
+    TC;
+notify_erlyberly_trace_log(Trace_log, #tcollector{ log_waiting = Waiting, log_sent = Sent, logs = Logs } = TC) when Waiting > 0 orelse Sent > ?LOGS_PER_TICK ->
+    io:format("Waiting: ~p queue:in ~n", [Waiting]),
+    TC#tcollector{ log_waiting = Waiting + 1, logs = queue:in(Trace_log, Logs) };
+notify_erlyberly_trace_log(Trace_log, #tcollector{ ui_pid = Pid, log_sent = Sent } = TC)  ->
+    io:format("None waiting, sending 1~n"),
+    %% No pending logs, send one and increment counter
     Pid ! {erlyberly_trace_log, Trace_log},
-    ok.
+    TC#tcollector{ log_sent = Sent + 1 }.
+
+suspend_tracing(Pid) ->
+    io:format("STOPPING TRACING"),
+    ok = dbg:stop_clear(),
+    Pid ! {erlyberly_trace_overload, ?LOGS_SUSPEND_THRESHOLD}.
+
+send_n_logs(_Pid, Logs, 0) ->
+    Logs;
+send_n_logs(Pid, Logs, N) ->
+    io:format("Sending ~p logs~n", [N]),
+    case queue:out(Logs) of
+        {{value, Trace_log}, Logs1} ->
+            Pid ! {erlyberly_trace_log, Trace_log},
+            send_n_logs(Pid, Logs1, N - 1);
+        {empty, Logs1} ->
+            Logs1
+    end.
+
+load_check_tick(#tcollector{ ui_pid = Pid, log_waiting = Waiting, logs = Logs } = TC) ->
+    %% Tick arrived. Send as much as possible (or none if zero waiting), reset counter, unblock sending.
+    io:format("Tick arrived. Waiting:~p~n", [TC#tcollector.log_waiting]),
+    N = min(Waiting, ?LOGS_PER_TICK),
+    Logs1 = send_n_logs(Pid, Logs, N),
+    TC#tcollector{ log_sent = N, log_waiting = Waiting - N, logs = Logs1 }.
 
 %% Convert a 'call' trace (a normal function call, before return) to a
 %% {call, proplists()} that erlyberly can understand.
@@ -383,20 +437,7 @@ reapply_traces(Loaded_module, Traces) ->
     [erlyberly_tcollector ! {start_trace, M, F, A} || {M, F, A} <- Traces_1],
     ok.
 %%
-collect_trace_logs() ->
-    case whereis(erlyberly_tcollector) of
-        undefined ->
-            % monitoring of a pid from jinterface is not implemented as far as I can
-            % tell so just make do with polling
-            {error, tcollector_down};
-        _ ->
-            erlyberly_tcollector ! {take_logs, self()},
-            receive
-                {trace_logs, Logs} -> {ok, Logs}
-            after 2000 -> {error, tcollector_timeout}
-            end
-    end.
-%%
+
 get_registered_name(Pid) ->
     case erlang:process_info(Pid, registered_name) of
         [{_, Name}] -> Name;
