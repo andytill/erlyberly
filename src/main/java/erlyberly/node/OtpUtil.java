@@ -62,6 +62,7 @@ public class OtpUtil {
     private static final OtpErlangAtom ERROR_ATOM = atom("error");
     public static final OtpErlangAtom OK_ATOM = atom("ok");
 
+    private OtpUtil() {}
 
     public static OtpErlangTuple tuple(Object... elements) {
         OtpErlangObject[] tuple = toOtpElementArray(elements);
