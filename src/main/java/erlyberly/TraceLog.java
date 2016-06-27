@@ -18,6 +18,7 @@
 package erlyberly;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -46,7 +47,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private static final AtomicLong INSTANCE_COUNTER = new AtomicLong();
 
-    private final HashMap<Object, Object> map;
+    private final Map<Object, Object> map;
 
     private final long instanceNum;
 
@@ -64,7 +65,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final String cssClass;
 
-    public TraceLog(HashMap<Object, Object> map) {
+    public TraceLog(Map<Object, Object> map) {
         this.map = map;
         instanceNum = INSTANCE_COUNTER.incrementAndGet();
         pid = getPidString();
@@ -219,7 +220,7 @@ public class TraceLog implements Comparable<TraceLog> {
         return Long.compare(instanceNum, o.instanceNum);
     }
 
-    public void complete(HashMap<Object, Object> resultMap) {
+    public void complete(Map<Object, Object> resultMap) {
         tracePropsToString = null;
         Object e = resultMap.get(EXCEPTION_FROM_ATOM);
         Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
