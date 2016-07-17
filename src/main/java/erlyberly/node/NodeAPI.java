@@ -250,7 +250,9 @@ public class NodeAPI {
         connection = null;
         self = null;
         connected = false;
-        suspendedProperty.set(false);
+        Platform.runLater(() -> {
+            suspendedProperty.set(false);
+        });
     }
 
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
@@ -746,12 +748,14 @@ public class NodeAPI {
     }
 
     public void toggleSuspended() throws OtpErlangException, IOException {
+        assert Platform.isFxApplicationThread();
         if(!isSuspended())
             stopAllTraces();
         suspendedProperty.set(!isSuspended());
     }
 
     public boolean isSuspended() {
+        assert Platform.isFxApplicationThread();
         return suspendedProperty.get();
     }
 
