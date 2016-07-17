@@ -216,8 +216,10 @@ public class NodeAPI {
 
         Platform.runLater(() -> { connectedProperty.set(true); });
 
-        checkAliveThread = new CheckAliveThread();
-        checkAliveThread.start();
+        if(checkAliveThread == null) {
+            checkAliveThread = new CheckAliveThread();
+            checkAliveThread.start();
+        }
     }
 
     public void manuallyDisconnect() throws IOException, OtpErlangException{
@@ -307,13 +309,10 @@ public class NodeAPI {
         @Override
         public void run() {
             while(true) {
-                if (manuallyDisconnected){
-                    this.interrupt();
-                    break;
-                }else{
+                if (!manuallyDisconnected) {
                     ensureAlive();
-                    mySleep(150);
                 }
+                mySleep(150);
             }
         }
 
@@ -609,8 +608,10 @@ public class NodeAPI {
     private void summaryUpdater(Observable o, Boolean wasConnected, Boolean isConnected) {
         String summaryText = ERLYBERLY;
 
-        if(!wasConnected && isConnected)
-            summaryText = self.node() + " connected to " + this.remoteNodeName;
+        OtpSelfNode self2 = self;
+
+        if(self2 != null && !wasConnected && isConnected)
+            summaryText = self2.node() + " connected to " + this.remoteNodeName;
         else if(wasConnected && !isConnected)
             summaryText = "erlyberly, connection lost.  reconnecting...";
 

@@ -176,7 +176,12 @@ public class TraceLog implements Comparable<TraceLog> {
     }
 
     public StringBuilder appendModFuncArity(StringBuilder sb) {
-        return sb.append(ErlyBerly.getTermFormatter().modFuncArityToString(getFunctionFromMap()));
+        OtpErlangTuple fn = getFunctionFromMap();
+        // there might be no function if this TraceLog is acting as a NODE DOWN
+        if(fn == null) {
+            return sb;
+        }
+        return sb.append(ErlyBerly.getTermFormatter().modFuncArityToString(fn));
     }
 
     private StringBuilder appendArgsToString(StringBuilder sb, OtpErlangObject[] elements) {
