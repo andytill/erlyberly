@@ -83,11 +83,14 @@ public class OtpUtil {
             if(e instanceof Integer) {
                 tuple[i] = new OtpErlangLong((Integer)e);
             }
+            else if(e instanceof Long) {
+                tuple[i] = new OtpErlangLong((Long)e);
+            }
             else if(e instanceof OtpErlangObject) {
-                tuple[i] = (OtpErlangObject) elements[i];
+                tuple[i] = (OtpErlangObject) e;
             }
             else if(e instanceof String) {
-                tuple[i] = new OtpErlangString((String)elements[i]);
+                tuple[i] = new OtpErlangString((String)e);
             }
             else if(e instanceof Boolean) {
                 if(Boolean.TRUE.equals(e))

@@ -69,6 +69,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class NodeAPI {
+
     private static final OtpErlangAtom ERLYBERLY_TRACE_OVERLOAD_ATOM = atom("erlyberly_trace_overload");
 
     private static final String ERLYBERLY = "erlyberly";
@@ -86,6 +87,8 @@ public class NodeAPI {
     private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom(ERLYBERLY);
 
     private static final OtpErlangAtom BET_SERVICES_MSG_ATOM = new OtpErlangAtom("add_locator");
+
+    private static final OtpErlangAtom REX_ATOM = atom("rex");
 
     public interface RpcCallback<T> {
         void callback(T result);
@@ -412,9 +415,8 @@ public class NodeAPI {
         }
         else if(isTupleTagged(ERLYBERLY_TRACE_OVERLOAD_ATOM, receive)) {
             Platform.runLater(() -> { suspendedProperty.set(true); });
-
         }
-        else if(!isTupleTagged(atom("rex"), receive)) {
+        else if(!isTupleTagged(REX_ATOM, receive)) {
             throw new RuntimeException("Expected tuple tagged with atom rex but got " + receive);
         }
         OtpErlangObject result = receive.elementAt(1);
@@ -504,19 +506,17 @@ public class NodeAPI {
         return (OtpErlangList) receiveRPC();
     }
 
-    public synchronized void startTrace(ModFunc mf) throws Exception {
+    public synchronized void startTrace(ModFunc mf, int maxQueueLen) throws Exception {
         assert mf.getFuncName() != null : "function name cannot be null";
         // if tracing is suspended, we can't apply a new trace because that will
         // leave us in a state where some traces are active and others are not
         if(isSuspended())
             return;
-        sendRPC(ERLYBERLY, "start_trace", toTraceTuple(mf));
+        sendRPC(ERLYBERLY, "start_trace", toStartTraceFnArgs(mf, maxQueueLen));
 
         OtpErlangObject result = receiveRPC();
-
-        if(isTupleTagged(atom("error"), result)) {
+        if(!isTupleTagged(OK_ATOM, result)) {
             System.out.println(result);
-
 
             // TODO notify caller of failure!
             return;
@@ -544,7 +544,7 @@ public class NodeAPI {
         receiveRPC();
     }
 
-    private OtpErlangList toTraceTuple(ModFunc mf) {
+    private OtpErlangList toStartTraceFnArgs(ModFunc mf, int maxQueueLen) {
         String node = self.node();
         OtpErlangPid self2 = mbox.self();
         return list(
@@ -552,7 +552,7 @@ public class NodeAPI {
             atom(mf.getModuleName()),
             atom(mf.getFuncName()),
             mf.getArity(),
-            mf.isExported()
+            maxQueueLen
         );
     }
 

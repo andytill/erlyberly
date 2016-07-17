@@ -19,7 +19,7 @@
 
 -export([collect_seq_trace_logs/0]).
 -export([collect_trace_logs/0]).
--export([ensure_dbg_started/1]).
+-export([ensure_dbg_started/2]).
 -export([ensure_xref_started/0]).
 -export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
@@ -35,7 +35,7 @@
 -export([xref_analysis/3]).
 
 %% exported for spawned processes
--export([erlyberly_tcollector/2]).
+-export([erlyberly_tcollector/3]).
 
 %%% ============================================================================
 %%% gen_event function exports
@@ -157,12 +157,22 @@ module_functions2(Mod) when is_atom(Mod) ->
 %%% ============================================================================
 
 %%
-start_trace({Node, Pid}, Mod, Func, Arity, _IsExported) when is_atom(Node), is_pid(Pid) ->
-    ensure_dbg_started({Node, Pid}),
+start_trace({Node, Pid}, Mod, Func, Arity, Max_queue_len) when is_atom(Node),
+                                                               is_pid(Pid),
+                                                               is_integer(Max_queue_len) ->
+    ensure_dbg_started({Node, Pid}, Max_queue_len),
+    Ref = make_ref(),
+    erlyberly_tcollector ! {start_trace, Mod, Func, Arity, self(), Ref},
+    receive
+        {ok, Ref} ->
+            {ok, whereis(erlyberly_tcollector)};
+        Error when element(1,Error) == error ->
+            Error
+    after
+        1000 ->
+            {error, timeout}
+    end.
 
-    erlyberly_tcollector ! {start_trace, Mod, Func, Arity},
-
-    {ok, whereis(erlyberly_tcollector)}.
 %%
 stop_trace(Mod, Func, Arity, _IsExported) ->
     erlyberly_tcollector ! {stop_trace, Mod, Func, Arity}.
@@ -176,26 +186,23 @@ when_process_is_unregistered(ProcName, Fn) ->
         _         -> ok
     end.
 %%
-ensure_dbg_started({Eb_Node, Eb_pid}) ->
+ensure_dbg_started({Eb_Node, Eb_pid}, Max_queue_len) ->
     % restart dbg
     when_process_is_unregistered(dbg, fun dbg:start/0),
-
     StartFn = 
         fun() -> 
-            Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid]),
-            register(erlyberly_tcollector, Pid)
+            Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid, Max_queue_len]),
+            register(erlyberly_tcollector, Pid),
+            % create a tracer that will send the trace logs to erlyberly_tcollector
+            % to be stored.
+            TraceFn = 
+                fun (Trace, _) -> 
+                    store_trace(Trace),
+                    ok
+                end,
+            dbg:tracer(process, {TraceFn, ok})
         end,
-
-    when_process_is_unregistered(erlyberly_tcollector, StartFn),
-
-    % create a tracer that will send the trace logs to erlyberly_tcollector
-    % to be stored.
-    TraceFn = 
-        fun (Trace, _) -> 
-            store_trace(Trace),
-            ok
-        end,
-    dbg:tracer(process, {TraceFn, ok}).
+    when_process_is_unregistered(erlyberly_tcollector, StartFn).
 
 %%
 store_trace(Trace) ->
@@ -208,10 +215,14 @@ store_trace(Trace) ->
     logs = [],
 
     %%
-    traces = []
+    traces = [],
+
+    %% the maximum message queue length that the collector can accrue before
+    %% tracing is suspended
+    max_queue_len
 }).
 
-erlyberly_tcollector(Node, Pid) ->
+erlyberly_tcollector(Node, Pid, Max_queue_len) when is_integer(Max_queue_len) ->
     % throws a badarg if the node has already closed down
     erlang:monitor_node(Node, true),
 
@@ -221,12 +232,13 @@ erlyberly_tcollector(Node, Pid) ->
     dbg:p(all, [c, timestamp]),
     dbg:tp(code, x),
 
-    erlyberly_tcollector2(#tcollector{ ui_pid = Pid }).
+    erlyberly_tcollector2(#tcollector{ ui_pid = Pid,
+                                       max_queue_len = Max_queue_len }).
 
 %%
-erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid } = TC) ->
+erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid, max_queue_len = Max_queue_len } = TC) ->
     case process_info(self(), message_queue_len) of
-        {message_queue_len, Queue_len} when Queue_len > 500 ->
+        {message_queue_len, Queue_len} when Queue_len > Max_queue_len ->
             io:format("STOPPING TRACING"),
             ok = dbg:stop_clear(),
             UI_pid ! {erlyberly_trace_overload, Queue_len};
@@ -236,8 +248,9 @@ erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid } = TC) ->
 
 receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
     receive
-        {start_trace, _, _, _} = Eb_spec ->
-            TC1 = tcollector_start_trace(Eb_spec, TC),
+        {start_trace, Mod, Func, Arity, Requester, Ref} ->
+            TC1 = tcollector_start_trace(Mod, Func, Arity, TC),
+            Requester ! {ok, Ref},
             erlyberly_tcollector2(TC1);
         {stop_trace, Mod, Func, Arity} ->
             dbg:ctpl(Mod, Func, Arity),
@@ -265,7 +278,7 @@ receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
    end.
 
 %%
-tcollector_start_trace({start_trace, Mod, Func, Arity}, #tcollector{ traces = Traces } = TC) ->
+tcollector_start_trace(Mod, Func, Arity, #tcollector{ traces = Traces } = TC) ->
     Match_spec = [{'_', [], [{message,{process_dump}}, {exception_trace}]}],
     Trace_spec = {Mod, Func, Arity},
     dbg:tpl(Trace_spec, Match_spec),
@@ -452,7 +465,8 @@ collect_seq_trace_logs() ->
 
 %%
 ensure_seq_tracer_started(Remote_node) ->
-    ensure_dbg_started(Remote_node),
+    %% TODO configure value for seq trace max queeu length
+    ensure_dbg_started(Remote_node, 500),
 
     case whereis(?erlyberly_seq_trace) of
         undefined ->
