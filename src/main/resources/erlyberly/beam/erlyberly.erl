@@ -241,12 +241,33 @@ erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid, max_queue_len = Max_queue_le
         {message_queue_len, Queue_len} when Queue_len > Max_queue_len ->
             io:format("STOPPING TRACING"),
             ok = dbg:stop_clear(),
-            UI_pid ! {erlyberly_trace_overload, Queue_len};
+            UI_pid ! {erlyberly_trace_overload, Queue_len},
+            collect_overloading_logs(Max_queue_len, TC);
         _ ->
             receive_next_trace(TC)
     end.
 
-receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
+%% Collect logs that in the message queue, even though we have suspended
+%% tracing. This is to try and show what was causing the overload.
+collect_overloading_logs(0, _) ->
+    ok;
+collect_overloading_logs(Max_queue_len, TC) ->
+    receive
+        Log ->
+            case collect_log(Log) of
+                skip ->
+                    collect_overloading_logs(Max_queue_len-1, TC);
+                {erlyberly_module_loaded, _} ->
+                    collect_overloading_logs(Max_queue_len-1, TC);
+                Trace_log ->
+                    notify_erlyberly_trace_log(Trace_log, TC),
+                    collect_overloading_logs(Max_queue_len-1, TC)
+            end
+    after
+        0 -> ok
+    end.
+
+receive_next_trace(#tcollector{ traces = Traces } = TC) ->
     receive
         {start_trace, Mod, Func, Arity, Requester, Ref} ->
             TC1 = tcollector_start_trace(Mod, Func, Arity, TC),
@@ -261,9 +282,6 @@ receive_next_trace(#tcollector{ logs = Logs, traces = Traces } = TC) ->
             ok = dbg:stop_clear();
         {nodedown, _Node} ->
             ok = dbg:stop_clear();
-        {take_logs, Pid} ->
-            Pid ! {trace_logs, lists:reverse(Logs)},
-            erlyberly_tcollector2(TC#tcollector{ logs = []});
         Log ->
             case collect_log(Log) of
                 skip ->
