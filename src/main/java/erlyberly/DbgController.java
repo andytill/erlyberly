@@ -58,6 +58,12 @@ public class DbgController implements Initializable {
                 reapplyTraces();
             }
         });
+        ErlyBerly.nodeAPI().connectedProperty().addListener(
+            (o, oldV, newV) -> {
+                if(oldV && !newV) {
+                    traceLogs.add(TraceLog.newNodeDown());
+                }
+            });
         new SeqTraceCollectorThread((seqs) -> { seqTraces.addAll(seqs); }).start();
     }
 

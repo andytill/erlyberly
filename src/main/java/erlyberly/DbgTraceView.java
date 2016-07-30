@@ -24,9 +24,6 @@ import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
@@ -53,26 +50,22 @@ import javafx.scene.layout.VBox;
 
 public class DbgTraceView extends VBox {
 
-    private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
+    private final DbgController dbgController;
 
-    private final SortedList<TraceLog> sortedTtraces = new SortedList<TraceLog>(traceLogs);
+    private final SortedList<TraceLog> sortedTtraces;
 
-    private final FilteredList<TraceLog> filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
+    private final FilteredList<TraceLog> filteredTraces;
 
     private final TableView<TraceLog> tracesBox;
 
-    /**
-     * Set insertTracesAtTop=true in the .erlyberly file in your home directory to
-     * make traces be inserted at the top of the list.
-     */
-    private boolean insertTracesAtTop;
+    public DbgTraceView(DbgController aDbgController) {
+        dbgController = aDbgController;
+        sortedTtraces = new SortedList<TraceLog>(dbgController.getTraceLogs());
+        filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
 
-    public DbgTraceView(DbgController dbgController) {
         setSpacing(5d);
         setStyle("-fx-background-insets: 5;");
         setMaxHeight(Double.MAX_VALUE);
-
-        insertTracesAtTop = PrefBind.getOrDefaultBoolean("insertTracesAtTop", false);
 
         tracesBox = new TableView<TraceLog>();
         tracesBox.getStyleClass().add("trace-log-table");
@@ -95,15 +88,6 @@ public class DbgTraceView extends VBox {
         Parent p = traceLogFloatySearchControl();
 
         getChildren().addAll(p, tracesBox);
-
-        dbgController.getTraceLogs().addListener(this::traceLogsChanged);
-
-        ErlyBerly.nodeAPI().connectedProperty().addListener(
-            (o, oldV, newV) -> {
-                if(oldV && !newV) {
-                    traceLogs.add(TraceLog.newNodeDown());
-                }
-            });
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -195,7 +179,7 @@ public class DbgTraceView extends VBox {
 
     private void putTraceContextMenu() {
         TraceContextMenu traceContextMenu = new TraceContextMenu();
-        traceContextMenu.setItems(traceLogs);
+        traceContextMenu.setItems(dbgController.getTraceLogs());
         traceContextMenu
                 .setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 
@@ -306,16 +290,5 @@ public class DbgTraceView extends VBox {
         });
 
         return fxmlNode;
-    }
-
-    public void traceLogsChanged(ListChangeListener.Change<? extends TraceLog> e) {
-        while(e.next()) {
-            for (TraceLog trace : e.getAddedSubList()) {
-                if(insertTracesAtTop)
-                    traceLogs.add(0, trace);
-                else
-                    traceLogs.add(trace);
-            }
-        }
     }
 }
