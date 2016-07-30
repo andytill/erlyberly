@@ -85,10 +85,7 @@ public class TraceContextMenu extends ContextMenu {
 
     private void onDelete(ActionEvent e) {
         ArrayList<TraceLog> arrayList = new ArrayList<TraceLog>(selectedItems);
-
-        for (TraceLog traceLog : arrayList) {
-            items.remove(traceLog);
-        }
+        items.removeAll(arrayList);
     }
 
     private void onDeleteAll(ActionEvent e) {

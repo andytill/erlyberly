@@ -39,7 +39,21 @@ import javafx.fxml.Initializable;
 
 public class DbgController implements Initializable {
 
-    public final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
+    /**
+     * The maximum trace logs that erlyberly can show in the table before it must
+     * load shed them e.g. start throwing them away so that the UI does not attempt
+     * to take an unlimited amount of memory, and fail!
+     *
+     * This is only checked at start up, so if it is changed it requires a restart.
+     */
+    private static final int MAX_TRACE_LOGS;
+
+    static {
+        Number maxTraceLogs = (Number) PrefBind.getOrDefault("maxTraceLogs", 1000);
+        MAX_TRACE_LOGS = maxTraceLogs.intValue();
+    }
+
+    private final ObservableList<TraceLog> traceLogs = FXCollections.observableArrayList();
 
     private final ObservableList<ModFunc> traces = FXCollections.observableArrayList();
 
@@ -47,9 +61,22 @@ public class DbgController implements Initializable {
 
     private volatile boolean collectingSeqTraces;
 
+    private TraceLog loadSheddingLog;
+
     @Override
     public void initialize(URL url, ResourceBundle r) {
         ErlyBerly.nodeAPI().setTraceLogCallback((traceLog) -> {
+            if(traceLogs.size() > MAX_TRACE_LOGS) {
+                if(loadSheddingLog == null) {
+                    loadSheddingLog = TraceLog.newLoadShedding();
+                    traceLogs.add(loadSheddingLog);
+                }
+                return;
+            }
+            if(loadSheddingLog != null) {
+                traceLogs.remove(loadSheddingLog);
+                loadSheddingLog = null;
+            }
             traceLogs.add(traceLog);
         });
         ErlyBerly.nodeAPI().suspendedProperty().addListener((o, oldv, suspended) -> {

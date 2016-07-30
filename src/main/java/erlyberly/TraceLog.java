@@ -310,6 +310,10 @@ public class TraceLog implements Comparable<TraceLog> {
         return new TraceLog("breaker-row", "NODE DOWN");
     }
 
+    public static TraceLog newLoadShedding() {
+        return new TraceLog("breaker-row", "LOAD SHEDDING");
+    }
+
     public OtpErlangList getStackTrace() {
         OtpErlangList stacktrace = (OtpErlangList) map.get(OtpUtil.atom("stack_trace"));
         if(stacktrace == null)
