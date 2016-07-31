@@ -522,10 +522,7 @@ public class TopBarView implements Initializable {
     }
 
     private void displayPreferencesPane() {
-        ErlyBerly.showPane(
-            "Preferences",
-            ErlyBerly.wrapInPane(new FxmlLoadable("/erlyberly/preferences.fxml").load())
-        );
+        ErlyBerly.showPreferencesPane();
     }
 
     class ErlangMemoryThread extends Thread {

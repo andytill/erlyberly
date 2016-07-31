@@ -47,6 +47,12 @@ public class ErlyBerly extends Application {
 
     private static final NodeAPI NODE_API = new NodeAPI();
 
+    /**
+     * The preferences tab, that is added when the user presses the 'Preferences'
+     * button in the top bar. Static because there can be only one.
+     */
+    private static Tab prefstab;
+
     private SplitPane splitPane;
 
     private Region entopPane;
@@ -251,8 +257,30 @@ public class ErlyBerly extends Application {
         Tab newTab;
         newTab = new Tab(title);
         newTab.setContent(parentControl);
+        addAndSelectTab(newTab);
+    }
+
+    private static void addAndSelectTab(Tab newTab) {
         tabPane.getTabs().add(newTab);
         tabPane.getSelectionModel().select(newTab);
+    }
+
+
+    public static void showPreferencesPane() {
+        if(prefstab == null) {
+            FxmlLoadable fxmlLoadable = new FxmlLoadable("/erlyberly/preferences.fxml");
+            Parent parent = fxmlLoadable.load();
+            Pane tabPane = ErlyBerly.wrapInPane(parent);
+            prefstab = new Tab("Preferences");
+            prefstab.setContent(tabPane);
+        }
+
+        if(tabPane.getTabs().contains(prefstab)) {
+            tabPane.getSelectionModel().select(prefstab);
+        }
+        else {
+            addAndSelectTab(prefstab);
+        }
     }
 
     /**
