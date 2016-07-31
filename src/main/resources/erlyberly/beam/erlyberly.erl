@@ -239,7 +239,7 @@ erlyberly_tcollector(Node, Pid, Max_queue_len) when is_integer(Max_queue_len) ->
 erlyberly_tcollector2(#tcollector{ ui_pid = UI_pid, max_queue_len = Max_queue_len } = TC) ->
     case process_info(self(), message_queue_len) of
         {message_queue_len, Queue_len} when Queue_len > Max_queue_len ->
-            io:format("STOPPING TRACING"),
+            %% io:format("~nSTOPPING TRACING, Queue Len: ~p, Max Len: ~p~n", [Queue_len, Max_queue_len]),
             ok = dbg:stop_clear(),
             UI_pid ! {erlyberly_trace_overload, Queue_len},
             collect_overloading_logs(Max_queue_len, TC);
