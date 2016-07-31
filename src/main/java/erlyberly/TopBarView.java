@@ -258,11 +258,13 @@ public class TopBarView implements Initializable {
     private void onSuspendedStateChanged(Boolean suspended) {
         if(suspended) {
             suspendButton.setText("Unsuspend");
-            suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PLAY));
+            suspendButton.setGraphic(FAIcon.create().style("-fx-text-fill: white;").icon(AwesomeIcon.PLAY));
+            suspendButton.getStyleClass().add("button-suspended");
         }
         else {
             suspendButton.setText("Suspend");
             suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PAUSE));
+            suspendButton.getStyleClass().remove("button-suspended");
         }
     }
 
