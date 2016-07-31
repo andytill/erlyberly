@@ -271,7 +271,8 @@ public class ErlyBerly extends Application {
             FxmlLoadable fxmlLoadable = new FxmlLoadable("/erlyberly/preferences.fxml");
             Parent parent = fxmlLoadable.load();
             Pane tabPane = ErlyBerly.wrapInPane(parent);
-            prefstab = new Tab("Preferences", tabPane);
+            prefstab = new Tab("Preferences");
+            prefstab.setContent(tabPane);
         }
 
         if(tabPane.getTabs().contains(prefstab)) {
