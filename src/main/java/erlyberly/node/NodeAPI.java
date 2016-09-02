@@ -153,6 +153,9 @@ public class NodeAPI {
             @Override
             public void changed(ObservableValue<? extends Boolean> obv, Boolean o, Boolean n) {
                 connected = n;
+                if(!n) {
+                    xrefStartedProperty.set(false);
+                }
             }});
         summary = new SimpleStringProperty("erlyberly not connected");
 

@@ -38,6 +38,7 @@ import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -59,6 +60,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleButton;
@@ -84,6 +86,8 @@ public class TopBarView implements Initializable {
     private static final KeyCodeCombination REFRESH_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
 
     private final SimpleIntegerProperty unreadCrashReportsProperty = new SimpleIntegerProperty(0);
+
+    private final SimpleBooleanProperty isXrefAnalysing = new SimpleBooleanProperty();
 
     @FXML
     private ToggleButton hideProcessesButton;
@@ -170,10 +174,12 @@ public class TopBarView implements Initializable {
         xrefAnalysisButton.setContentDisplay(ContentDisplay.TOP);
         xrefAnalysisButton.setGraphicTextGap(0d);
         xrefAnalysisButton.setTooltip(new Tooltip("Start xref analysis. This may take a while, an ok is displayed when complete."));
-        xrefAnalysisButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
+        xrefAnalysisButton.disableProperty().bind(
+                ErlyBerly.nodeAPI().connectedProperty().not().or(isXrefAnalysing).or(ErlyBerly.nodeAPI().xrefStartedProperty()));
         xrefAnalysisButton.setOnAction((e) -> {
             try {
                 ErlyBerly.nodeAPI().asyncEnsureXRefStarted();
+                isXrefAnalysing.set(true);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -253,12 +259,14 @@ public class TopBarView implements Initializable {
         ErlyBerly.nodeAPI()
             .getCrashReports()
             .addListener(this::traceLogsChanged);
+        ErlyBerly.nodeAPI()
+            .xrefStartedProperty()
+            .addListener((e, oldv, newv) -> { if(newv) isXrefAnalysing.set(false); });
     }
 
     private void onSuspendedStateChanged(Boolean suspended) {
         if(suspended) {
             suspendButton.setText("Unsuspend");
-            suspendButton.setGraphic(FAIcon.create().style("-fx-text-fill: white;").icon(AwesomeIcon.PLAY));
             suspendButton.getStyleClass().add("button-suspended");
         }
         else {
@@ -355,16 +363,22 @@ public class TopBarView implements Initializable {
 
         icon = FAIcon.create().icon(AwesomeIcon.TH_LARGE);
         icon.setPadding(new Insets(0, 5, 0, 5));
-
+        icon.visibleProperty().bind(isXrefAnalysing.not());
         Label reportCountLabel;
 
         reportCountLabel = new Label("ok");
         reportCountLabel.setStyle("-fx-background-color:green; -fx-font-size:9; -fx-padding: 0 2 0 2; -fx-opacity:0.9");
         reportCountLabel.setTextFill(Color.WHITE);
 
+        ProgressIndicator analysisProgressIndicator;
+        analysisProgressIndicator = new ProgressIndicator();
+        analysisProgressIndicator.visibleProperty().bind(isXrefAnalysing);
+        analysisProgressIndicator.setPrefSize(10d, 10d);
+        analysisProgressIndicator.setStyle("-fx-progress-color: black;");
+
         reportCountLabel.visibleProperty().bind(ErlyBerly.nodeAPI().xrefStartedProperty());
 
-        StackPane stackPane = new StackPane(icon, reportCountLabel);
+        StackPane stackPane = new StackPane(icon, reportCountLabel, analysisProgressIndicator);
         StackPane.setAlignment(reportCountLabel, Pos.TOP_RIGHT);
         return stackPane;
     }
