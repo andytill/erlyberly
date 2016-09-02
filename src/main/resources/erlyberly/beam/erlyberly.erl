@@ -624,15 +624,10 @@ is_xref_recursion(_,_) ->
 
 %%
 ensure_xref_started() ->
-    case whereis(?erlyberly_xref) of
-        undefined ->
-            {ok, _} = xref:start(?erlyberly_xref),
-            % timer:sleep(1000),
-            [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path()],
-            {erlyberly_xref_started};
-        _ ->
-            {erlyberly_xref_started}
-    end.
+    catch xref:stop(?erlyberly_xref),
+    {ok, _} = xref:start(?erlyberly_xref),
+    [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path()],
+    {erlyberly_xref_started}.
 
 %%% ============================================================================
 %%% view module source code
