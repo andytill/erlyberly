@@ -22,10 +22,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
@@ -159,8 +164,17 @@ public class ModFuncContextMenu extends ContextMenu {
         if(func.isModule())
             return;
 
+        List<String> defaultSkippedModules = Arrays.asList(
+            "app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer"
+        );
+        List<String> skippedModules = (List<String>) PrefBind.getOrDefault("xrefSkippedModules", defaultSkippedModules);
+        List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
         try {
-            OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
+            OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(
+                new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})),
+                OtpUtil.atom(func.getModuleName()),
+                OtpUtil.atom(func.getFuncName()),
+                new OtpErlangLong(func.getArity()));
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
             ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));

@@ -32,7 +32,7 @@
 -export([start_trace/5]).
 -export([stop_trace/4]).
 -export([stop_traces/0]).
--export([xref_analysis/3]).
+-export([xref_analysis/4]).
 
 %% exported for spawned processes
 -export([erlyberly_tcollector/3]).
@@ -605,16 +605,22 @@ seq_trace_match_spec(_) ->
 -define(erlyberly_xref, erlyberly_xref).
 
 %%
-xref_analysis(M,F,A) when is_integer(A) ->
-    % TODO monitor the node and stop the erlyberly xref
-    ensure_xref_started(),
-
-    xref_analysis2({M,F,A}, []).
+xref_analysis(Ignore_mods, M,F,A) when is_integer(A) ->
+    Call_stack_set = gb_sets:new(),
+    xref_analysis2({M,F,A}, gb_sets:from_list(Ignore_mods), Call_stack_set, []).
 
 %%
-xref_analysis2(MFA, Call_stack) ->
-    {ok, Calls} = xref:analyze(?erlyberly_xref, {call, MFA}),
-    {MFA, [xref_analysis2(X_mfa, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa) andalso not lists:member(MFA, Call_stack)]}.
+xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
+    case gb_sets:is_member(MFA, All_calls) orelse gb_sets:is_member(element(1,MFA), Ignore_mods_set) of
+        true ->
+            {MFA, []};
+        false ->
+            {ok, Calls} = xref:analyze(?erlyberly_xref, {call, MFA}),
+            All_calls2 = gb_sets:add(MFA, All_calls),
+            Analysed_calls =
+                [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
+            {MFA, Analysed_calls}
+    end.
 
 %%
 is_xref_recursion({M,F,A}, {M,F,A}) ->
@@ -624,14 +630,18 @@ is_xref_recursion(_,_) ->
 
 %%
 ensure_xref_started() ->
-    case whereis(?erlyberly_xref) of
-        undefined ->
-            {ok, _} = xref:start(?erlyberly_xref),
-            % timer:sleep(1000),
-            [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path()],
-            {erlyberly_xref_started};
-        _ ->
-            {erlyberly_xref_started}
+    catch xref:stop(?erlyberly_xref),
+    {ok, _} = xref:start(?erlyberly_xref),
+    Excluded = ["asn1ct", "/ct-", "dialyzer", "diameter", "hipe", "httpd", "megaco", "xmerl", "wx-"],
+    [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path(), not dir_contains(Dir, Excluded)],
+    {erlyberly_xref_started}.
+
+dir_contains(_, []) ->
+    false;
+dir_contains(Dir, [Str|Tail]) ->
+    case string:str(Dir, Str) of
+        0 -> dir_contains(Dir, Tail);
+        _ -> true
     end.
 
 %%% ============================================================================

@@ -70,6 +70,7 @@ public class CallGraphView extends TreeView<ModFunc> {
     }
 
     public void callGraph(OtpErlangTuple callStack) {
+        assert callStack != null;
         populateCallGraph(getRoot(), callStack);
     }
 
@@ -80,6 +81,7 @@ public class CallGraphView extends TreeView<ModFunc> {
      * </code>
      */
     private void populateCallGraph(TreeItem<ModFunc> parentModFuncItem, OtpErlangTuple callGraph) {
+        assert callGraph != null;
         OtpErlangTuple mfaTuple = (OtpErlangTuple) OtpUtil.tupleElement(0, callGraph);
         OtpErlangList calls = (OtpErlangList) OtpUtil.tupleElement(1, callGraph);
 

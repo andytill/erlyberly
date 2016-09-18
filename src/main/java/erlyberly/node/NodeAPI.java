@@ -153,6 +153,9 @@ public class NodeAPI {
             @Override
             public void changed(ObservableValue<? extends Boolean> obv, Boolean o, Boolean n) {
                 connected = n;
+                if(!n) {
+                    xrefStartedProperty.set(false);
+                }
             }});
         summary = new SimpleStringProperty("erlyberly not connected");
 
@@ -666,8 +669,8 @@ public class NodeAPI {
         return manuallyDisconnected;
     }
 
-    public synchronized OtpErlangObject callGraph(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {
-        sendRPC(ERLYBERLY, "xref_analysis", list(module, function, arity));
+    public synchronized OtpErlangObject callGraph(OtpErlangList skippedModuleAtoms, OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity) throws IOException, OtpErlangException {
+        sendRPC(ERLYBERLY, "xref_analysis", list(skippedModuleAtoms, module, function, arity));
 
         OtpErlangObject result = receiveRPC();
 
