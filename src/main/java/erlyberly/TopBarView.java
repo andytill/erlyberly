@@ -17,11 +17,8 @@
  */
 package erlyberly;
 
-import java.awt.Desktop;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,8 +66,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
@@ -185,14 +180,6 @@ public class TopBarView implements Initializable {
             }
         });
 
-        Button tweetButton;
-        tweetButton = new Button("Tweet");
-        tweetButton.setGraphic(FAIcon.create().icon(AwesomeIcon.TWITTER));
-        tweetButton.setContentDisplay(ContentDisplay.TOP);
-        tweetButton.setGraphicTextGap(0d);
-        tweetButton.setOnAction((e) -> { tweet(); });
-        tweetButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
-
         disconnectButton.setGraphic(FAIcon.create().icon(AwesomeIcon.EJECT));
         disconnectButton.setContentDisplay(ContentDisplay.TOP);
         disconnectButton.setGraphicTextGap(0d);
@@ -234,8 +221,6 @@ public class TopBarView implements Initializable {
 
         topBox.getItems().add(new Separator(Orientation.VERTICAL));
         topBox.getItems().add(loader.fxmlNode);
-
-        topBox.getItems().addAll(rhsSpacer(), tweetButton);
 
         // let's store the ui preferences, as the end user changes them...
         PrefBind.bindBoolean("hideProcesses", hideProcessesButton.selectedProperty());
@@ -299,28 +284,6 @@ public class TopBarView implements Initializable {
             unreadCrashReportsProperty.set(0);
         });
         return menuItem;
-    }
-
-    /**
-     * Create a node that just takes up space, so everything after
-     * is laid out on the right hand side.
-     */
-    private HBox rhsSpacer() {
-        HBox spacer = new HBox();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        return spacer;
-    }
-
-    private void tweet() {
-        String message =
-            "Using erlyberly to debug my node @erlyberlytips";
-        URI uri;
-        try {
-            uri = new URI("https://twitter.com/intent/tweet?text=" + URLEncoder.encode(message, "utf-8"));
-            Desktop.getDesktop().browse(uri);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void traceLogsChanged(ListChangeListener.Change<? extends OtpErlangObject> e) {
