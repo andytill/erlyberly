@@ -93,8 +93,12 @@ public class CrashReport {
             OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
             OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
 
+            String fileString = "";
+            if(file != null) {
+                fileString = file.stringValue();
+            }
             result.add(
-                fn.invoke(module, function, arity, file.stringValue(), line)
+                fn.invoke(module, function, arity, fileString, line)
             );
         }
         return result;
