@@ -48,8 +48,11 @@ public class CrashReportGraphic extends VBox {
             processString = report.getPid().toString();
         }
         processString += " " + report.getErrorClass() + ":" + report.getErrorReason();
+
         Label label;
         label = new Label(processString);
+        // #75 make sure that the label does not have unbounded width
+        label.setMaxWidth(500d);
         label.setStyle("-fx-font-size: 11; -fx-padding: 2 0 0 0;");
         return label;
     }
