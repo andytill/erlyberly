@@ -17,6 +17,7 @@
  */
 package erlyberly;
 
+import java.text.DecimalFormat;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -45,6 +46,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -73,6 +75,17 @@ public class ProcView implements Initializable {
     private Button totalHeapPieButton;
     @FXML
     private HBox headerBox;
+
+    /**
+     * Total of the last opened pie chart
+     */
+    private double total = 0d;
+
+    /**
+     * Only use on the javafx thread
+     */
+    private final DecimalFormat percentFormatter = new DecimalFormat("#.#");
+
 
     public ProcView() {
         procController = new ProcController();
@@ -238,31 +251,31 @@ public class ProcView implements Initializable {
 
     private ObservableList<PieChart.Data> buildData(ObservableList<ProcInfo> procs, Callback<ProcInfo, Long> extractor) {
 
-        long total = 0;
+        total = 0;
 
         for (ProcInfo proc : procs) {
             total += extractor.call(proc);
         }
 
-        // threshold is 1%, this is a limit on how many segments are added to the pie chart
-        // too many seems to crash the process
-        long threshold = total / 200;
+        // threshold is 0.5%, this is a limit on how many segments are added to
+        // the pie chart too many seems to crash the process
+        double threshold = total / 200;
 
-        long other = 0;
+        double other = 0;
 
         ObservableList<PieChart.Data> data = FXCollections.observableArrayList();
 
         for (ProcInfo proc : procs) {
-            long value = extractor.call(proc);
+            double value = extractor.call(proc);
 
             if(value >= threshold)
-                data.add(new Data(procDescription(proc), proc.getTotalHeapSize()));
+                data.add(new Data(procDescription(proc), extractor.call(proc)));
             else
                 other += value;
         }
 
         if(other > 0)
-            data.add(new Data("All processes > " + threshold + " bytes", other));
+            data.add(new Data("All processes less than 0.5% of total", other));
 
         return data;
     }
@@ -280,6 +293,13 @@ public class ProcView implements Initializable {
         PieChart pieChart;
         pieChart = new PieChart(data);
         pieChart.setTitle(title);
+        pieChart.getData().stream().forEach(d -> {
+            Tooltip tooltip;
+            tooltip = new Tooltip();
+            String percent = percentFormatter.format((d.getPieValue()/total)*100);
+            tooltip.setText(d.getName() + " " + percent + "%");
+            Tooltip.install(d.getNode(), tooltip);
+        });
         ErlyBerly.showPane(title, ErlyBerly.wrapInPane(pieChart));
     }
 
@@ -287,6 +307,9 @@ public class ProcView implements Initializable {
         String pid = proc.getProcessName();
         if(pid == null || "".equals(pid)) {
             pid = proc.getPid();
+        }
+        if(pid == null || "".equals(pid)) {
+            pid = "unknown pid";
         }
         return pid;
     }
