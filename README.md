@@ -1,3 +1,6 @@
+**Looking for contributors, especially if you would like to code java. Have a look at the issues or ping me at  https://twitter.com/erlyberlytips.**
+
+---
 
 # erlyberly
 
