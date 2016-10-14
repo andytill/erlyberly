@@ -29,7 +29,8 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
 
-public class ErlangFormatter implements TermFormatter {
+public class
+ErlangFormatter extends BaseFormatter {
 
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
@@ -136,35 +137,5 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason) {
         return errorClass + ":" +  toString(errorReason);
-    }
-
-    @Override
-    public String emptyTupleString() {
-        return "{ }";
-    }
-
-    @Override
-    public String tupleLeftParen() {
-        return "{";
-    }
-
-    @Override
-    public String tupleRightParen() {
-        return "}";
-    }
-
-    @Override
-    public String emptyListString() {
-        return "[ ]";
-    }
-
-    @Override
-    public String listLeftParen() {
-        return "[";
-    }
-
-    @Override
-    public String listRightParen() {
-        return "]";
     }
 }

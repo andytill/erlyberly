@@ -28,7 +28,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.OtpUtil;
 
-public class LFEFormatter implements TermFormatter {
+public class LFEFormatter extends BaseFormatter {
 
     /**
      * Convert an MFA tuple to a string, where the MFA must have the type:
@@ -111,35 +111,5 @@ public class LFEFormatter implements TermFormatter {
             }
             appendToString(elements[i], sb);
         }
-    }
-
-    @Override
-    public String emptyTupleString() {
-        return "#( )";
-    }
-
-    @Override
-    public String tupleLeftParen() {
-        return "#(";
-    }
-
-    @Override
-    public String tupleRightParen() {
-        return ")";
-    }
-
-    @Override
-    public String emptyListString() {
-        return "( )";
-    }
-
-    @Override
-    public String listLeftParen() {
-        return ")";
-    }
-
-    @Override
-    public String listRightParen() {
-        return ")";
     }
 }
