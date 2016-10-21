@@ -93,6 +93,10 @@ public class LFEFormatter implements TermFormatter {
         else if(obj instanceof OtpErlangList) {
             sb.append("(");
             elementsToString(sb, ((OtpErlangList) obj).elements());
+            if(!((OtpErlangList) obj).isProper()) {
+                sb.append(cons());
+                appendToString(((OtpErlangList) obj).getLastTail(), sb);
+            }
             sb.append(")");
         }
         else if(obj instanceof OtpErlangString) {
@@ -141,5 +145,10 @@ public class LFEFormatter implements TermFormatter {
     @Override
     public String listRightParen() {
         return ")";
+    }
+
+    @Override
+    public String cons() {
+        return ".";
     }
 }
