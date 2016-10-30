@@ -209,6 +209,10 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     for (OtpErlangObject e : elements) {
                         addToTreeItem(listItem, e);
                     }
+                    if (!((OtpErlangList)obj).isProper()) {
+                        listItem.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.cons())));
+                        addToTreeItem(listItem, ((OtpErlangList)obj).getLastTail());
+                    }
                     parent.getChildren().add(listItem);
                     parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.listRightParen())));
                 }

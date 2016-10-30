@@ -20,9 +20,14 @@ package erlyberly.node;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangException;
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangObject;
 
 import erlyberly.format.ErlangFormatter;
+import erlyberly.format.LFEFormatter;
 
 
 public class OtpUtilTest  {
@@ -121,6 +126,35 @@ public class OtpUtilTest  {
 		Assert.assertEquals("{1, 2, {3, 4}}", sb.toString());
 	}
 	*/
+
+    @Test
+    public void improperListErlang() throws OtpErlangException {
+        OtpErlangList improper =
+            new OtpErlangList(
+                    new OtpErlangObject[] {
+                        new OtpErlangAtom("hello"),
+                        new OtpErlangBinary("x".getBytes()),
+                    },
+                    new OtpErlangAtom("world"));
+        Assert.assertEquals(
+                "[hello, <<\"x\">>|world]",
+                new ErlangFormatter().toString(improper));
+    }
+
+    @Test
+    public void improperListLFE() throws OtpErlangException {
+        OtpErlangList improper =
+            new OtpErlangList(
+                    new OtpErlangObject[] {
+                        new OtpErlangAtom("hello"),
+                        new OtpErlangBinary("x".getBytes()),
+                    },
+                    new OtpErlangAtom("world"));
+        Assert.assertEquals(
+                "('hello, #B(\"x\").'world)",
+                new LFEFormatter().toString(improper));
+    }
+
 	private String bin() {
 		OtpErlangBinary binary = new OtpErlangBinary(bytes);
 		
