@@ -70,10 +70,14 @@ public class PreferencesView implements Initializable {
     }
 
     private void storeFormattingPreferenceChange() {
-        if(erlangTermsButton.isSelected())
+        if(erlangTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "erlang");
-        else if(lfeTermsButton.isSelected())
+            ErlyBerly.setTermFormatter(new ErlangFormatter());
+        }
+        else if(lfeTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "lfe");
+            ErlyBerly.setTermFormatter(new LFEFormatter());
+        }
         selectFormattingButton();
     }
 
@@ -81,11 +85,9 @@ public class PreferencesView implements Initializable {
         String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
         if("erlang".equals(formattingPref)) {
             erlangTermsButton.setSelected(true);
-            ErlyBerly.setTermFormatter(new ErlangFormatter());
         }
         else if("lfe".equals(formattingPref)) {
             lfeTermsButton.setSelected(true);
-            ErlyBerly.setTermFormatter(new LFEFormatter());
         }
         else
             throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);

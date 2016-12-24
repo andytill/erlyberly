@@ -27,21 +27,21 @@ class Formatting {
 
     private Formatting() {}
 
-    public static void appendString(OtpErlangString aString, StringBuilder sb) {
+    public static void appendString(OtpErlangString aString, TermFormatter formatter, StringBuilder sb) {
         String stringValue = aString.stringValue();
         // sometimes a list of integers can be mis-typed by jinterface as a string
         // in this case we format it ourselves as a list of ints
         boolean isString = isString(stringValue);
         if(isString) {
-            sb.append(stringValue.replace("\n", "\\n"));
+            sb.append("\"").append(stringValue.replace("\n", "\\n")).append("\"");
         }
         else {
-            appendListOfInts(stringValue, sb);
+            appendListOfInts(stringValue, formatter, sb);
         }
     }
 
-    private static void appendListOfInts(String stringValue, StringBuilder sb) {
-        sb.append("[");
+    private static void appendListOfInts(String stringValue, TermFormatter formatter, StringBuilder sb) {
+        sb.append(formatter.listLeftParen());
         for (int i = 0; i < stringValue.length(); i++) {
             int c = stringValue.charAt(i);
             sb.append(c);
@@ -49,7 +49,7 @@ class Formatting {
                 sb.append(",");
             }
         }
-        sb.append("]");
+        sb.append(formatter.listRightParen());
     }
 
     private static boolean isString(String stringValue) {

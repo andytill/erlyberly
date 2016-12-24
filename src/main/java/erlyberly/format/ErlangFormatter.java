@@ -79,49 +79,12 @@ public class ErlangFormatter implements TermFormatter {
             sb.append(brackets.charAt(1));
         }
         else if(obj instanceof OtpErlangString) {
-            OtpErlangString aString = (OtpErlangString) obj;
-            appendString(aString, sb);
+            Formatting.appendString((OtpErlangString) obj, this, sb);
         }
         else {
             sb.append(obj.toString());
         }
         return sb;
-    }
-
-    private void appendString(OtpErlangString aString, StringBuilder sb) {
-        String stringValue = aString.stringValue();
-        // sometimes a list of integers can be mis-typed by jinterface as a string
-        // in this case we format it ourselves as a list of ints
-        boolean isString = isString(stringValue);
-        if(isString) {
-            sb.append(stringValue.replace("\n", "\\n"));
-        }
-        else {
-            appendListOfInts(stringValue, sb);
-        }
-    }
-
-    private void appendListOfInts(String stringValue, StringBuilder sb) {
-        sb.append("[");
-        for (int i = 0; i < stringValue.length(); i++) {
-            int c = stringValue.charAt(i);
-            sb.append(c);
-            if(i < (stringValue.length() - 1)) {
-                sb.append(",");
-            }
-        }
-        sb.append("]");
-    }
-
-    private boolean isString(String stringValue) {
-        int length = stringValue.length();
-        for (int i = 0; i < length; i++) {
-            char c = stringValue.charAt(i);
-            if(c < 10 || c > 127) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static String pidToString(OtpErlangPid pid) {
