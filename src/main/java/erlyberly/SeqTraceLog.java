@@ -17,7 +17,7 @@
  */
 package erlyberly;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
@@ -42,7 +42,7 @@ public class SeqTraceLog {
         this.timestamp = timestamp;
     }
 
-    public static SeqTraceLog build(HashMap<Object, Object> props) {
+    public static SeqTraceLog build(Map<Object, Object> props) {
         Object msgType = props.get(OtpUtil.atom("msg_type"));
         Object serial = props.get(OtpUtil.atom("serial"));
         Object from = props.get(OtpUtil.atom("from"));

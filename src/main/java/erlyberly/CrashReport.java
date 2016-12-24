@@ -19,8 +19,8 @@ package erlyberly;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -47,7 +47,7 @@ public class CrashReport {
 
     private static final OtpErlangAtom ATOM_LINE = OtpUtil.atom("line");
 
-    private final HashMap<Object, Object> crashProps;
+    private final Map<Object, Object> crashProps;
 
     private final String registeredName;
 
@@ -89,7 +89,7 @@ public class CrashReport {
                 OtpErlangList list = (OtpErlangList) argsOrArity;
                 arity = new OtpErlangLong(list.arity());
             }
-            HashMap<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
+            Map<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
             OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
             OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
 
