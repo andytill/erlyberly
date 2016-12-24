@@ -19,6 +19,8 @@ package erlyberly.node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -40,7 +42,7 @@ public class TraceManager {
     private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
 
 
-    public ArrayList<TraceLog> collateTraces(OtpErlangList traceLogs) {
+    public List<TraceLog> collateTraces(OtpErlangList traceLogs) {
         final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
 
         for (OtpErlangObject obj : traceLogs) {
@@ -50,7 +52,7 @@ public class TraceManager {
         return traceList;
     }
 
-    public ArrayList<TraceLog> collateTraceSingle(OtpErlangTuple traceLog) {
+    public List<TraceLog> collateTraceSingle(OtpErlangTuple traceLog) {
         final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
         decodeTraceLog(traceLog, traceList);
         return traceList;
@@ -75,7 +77,7 @@ public class TraceManager {
             traceList.add(trace);
         }
         else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
-            HashMap<Object, Object> map = propsFromTrace(tup);
+            Map<Object, Object> map = propsFromTrace(tup);
 
             Object object = map.get(TraceLog.ATOM_PID);
 
@@ -97,14 +99,14 @@ public class TraceManager {
     }
 
     private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
-        HashMap<Object, Object> map = propsFromTrace(tup);
+        Map<Object, Object> map = propsFromTrace(tup);
 
         TraceLog trace = new TraceLog(map);
 
         return trace;
     }
 
-    private HashMap<Object, Object> propsFromTrace(OtpErlangTuple tup) {
+    private Map<Object, Object> propsFromTrace(OtpErlangTuple tup) {
         return OtpUtil.propsToMap((OtpErlangList) tup.elementAt(1));
     }
 }

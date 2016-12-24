@@ -25,6 +25,8 @@ import com.ericsson.otp.erlang.OtpErlangString;
  */
 class Formatting {
 
+    private Formatting() {}
+
     public static void appendString(OtpErlangString aString, StringBuilder sb) {
         String stringValue = aString.stringValue();
         // sometimes a list of integers can be mis-typed by jinterface as a string

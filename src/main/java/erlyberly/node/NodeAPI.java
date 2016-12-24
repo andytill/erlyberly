@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -439,7 +438,7 @@ public class NodeAPI {
     private void traceLogNotification(OtpErlangTuple receive) {
         Platform.runLater(() -> {
             OtpErlangTuple traceLog = (OtpErlangTuple) receive.elementAt(1);
-            ArrayList<TraceLog> collatedTraces = traceManager.collateTraceSingle(traceLog);
+            List<TraceLog> collatedTraces = traceManager.collateTraceSingle(traceLog);
             if(traceLogCallback != null) {
                 for (TraceLog log : collatedTraces) {
                     traceLogCallback.callback(log);
@@ -483,7 +482,7 @@ public class NodeAPI {
             for (OtpErlangObject recv : received) {
                 if(recv instanceof OtpErlangList) {
                     OtpErlangList pinfo = (OtpErlangList) recv;
-                    HashMap<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
+                    Map<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
                     processes.add(ProcInfo.toProcessInfo(propsToMap));
                 }
                 }

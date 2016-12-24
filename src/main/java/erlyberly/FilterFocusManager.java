@@ -34,6 +34,8 @@ public class FilterFocusManager {
 
     private static int lastFocusedIndex = -1;
 
+    private FilterFocusManager() {}
+
     public static void init(Scene scene) {
         FILTERS.add(null);
         FILTERS.add(null);

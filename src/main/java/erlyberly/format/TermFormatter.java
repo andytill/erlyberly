@@ -50,4 +50,6 @@ public interface TermFormatter {
     String listLeftParen();
 
     String listRightParen();
+
+    String cons();
 }

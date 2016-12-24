@@ -70,6 +70,12 @@ public class ErlangFormatter implements TermFormatter {
                 }
                 appendToString(elements[i], sb);
             }
+
+            if(obj instanceof OtpErlangList && !((OtpErlangList)obj).isProper()) {
+                sb.append(cons());
+                appendToString(((OtpErlangList)obj).getLastTail(), sb);
+            }
+
             sb.append(brackets.charAt(1));
         }
         else if(obj instanceof OtpErlangString) {
@@ -203,5 +209,10 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String listRightParen() {
         return "]";
+    }
+
+    @Override
+    public String cons() {
+        return "|";
     }
 }

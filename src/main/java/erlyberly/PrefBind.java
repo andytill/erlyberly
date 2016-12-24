@@ -67,6 +67,8 @@ public class PrefBind {
     private static final Object AWAIT_STORE_LOCK = new Object();
     private static boolean awaitingStore;
 
+    private PrefBind() {}
+
     public static void bind(final String propName, StringProperty stringProp) {
         if(props == null) {
             return;

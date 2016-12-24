@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import com.ericsson.otp.erlang.OtpConn;
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -46,12 +48,12 @@ public class OtpUtil {
 
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
-    public static final HashSet<Class<?>> CONTAINER_TERM_TYPES = new HashSet<Class<?>>(
+    public static final Set<Class<?>> CONTAINER_TERM_TYPES = new HashSet<Class<?>>(
         Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class, OtpErlangList.class)
     );
 
 
-    public static final HashSet<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
+    public static final Set<Class<?>> LARGE_TERM_TYPES = new HashSet<Class<?>>(
         Arrays.asList(OtpErlangFun.class, OtpErlangExternalFun.class)
     );
 
@@ -62,6 +64,7 @@ public class OtpUtil {
     private static final OtpErlangAtom ERROR_ATOM = atom("error");
     public static final OtpErlangAtom OK_ATOM = atom("ok");
 
+    private OtpUtil() {}
 
     public static OtpErlangTuple tuple(Object... elements) {
         OtpErlangObject[] tuple = toOtpElementArray(elements);
@@ -113,7 +116,7 @@ public class OtpUtil {
     /**
      * Take an {@link OtpErlangList} of erlang key value tuples and converts it to a map.
      */
-    public static HashMap<Object, Object> propsToMap(OtpErlangList pinfo) {
+    public static Map<Object, Object> propsToMap(OtpErlangList pinfo) {
         HashMap<Object, Object> map = new HashMap<>();
         for (OtpErlangObject otpErlangObject : pinfo) {
             if(otpErlangObject instanceof OtpErlangTuple && ((OtpErlangTuple) otpErlangObject).arity() == 2) {
