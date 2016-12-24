@@ -24,6 +24,8 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
  */
 class Formatting {
 
+    private Formatting() {}
+
     /**
      * Append the binary term bytes to a string builder. It attempts to display character data
      * as strings.
