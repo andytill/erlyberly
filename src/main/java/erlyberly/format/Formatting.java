@@ -18,6 +18,7 @@
 package erlyberly.format;
 
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangString;
 
 /**
  * Utility methods for formatting.
@@ -25,6 +26,42 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
 class Formatting {
 
     private Formatting() {}
+
+    public static void appendString(OtpErlangString aString, TermFormatter formatter, StringBuilder sb) {
+        String stringValue = aString.stringValue();
+        // sometimes a list of integers can be mis-typed by jinterface as a string
+        // in this case we format it ourselves as a list of ints
+        boolean isString = isString(stringValue);
+        if(isString) {
+            sb.append("\"").append(stringValue.replace("\n", "\\n")).append("\"");
+        }
+        else {
+            appendListOfInts(stringValue, formatter, sb);
+        }
+    }
+
+    private static void appendListOfInts(String stringValue, TermFormatter formatter, StringBuilder sb) {
+        sb.append(formatter.listLeftParen());
+        for (int i = 0; i < stringValue.length(); i++) {
+            int c = stringValue.charAt(i);
+            sb.append(c);
+            if(i < (stringValue.length() - 1)) {
+                sb.append(",");
+            }
+        }
+        sb.append(formatter.listRightParen());
+    }
+
+    private static boolean isString(String stringValue) {
+        int length = stringValue.length();
+        for (int i = 0; i < length; i++) {
+            char c = stringValue.charAt(i);
+            if(c < 10 || c > 127) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Append the binary term bytes to a string builder. It attempts to display character data

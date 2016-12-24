@@ -79,7 +79,7 @@ public class ErlangFormatter implements TermFormatter {
             sb.append(brackets.charAt(1));
         }
         else if(obj instanceof OtpErlangString) {
-            sb.append(obj.toString().replace("\n", "\\n"));
+            Formatting.appendString((OtpErlangString) obj, this, sb);
         }
         else {
             sb.append(obj.toString());

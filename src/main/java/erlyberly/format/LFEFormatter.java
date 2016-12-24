@@ -100,7 +100,7 @@ public class LFEFormatter implements TermFormatter {
             sb.append(")");
         }
         else if(obj instanceof OtpErlangString) {
-            sb.append(obj.toString().replace("\n", "\\n"));
+            Formatting.appendString((OtpErlangString) obj, this, sb);
         }
         else {
             sb.append(obj.toString());
@@ -139,7 +139,7 @@ public class LFEFormatter implements TermFormatter {
 
     @Override
     public String listLeftParen() {
-        return ")";
+        return "(";
     }
 
     @Override

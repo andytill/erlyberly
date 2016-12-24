@@ -20,6 +20,7 @@ package erlyberly;
 import java.io.IOException;
 
 import erlyberly.format.ErlangFormatter;
+import erlyberly.format.LFEFormatter;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
 import javafx.application.Application;
@@ -61,7 +62,7 @@ public class ErlyBerly extends Application {
 
     private static TabPane tabPane;
 
-    private static TermFormatter termFormatter = new ErlangFormatter();
+    private static TermFormatter termFormatter;
 
     public static void main(String[] args) throws Exception {
         launch(args);
@@ -74,6 +75,7 @@ public class ErlyBerly extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        termFormatter = formatterFromConfig();
 
         FxmlLoadable topBarFxml;
         topBarFxml = new FxmlLoadable("/erlyberly/topbar.fxml");
@@ -154,6 +156,16 @@ public class ErlyBerly extends Application {
             sizeSplitPanes(splitPane);
             dbgView.sizeSplitPanes();
         });
+    }
+
+    private static TermFormatter formatterFromConfig() {
+        String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
+        if("erlang".equals(formattingPref))
+            return new ErlangFormatter();
+        else if("lfe".equals(formattingPref))
+            return new LFEFormatter();
+        else
+            throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);
     }
 
     public static void applyCssToWIndow(Scene scene) {
