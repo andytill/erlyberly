@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import erlyberly.format.ErlangFormatter;
+import erlyberly.format.ElixirFormatter;
 import erlyberly.format.LFEFormatter;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
@@ -47,6 +48,8 @@ public class PreferencesView implements Initializable {
     @FXML
     private RadioButton erlangTermsButton;
     @FXML
+    private RadioButton elixirTermsButton;
+    @FXML
     private RadioButton lfeTermsButton;
 
     @Override
@@ -59,6 +62,7 @@ public class PreferencesView implements Initializable {
             storeFormattingPreferenceChange();
         });
         erlangTermsButton.setToggleGroup(group);
+        elixirTermsButton.setToggleGroup(group);
         lfeTermsButton.setToggleGroup(group);
 
         PrefBind.bind("targetNodeName", nodeNameField.textProperty());
@@ -74,6 +78,10 @@ public class PreferencesView implements Initializable {
             PrefBind.set("termFormatting", "erlang");
             ErlyBerly.setTermFormatter(new ErlangFormatter());
         }
+        else if(elixirTermsButton.isSelected()) {
+            PrefBind.set("termFormatting", "elixir");
+            ErlyBerly.setTermFormatter(new ElixirFormatter());
+        }
         else if(lfeTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "lfe");
             ErlyBerly.setTermFormatter(new LFEFormatter());
@@ -85,6 +93,9 @@ public class PreferencesView implements Initializable {
         String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
         if("erlang".equals(formattingPref)) {
             erlangTermsButton.setSelected(true);
+        }
+        else if("elixir".equals(formattingPref)) {
+            elixirTermsButton.setSelected(true);
         }
         else if("lfe".equals(formattingPref)) {
             lfeTermsButton.setSelected(true);

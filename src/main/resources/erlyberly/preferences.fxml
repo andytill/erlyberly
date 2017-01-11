@@ -31,10 +31,12 @@
       <CheckBox fx:id="showSourceInSystemEditorBox" text="Show Source in the System Text Editor"
         GridPane.columnSpan="2" GridPane.rowIndex="5" />
       <Separator GridPane.columnSpan="2" GridPane.rowIndex="6" />
-      <RadioButton fx:id="erlangTermsButton" text="Display Erlang Terms"
+     <RadioButton fx:id="erlangTermsButton" text="Display Erlang Terms"
         GridPane.columnSpan="2" GridPane.rowIndex="7" />
-      <RadioButton fx:id="lfeTermsButton" text="Display LFE Terms"
+     <RadioButton fx:id="elixirTermsButton" text="Display Elixir Terms"
         GridPane.columnSpan="2" GridPane.rowIndex="8" />
+      <RadioButton fx:id="lfeTermsButton" text="Display LFE Terms"
+        GridPane.columnSpan="2" GridPane.rowIndex="9" />
    </children>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

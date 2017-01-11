@@ -100,7 +100,7 @@ public class LFEFormatter implements TermFormatter {
             sb.append(")");
         }
         else if(obj instanceof OtpErlangString) {
-            Formatting.appendString((OtpErlangString) obj, this, sb);
+            Formatting.appendString((OtpErlangString) obj, this, "\"", sb);
         }
         else {
             sb.append(obj.toString());
