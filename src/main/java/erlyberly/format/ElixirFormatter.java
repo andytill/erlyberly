@@ -17,26 +17,36 @@
  */
 package erlyberly.format;
 
-import java.util.ArrayList;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
-import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangString;
+import com.ericsson.otp.erlang.OtpErlangMap;
 import erlyberly.node.OtpUtil;
 
-public class ErlangFormatter implements TermFormatter {
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Iterator;
+import java.nio.charset.StandardCharsets;
+
+public class ElixirFormatter implements TermFormatter {
 
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
         if(obj instanceof OtpErlangBinary) {
-            sb.append("<<");
-            Formatting.binaryToString((OtpErlangBinary) obj, ", ", sb);
-            sb.append(">>");
+            OtpErlangBinary bin = (OtpErlangBinary) obj;
+            if (Formatting.isDisplayableString(bin)) {
+                sb.append("\"");
+                sb.append(new String(bin.binaryValue(), StandardCharsets.UTF_8));
+                sb.append("\"");
+            } else {
+                sb.append("<<");
+                Formatting.binaryToString(bin, ", ", sb);
+                sb.append(">>");
+            }
         }
         else if(obj instanceof OtpErlangPid) {
             sb.append(pidToString((OtpErlangPid) obj));
@@ -79,7 +89,36 @@ public class ErlangFormatter implements TermFormatter {
             sb.append(brackets.charAt(1));
         }
         else if(obj instanceof OtpErlangString) {
-            Formatting.appendString((OtpErlangString) obj, this, "\"", sb);
+            Formatting.appendString((OtpErlangString) obj, this, "\'", sb);
+        }
+        else if(obj instanceof OtpErlangAtom){
+            sb.append(":");
+            String str = obj.toString();
+            if (str.startsWith("\'") && str.endsWith("\'")) {
+                // Convert Erlang style escaped atoms to Elixir style
+                str = "\"" + str.substring(1, str.length() - 1) + "\"";
+            }
+            sb.append(str);
+        }
+        else if(obj instanceof OtpErlangMap) {
+            sb.append("%{");
+            Iterator<Map.Entry<OtpErlangObject,OtpErlangObject>> elemIt = ((OtpErlangMap) obj).entrySet().iterator();
+            while(elemIt.hasNext()) {
+                Map.Entry<OtpErlangObject,OtpErlangObject> elem = elemIt.next();
+                if (elem.getKey() instanceof OtpErlangAtom) {
+                    sb.append(elem.getKey().toString());
+                    sb.append(": ");
+                }
+                else {
+                    appendToString(elem.getKey(), sb);
+                    sb.append(" => ");
+                }
+                appendToString(elem.getValue(), sb);
+                if (elemIt.hasNext()) {
+                    sb.append(", ");
+                }
+            }
+            sb.append("}");
         }
         else {
             sb.append(obj.toString());
@@ -110,9 +149,9 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String modFuncArgsToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
-        sb.append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
-          .append(":")
-          .append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+        sb.append(moduleNameToString((OtpErlangAtom) mfa.elementAt(0)))
+          .append(".")
+          .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
           .append("(");
         OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
         ArrayList<String> stringArgs = new ArrayList<>();
@@ -124,17 +163,28 @@ public class ErlangFormatter implements TermFormatter {
         return sb.toString();
     }
 
-    private String atomToStringNoQuotes(OtpErlangAtom atom) {
+    private String moduleNameToString(OtpErlangAtom mod) {
+        String str = mod.atomValue();
+        if(str.startsWith("Elixir."))
+            return str.substring(7);
+        else
+            return ":" + mod.atomValue();
+    }
+
+    private String funToStringNoQuotes(OtpErlangAtom atom) {
         return atom.atomValue();
+    }
+    private String atomToStringNoQuotes(OtpErlangAtom atom) {
+        return ":" + atom.atomValue();
     }
 
     @Override
     public String modFuncArityToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
         OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
-        sb.append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
-          .append(":")
-          .append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+        sb.append(moduleNameToString((OtpErlangAtom) mfa.elementAt(0)))
+          .append(".")
+          .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
           .append("/").append(argsList.arity());
         return sb.toString();
     }

@@ -27,13 +27,13 @@ class Formatting {
 
     private Formatting() {}
 
-    public static void appendString(OtpErlangString aString, TermFormatter formatter, StringBuilder sb) {
+    public static void appendString(OtpErlangString aString, TermFormatter formatter, String quote, StringBuilder sb) {
         String stringValue = aString.stringValue();
         // sometimes a list of integers can be mis-typed by jinterface as a string
         // in this case we format it ourselves as a list of ints
         boolean isString = isString(stringValue);
         if(isString) {
-            sb.append("\"").append(stringValue.replace("\n", "\\n")).append("\"");
+            sb.append(quote).append(stringValue.replace("\n", "\\n")).append(quote);
         }
         else {
             appendListOfInts(stringValue, formatter, sb);
@@ -107,5 +107,29 @@ class Formatting {
 
     private static boolean isDisplayableChar(int b) {
         return b > 31 && b < 127;
+    }
+
+    /**
+     * Make a guess if the given binary is a UTF-8 string or not.
+     */
+    public static boolean isDisplayableString(OtpErlangBinary bin) {
+        int expected;
+        byte[] bytes = bin.binaryValue();
+        for (int i = 0; i < bytes.length; i++) {
+            int ch = bytes[i];
+            if (isDisplayableChar(ch)) continue;
+            else if ((ch & 0b11100000) == 0b11000000) expected = 1;
+            else if ((ch & 0b11110000) == 0b11100000) expected = 2;
+            else if ((ch & 0b11111000) == 0b11100000) expected = 3;
+            else return false;
+
+            while (expected > 0) {
+                if (i + expected >= bytes.length) return false;
+                if ((bytes[i + 1] & 0b11000000) != 0b10000000) return false;
+                expected--;
+                i++;
+            }
+        }
+        return true;
     }
 }

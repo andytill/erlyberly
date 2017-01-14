@@ -20,6 +20,7 @@ package erlyberly;
 import java.io.IOException;
 
 import erlyberly.format.ErlangFormatter;
+import erlyberly.format.ElixirFormatter;
 import erlyberly.format.LFEFormatter;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
@@ -162,6 +163,8 @@ public class ErlyBerly extends Application {
         String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
         if("erlang".equals(formattingPref))
             return new ErlangFormatter();
+        else if("elixir".equals(formattingPref))
+            return new ElixirFormatter();
         else if("lfe".equals(formattingPref))
             return new LFEFormatter();
         else
