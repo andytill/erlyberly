@@ -109,6 +109,9 @@ class Formatting {
         return b > 31 && b < 127;
     }
 
+    /**
+     * Make a guess if the given binary is a UTF-8 string or not.
+     */
     public static boolean isDisplayableString(OtpErlangBinary bin) {
         int expected;
         byte[] bytes = bin.binaryValue();

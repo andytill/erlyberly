@@ -93,7 +93,12 @@ public class ElixirFormatter implements TermFormatter {
         }
         else if(obj instanceof OtpErlangAtom){
             sb.append(":");
-            sb.append(obj.toString());
+            String str = obj.toString();
+            if (str.startsWith("\'") && str.endsWith("\'")) {
+                // Convert Erlang style escaped atoms to Elixir style
+                str = "\"" + str.substring(1, str.length() - 1) + "\"";
+            }
+            sb.append(str);
         }
         else if(obj instanceof OtpErlangMap) {
             sb.append("%{");
