@@ -31,6 +31,10 @@ public interface TermFormatter {
 
     String modFuncArityToString(OtpErlangTuple mfa);
 
+    default String modFuncArityToString(String mod, String func, int arity) { return mod + ":" + func + "/" + arity; }
+
+    default String moduleNameToString(String modName) { return modName; }
+
     String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason);
 
     StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb);

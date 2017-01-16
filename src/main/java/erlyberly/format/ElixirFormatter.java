@@ -165,10 +165,15 @@ public class ElixirFormatter implements TermFormatter {
 
     private String moduleNameToString(OtpErlangAtom mod) {
         String str = mod.atomValue();
-        if(str.startsWith("Elixir."))
-            return str.substring(7);
+        return moduleNameToString(str);
+    }
+
+    @Override
+    public String moduleNameToString(String moduleName) {
+        if(moduleName.startsWith("Elixir."))
+            return moduleName.substring(7);
         else
-            return ":" + mod.atomValue();
+            return ":" + moduleName;
     }
 
     private String funToStringNoQuotes(OtpErlangAtom atom) {
@@ -187,6 +192,11 @@ public class ElixirFormatter implements TermFormatter {
           .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
           .append("/").append(argsList.arity());
         return sb.toString();
+    }
+
+    @Override
+    public String modFuncArityToString(String mod, String func, int arity) {
+        return moduleNameToString(mod) + "." + func + "/" + arity;
     }
 
     @Override

@@ -65,16 +65,16 @@ public class ModFunc implements Comparable<ModFunc> {
     @Override
     public String toString() {
         if(funcName == null) {
-            return moduleName;
+            return ErlyBerly.getTermFormatter().moduleNameToString(moduleName);
         }
         return funcName + "/" + arity;
     }
 
     public String toFullString() {
         if(funcName == null) {
-            return moduleName;
+            return ErlyBerly.getTermFormatter().moduleNameToString(moduleName);
         }
-        return moduleName + ":" + funcName + "/" + arity;
+        return ErlyBerly.getTermFormatter().modFuncArityToString(moduleName, funcName, arity);
     }
 
     public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported)  {
