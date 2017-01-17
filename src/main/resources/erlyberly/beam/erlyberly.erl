@@ -101,7 +101,6 @@ add_global_name(Proc, Props) ->
     end.
 
 find_global_name(Pid) ->
-    io:format("PID ~p~n",[Pid]),
     Names = [Name || Name <- global:registered_names(), global:whereis_name(Name) =:= Pid],
     case Names of
         [] ->
