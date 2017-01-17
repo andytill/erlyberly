@@ -18,6 +18,7 @@
 package erlyberly;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
@@ -26,6 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+import com.ericsson.otp.erlang.OtpErlangMap;
 
 import erlyberly.format.TermFormatter;
 import erlyberly.node.OtpUtil;
@@ -217,6 +219,28 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.listRightParen())));
                 }
             }
+        }
+        else if (obj instanceof OtpErlangMap){
+            TreeItem<TermTreeItem> mapNode = new TreeItem<>(new TermTreeItem(obj, f.mapLeft(obj)));
+            parent.getChildren().add(mapNode);
+            for (Map.Entry<OtpErlangObject,OtpErlangObject> e : ((OtpErlangMap) obj).entrySet()) {
+                if (f.isHiddenField(e.getKey()))
+                    continue;
+                String keyStr = f.mapKeyToString(e.getKey());
+                String valStr = f.toString(e.getValue());
+                if (valStr.length() < 50) {
+                    TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), valStr));
+                    key.setGraphic(recordLabel(keyStr));
+                    mapNode.getChildren().add(key);
+                }
+                else {
+                    TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), ""));
+                    key.setGraphic(recordLabel(keyStr));
+                    addToTreeItem(key, e.getValue());
+                    mapNode.getChildren().add(key);
+                }
+            }
+            parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.mapRight())));
         }
         else {
             parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.toString(obj))));

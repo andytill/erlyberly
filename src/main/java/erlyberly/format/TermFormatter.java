@@ -43,6 +43,10 @@ public interface TermFormatter {
         return appendToString(obj, new StringBuilder()).toString();
     }
 
+    default String mapKeyToString(OtpErlangObject obj) {
+        return toString(obj) + " => ";
+    }
+
     String emptyTupleString();
 
     String tupleLeftParen();
@@ -54,6 +58,13 @@ public interface TermFormatter {
     String listLeftParen();
 
     String listRightParen();
+
+    String mapLeft(OtpErlangObject obj);
+
+    String mapRight();
+
+    // True if given key in map should be hidden (Elixir __struct__)
+    Boolean isHiddenField(OtpErlangObject key);
 
     String cons();
 }
