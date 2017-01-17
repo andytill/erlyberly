@@ -86,23 +86,22 @@ process_info2([Proc | Tail], Acc) ->
                undefined -> 
                    Acc;
                _ -> 
-                   Props1 = [add_global_name(Proc, Prop) || Prop <- Props],
+                   Props1 = add_global_name(Proc, Props),
                    Props2 = [{pid, pid_to_list(Proc)} | size_props_to_bytes(Props1)],
                    [Props2 | Acc]
            end,
     process_info2(Tail, Acc1).
 
-add_global_name(Proc, {registered_name, []} = Prop) ->
+add_global_name(Proc, Props) ->
     case find_global_name(Proc) of
         not_found ->
-            Prop;
+            Props;
         Name ->
-            {registered_name, Name}
-    end;
-add_global_name(_Proc, Prop) ->
-    Prop.
+            [{global_name, Name} | Props]
+    end.
 
 find_global_name(Pid) ->
+    io:format("PID ~p~n",[Pid]),
     Names = [Name || Name <- global:registered_names(), global:whereis_name(Name) =:= Pid],
     case Names of
         [] ->

@@ -47,6 +47,8 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
     private static final OtpErlangAtom REGISTERED_NAME_ATOM = new OtpErlangAtom("registered_name");
 
+    private static final OtpErlangAtom GLOBAL_NAME_ATOM = new OtpErlangAtom("global_name");
+
     private static final OtpErlangAtom PID_ATOM = new OtpErlangAtom("pid");
 
     private static final OtpErlangAtom REDUCTIONS_ATOM = new OtpErlangAtom("reductions");
@@ -174,7 +176,9 @@ public class ProcInfo implements Comparable<ProcInfo> {
         ProcInfo processInfo;
 
         processInfo = new ProcInfo();
-        processInfo.setProcessName(Objects.toString(processName, ""));
+        String localName = Objects.toString(processName, "");
+        String globalName = Objects.toString(propList.get(GLOBAL_NAME_ATOM), "");
+        processInfo.setProcessName(localName + ("".equals(localName) ? "" : " ") + ("".equals(globalName) ? "" : "(" + globalName + ")"));
         processInfo.setPid(Objects.toString(pid, ""));
         processInfo.setReductions(toLong(propList.get(REDUCTIONS_ATOM)));
         processInfo.setMsgQueueLen(toLong(propList.get(MSG_QUEUE_LEN_ATOM)));
