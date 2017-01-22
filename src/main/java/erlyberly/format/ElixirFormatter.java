@@ -27,12 +27,30 @@ import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangMap;
 import erlyberly.node.OtpUtil;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Iterator;
 import java.nio.charset.StandardCharsets;
 
 public class ElixirFormatter implements TermFormatter {
+
+    private final String STRUCTKEY = "__struct__";
+
+    private String stripElixirPrefix(String str) {
+        if (str.startsWith("\'Elixir.")) {
+            return stripQutes(str).substring(7);
+        }
+        if (str.startsWith("Elixir.")) {
+            return str.substring(7);
+        }
+        return str;
+    }
+
+    private String stripQutes(String str) {
+        return str.substring(1, str.length() - 1);
+    }
 
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
@@ -101,8 +119,17 @@ public class ElixirFormatter implements TermFormatter {
             sb.append(str);
         }
         else if(obj instanceof OtpErlangMap) {
-            sb.append("%{");
-            Iterator<Map.Entry<OtpErlangObject,OtpErlangObject>> elemIt = ((OtpErlangMap) obj).entrySet().iterator();
+            OtpErlangMap map = (OtpErlangMap) obj;
+            OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCTKEY);
+            if (map.get(structNameKey) != null) {
+                String structName = stripElixirPrefix(map.get(structNameKey).toString());
+                sb.append("%" + structName + "{");
+                map.remove(structNameKey);
+            }
+            else {
+                sb.append("%{");
+            }
+            Iterator<Map.Entry<OtpErlangObject,OtpErlangObject>> elemIt = map.entrySet().iterator();
             while(elemIt.hasNext()) {
                 Map.Entry<OtpErlangObject,OtpErlangObject> elem = elemIt.next();
                 if (elem.getKey() instanceof OtpErlangAtom) {
