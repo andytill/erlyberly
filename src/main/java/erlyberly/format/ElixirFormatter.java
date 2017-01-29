@@ -27,16 +27,14 @@ import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangMap;
 import erlyberly.node.OtpUtil;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Iterator;
 import java.nio.charset.StandardCharsets;
 
 public class ElixirFormatter implements TermFormatter {
 
-    private final String STRUCTKEY = "__struct__";
+    private static final String STRUCT_KEY = "__struct__";
 
     private String stripElixirPrefix(String str) {
         if (str.startsWith("\'Elixir.")) {
@@ -120,7 +118,7 @@ public class ElixirFormatter implements TermFormatter {
         }
         else if(obj instanceof OtpErlangMap) {
             OtpErlangMap map = (OtpErlangMap) obj;
-            OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCTKEY);
+            OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCT_KEY);
             if (map.get(structNameKey) != null) {
                 String structName = stripElixirPrefix(map.get(structNameKey).toString());
                 sb.append("%" + structName + "{");
