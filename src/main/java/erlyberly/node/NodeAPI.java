@@ -393,10 +393,15 @@ public class NodeAPI {
         return receiveRPC(timeout);
     }
 
+
     private OtpErlangObject receiveRPC(int timeout) throws OtpErlangExit,
             OtpErlangDecodeException, IOException, OtpErlangException {
-        OtpErlangTuple receive = OtpUtil.receiveRPC(mbox, timeout);
+        return receiveRPC(timeout, mbox);
+    }
 
+    private OtpErlangObject receiveRPC(int timeout, OtpMbox mailbox) throws OtpErlangExit,
+            OtpErlangDecodeException, IOException, OtpErlangException {
+        OtpErlangTuple receive = OtpUtil.receiveRPC(mailbox, timeout);
         if(receive == null) {
             return null;
         }
@@ -466,7 +471,7 @@ public class NodeAPI {
         return Arrays.copyOf(b, total);
     }
 
-    public synchronized void retrieveProcessInfo(List<ProcInfo> processes) throws Exception {
+    public synchronized void retrieveProcessInfo(List<ProcInfo> processes) {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
 
         if(connection == null || !connected)
@@ -488,7 +493,7 @@ public class NodeAPI {
                 }
             Platform.runLater(() -> { appProcs.set(new AppProcs(processes.size(), LocalDateTime.now())); });
         }
-        catch (ClassCastException e) {
+        catch (Exception e) {
             throw new RuntimeException("unexpected result: " + receiveRPC, e);
         }
     }
@@ -514,15 +519,9 @@ public class NodeAPI {
         // leave us in a state where some traces are active and others are not
         if(isSuspended())
             return;
-        sendRPC(ERLYBERLY, "start_trace", toStartTraceFnArgs(mf, maxQueueLen));
-
-        OtpErlangObject result = receiveRPC();
-        if(!isTupleTagged(OK_ATOM, result)) {
-            System.out.println(result);
-
-            // TODO notify caller of failure!
-            return;
-        }
+        NodeObservable
+                .rpc(ERLYBERLY, "start_trace", toStartTraceFnArgs(mf, maxQueueLen))
+                .subscribe((s) -> { System.out.println(s); });
     }
 
     public synchronized void stopTrace(ModFunc mf) throws Exception {
@@ -566,8 +565,19 @@ public class NodeAPI {
         return xrefStartedProperty;
     }
 
-    private void sendRPC(String module, String function, OtpErlangList args) throws IOException {
+    public void sendRPC(String module, String function, OtpErlangList args) throws IOException {
         OtpUtil.sendRPC(connection, mbox, atom(module), atom(function), args);
+    }
+
+    public OtpErlangObject rpc(String module, String function, OtpErlangList args) {
+        final OtpMbox mailbox = self.createMbox();
+        try {
+            OtpUtil.sendRPC(connection, mailbox, atom(module), atom(function), args);
+            return receiveRPC(5000, mailbox);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public synchronized List<TraceLog> collectTraceLogs() throws Exception {
