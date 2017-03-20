@@ -89,7 +89,7 @@ public class TraceContextMenu extends ContextMenu {
 
     private void onTraceToggle(ActionEvent e) {
         for (TraceLog log : selectedItems) {
-        	dbgController.toggleTraceModFunc(log.getModFunc());
+            dbgController.toggleTraceModFunc(log.getModFunc());
         }
     }
 

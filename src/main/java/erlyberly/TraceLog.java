@@ -38,7 +38,7 @@ import javafx.beans.property.SimpleStringProperty;
 public class TraceLog implements Comparable<TraceLog> {
 
     private static final OtpErlangAtom FN_ATOM = new OtpErlangAtom("fn");
-	public static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
+    public static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
     public static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
     public static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
     public static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
@@ -163,9 +163,9 @@ public class TraceLog implements Comparable<TraceLog> {
         return ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
     }
 
-	/**
-	 * Returns an MFA. 
-	 */
+    /**
+     * Returns an MFA.
+     */
     private OtpErlangTuple getFunctionFromMap() {
         return (OtpErlangTuple)map.get(FN_ATOM);
     }
@@ -326,11 +326,11 @@ public class TraceLog implements Comparable<TraceLog> {
         return stacktrace;
     }
 
-	public ModFunc getModFunc() {
-		OtpErlangTuple mfa = getFunctionFromMap();
-		OtpErlangAtom module = (OtpErlangAtom) mfa.elementAt(0);
-		OtpErlangAtom function = (OtpErlangAtom) mfa.elementAt(1);
-		int arity = ((OtpErlangList) mfa.elementAt(2)).arity();
-		return new ModFunc(module.atomValue(), function.atomValue(), arity, false, false);
-	}
+    public ModFunc getModFunc() {
+        OtpErlangTuple mfa = getFunctionFromMap();
+        OtpErlangAtom module = (OtpErlangAtom) mfa.elementAt(0);
+        OtpErlangAtom function = (OtpErlangAtom) mfa.elementAt(1);
+        int arity = ((OtpErlangList) mfa.elementAt(2)).arity();
+        return new ModFunc(module.atomValue(), function.atomValue(), arity, false, false);
+    }
 }
