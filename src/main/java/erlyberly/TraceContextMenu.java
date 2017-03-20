@@ -32,15 +32,19 @@ import javafx.scene.input.KeyCombination;
 
 public class TraceContextMenu extends ContextMenu {
 
+    private final DbgController dbgController;
+
     private ObservableList<TraceLog> items, selectedItems;
 
-    public TraceContextMenu() {
+    public TraceContextMenu(DbgController aDbgContoller) {
+        dbgController = aDbgContoller;
         getItems().add(menuItem("Copy All", "shortcut+c", this::onCopy));
         getItems().add(menuItem("Copy Function Call", null, this::onCopyCalls));
         getItems().add(new SeparatorMenuItem());
         getItems().add(menuItem("Delete", "delete", this::onDelete));
         getItems().add(menuItem("Delete All", "shortcut+n", this::onDeleteAll));
         getItems().add(menuItem("Add Breaker", "shortcut+b", this::onAddBreaker));
+        getItems().add(menuItem("Toggle Trace", null, this::onTraceToggle));
     }
 
     private MenuItem menuItem(String text, String accelerator, EventHandler<ActionEvent> e) {
@@ -81,6 +85,12 @@ public class TraceContextMenu extends ContextMenu {
 
         content.putString(sbuilder.toString());
         clipboard.setContent(content);
+    }
+
+    private void onTraceToggle(ActionEvent e) {
+        for (TraceLog log : selectedItems) {
+        	dbgController.toggleTraceModFunc(log.getModFunc());
+        }
     }
 
     private void onDelete(ActionEvent e) {

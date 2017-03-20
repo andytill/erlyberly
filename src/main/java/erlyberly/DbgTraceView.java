@@ -178,7 +178,7 @@ public class DbgTraceView extends VBox {
     }
 
     private void putTraceContextMenu() {
-        TraceContextMenu traceContextMenu = new TraceContextMenu();
+        TraceContextMenu traceContextMenu = new TraceContextMenu(dbgController);
         traceContextMenu.setItems(dbgController.getTraceLogs());
         traceContextMenu
                 .setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
