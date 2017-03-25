@@ -119,6 +119,10 @@ public class ElixirFormatter implements TermFormatter {
                     // Convert Erlang style escaped atoms to Elixir style
                     str = ":\"" + innerStr +"\"";
                 }
+
+            }
+            else {
+                str = ":" + str;
             }
             sb.append(str);
         }
