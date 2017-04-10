@@ -18,3 +18,13 @@ src/main/resources/erlyberly/beam/erlyberly.beam
 # maven release stuff
 pom.xml.releaseBackup
 release.properties
+
+# IntelliJ
+
+.idea/*
+!.idea/workspace.xml
+!.idea/misc.xml
+!.idea/compiler.xml
+!.idea/modules.xml
+!.idea/vcs.xml
+!.idea/encodings.xml
