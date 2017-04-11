@@ -24,6 +24,8 @@ If you already have erlyberly and want to update to have the latest features, ru
 git pull origin && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
 ```
 
+To create a development environment, follow the three steps [in the wiki](https://github.com/andytill/erlyberly/wiki/Dev-Environment).
+
 Please raise an issue if you are unable to build that includes the OS, java version and erlang versions.
 
 ### Features and How To
