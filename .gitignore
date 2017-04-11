@@ -22,3 +22,11 @@ release.properties
 # intellij
 .idea/
 erlyberly.iml
+
+# eclipse
+.settings/*
+.classpath
+.project
+_config.yml
+.checkstyle
+
