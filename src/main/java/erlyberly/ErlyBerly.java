@@ -19,8 +19,8 @@ package erlyberly;
 
 import java.io.IOException;
 
-import erlyberly.format.ErlangFormatter;
 import erlyberly.format.ElixirFormatter;
+import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
@@ -235,28 +235,36 @@ public class ErlyBerly extends Application {
     }
 
     private void displayConnectionPopup(Stage primaryStage) {
-        Stage connectStage;
+        Scene scene = new Scene(new ConnectionView());
 
+        // close the app when escape is pressed on the connection window
+        scene.setOnKeyPressed((e) -> {
+            if(e.getCode() == KeyCode.ESCAPE) {
+               Stage aStage = (Stage) scene.getWindow();
+               aStage.close();
+               primaryStage.close();
+            }
+        });
+        applyCssToWIndow(scene);
+
+        Stage connectStage;
         connectStage = new Stage();
         connectStage.initModality(Modality.WINDOW_MODAL);
-        connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
+        connectStage.setScene(scene);
         connectStage.setAlwaysOnTop(true);
 
         // javafx vertical resizing is laughably ugly, lets just disallow it
-        connectStage.setResizable(false);
+        //connectStage.setResizable(false);
         connectStage.setWidth(400);
-
+        connectStage.setHeight(800d);
+        connectStage.setTitle("Connect to Node");
         // if the user closes the window without connecting then close the app
-        connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                if(!NODE_API.connectedProperty().get()) {
-                    Platform.exit();
-                }
-
-                Platform.runLater(() -> { primaryStage.setResizable(true); });
-            }});
-
+        connectStage.setOnCloseRequest((e) -> {
+            if(!NODE_API.connectedProperty().get()) {
+                Platform.exit();
+            }
+            Platform.runLater(() -> { primaryStage.setResizable(true); });
+        });
         connectStage.show();
     }
 

@@ -21,6 +21,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,12 +31,13 @@ import java.util.TimerTask;
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
 
+import erlyberly.ConnectionView.KnownNode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 
 /**
- * Load dot {@link Properties} files, bind them to JavaFX properties and auto-store
+ * Load dot Properties files, bind them to JavaFX properties and auto-store
  * them when the JavaFX properties change.
  * <p>
  * Call {@link PrefBind#setup()} before hand then {@link PrefBind#bind(String, StringProperty)} away.
@@ -146,5 +150,17 @@ public class PrefBind {
         synchronized (AWAIT_STORE_LOCK) {
             awaitingStore = true;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<List<String>> getKnownNodes() {
+        return (List<List<String>>) props.getOrDefault("knownNodes", new ArrayList<>());
+    }
+
+    public static void storeKnownNode(KnownNode knownNode) {
+        List<List<String>> knownNodes = getKnownNodes();
+        knownNodes.add(Arrays.asList(knownNode.getNodeName(), knownNode.getCookie()));
+        props.put("knownNodes", knownNodes);
+        store();
     }
 }

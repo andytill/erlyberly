@@ -167,7 +167,7 @@ public class ModFuncContextMenu extends ContextMenu {
         List<String> defaultSkippedModules = Arrays.asList(
             "app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer"
         );
-        List<String> skippedModules = (List<String>) PrefBind.getOrDefault("xrefSkippedModules", defaultSkippedModules);
+        List<String> skippedModules = getConfiguredSkippedModuleNames(defaultSkippedModules);
         List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
         try {
             OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(
@@ -182,6 +182,11 @@ public class ModFuncContextMenu extends ContextMenu {
         catch (OtpErlangException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getConfiguredSkippedModuleNames(List<String> defaultSkippedModules) {
+        return (List<String>) PrefBind.getOrDefault("xrefSkippedModules", defaultSkippedModules);
     }
 
     private void onFunctionTrace(ActionEvent e) {

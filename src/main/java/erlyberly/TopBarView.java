@@ -30,7 +30,7 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import erlyberly.node.AppProcs;
 import erlyberly.node.OtpUtil;
-import floatyfield.FloatyFieldView;
+import floatyfield.FloatyFieldControl;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -217,10 +217,10 @@ public class TopBarView implements Initializable {
 
         erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
 
-        FxmlLoadable loader = processCountStat();
+        FloatyFieldControl processCountField = processCountStat();
 
         topBox.getItems().add(new Separator(Orientation.VERTICAL));
-        topBox.getItems().add(loader.fxmlNode);
+        topBox.getItems().add(processCountField);
 
         // let's store the ui preferences, as the end user changes them...
         PrefBind.bindBoolean("hideProcesses", hideProcessesButton.selectedProperty());
@@ -384,33 +384,23 @@ public class TopBarView implements Initializable {
         });
     }
 
-    private FxmlLoadable processCountStat() {
-        FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+    private FloatyFieldControl processCountStat() {
+        FloatyFieldControl floatyFieldControl;
+        floatyFieldControl = new FloatyFieldControl();
+        floatyFieldControl.getStyleClass().add("floaty-label");
+        floatyFieldControl.getModel().promptTextProperty().set("Processes");
+        floatyFieldControl.getModel().textProperty().set("0");
+        floatyFieldControl.getModel().disableProperty().set(true);
 
-        loader.load();
+        ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> { upateProcsStat(floatyFieldControl, nv); });
 
-        Parent fxmlNode;
-
-        fxmlNode = loader.fxmlNode;
-        fxmlNode.getStyleClass().add("floaty-label");
-
-        FloatyFieldView ffView;
-
-        ffView = (FloatyFieldView) loader.controller;
-        ffView.promptTextProperty().set("Processes");
-        ffView.textProperty().set("0");
-        ffView.disableProperty().set(true);
-
-        ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> { upateProcsStat(ffView, nv); });
-
-        return loader;
+        return floatyFieldControl;
     }
 
-    private void upateProcsStat(FloatyFieldView ffView, AppProcs nv) {
+    private void upateProcsStat(FloatyFieldControl floatyFieldControl, AppProcs nv) {
         String dateString = nv.getDateTime().format(DateTimeFormatter.ISO_TIME);
-
-        ffView.textProperty().set(Integer.toString(nv.getProcCount()));
-        ffView.promptTextProperty().set("Processes @ " + dateString);
+        floatyFieldControl.getModel().textProperty().set(Integer.toString(nv.getProcCount()));
+        floatyFieldControl.getModel().promptTextProperty().set("Processes @ " + dateString);
     }
 
     private ObservableMap<KeyCombination, Runnable> accelerators() {
