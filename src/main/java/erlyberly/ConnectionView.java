@@ -19,6 +19,7 @@ package erlyberly;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -49,6 +50,11 @@ import ui.FAIcon;
 public class ConnectionView extends VBox {
 
     private final SimpleBooleanProperty isConnecting = new SimpleBooleanProperty();
+
+    /**
+     * Is there enough user input to connect to a node?
+     */
+    private final SimpleBooleanProperty isNodeConnectable = new SimpleBooleanProperty();
 
     private FloatyFieldControl nodeNameField;
     private FloatyFieldControl cookieField;
@@ -119,13 +125,22 @@ public class ConnectionView extends VBox {
             knownNodesTable,
             connectButton);
 
+        newNodeRadioButton.disableProperty().bind(isConnecting);
+        nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
+        cookieField.getModel().getField().disableProperty().bind(isConnecting);
+        knownRadioButton.disableProperty().bind(isConnecting);
+        knownNodesTable.disableProperty().bind(isConnecting);
+        connectButton.disableProperty().bind(isConnecting.or(isNodeConnectable.not()));
+
+        // disable the connect button while there is no node information to connect to
+        newNodeRadioButton.selectedProperty().addListener((o) -> { onIsConnectableChanged(); });
+        nodeNameField.getModel().getField().textProperty().addListener((o) -> { onIsConnectableChanged(); });
+        knownRadioButton.selectedProperty().addListener((o) -> { onIsConnectableChanged(); });
+        knownNodesTable.getSelectionModel().selectedItemProperty().addListener((o) -> { onIsConnectableChanged(); });
+        knownNodesTable.focusedProperty().addListener((o) -> { onIsConnectableChanged(); });
+        onIsConnectableChanged();
 /*
         PrefBind.bindBoolean("autoConnect", autoConnectField.selectedProperty());
-
-        nodeNameField.disableProperty().bind(isConnecting);
-        cookieField.disableProperty().bind(isConnecting);
-        connectButton.disableProperty().bind(isConnecting);
-        autoConnectField.disableProperty().bind(isConnecting);
 
         // TODO: or immediately start connecting when the CMDLINE flag is present...
         if (autoConnectField.isSelected() && !ErlyBerly.nodeAPI().manuallyDisconnected()) {
@@ -144,6 +159,18 @@ public class ConnectionView extends VBox {
         }*/
     }
 
+    /**
+     *
+     */
+    private void onIsConnectableChanged() {
+        if(newNodeRadioButton.isSelected()) {
+            isNodeConnectable.set(!nodeNameField.getModel().getText().isEmpty());
+        }
+        else if(knownRadioButton.isSelected()) {
+            isNodeConnectable.set(knownNodesTable.getSelectionModel().getSelectedItem() != null);
+        }
+    }
+
     private List<KnownNode> knownNodesConfigToRowObjects(List<List<String>> knownNodeStrings) {
         ArrayList<KnownNode> knownNodeRows = new ArrayList<>();
         for (List<String> confStrings : knownNodeStrings) {
@@ -151,6 +178,9 @@ public class ConnectionView extends VBox {
                 new KnownNode(confStrings.get(0), confStrings.get(1))
             );
         }
+        Collections.sort(knownNodeRows, (a, b) -> {
+            return a.getNodeName().compareTo(b.getNodeName());
+        });
         return knownNodeRows;
     }
 
