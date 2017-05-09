@@ -29,8 +29,12 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import floatyfield.FloatyFieldControl;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -39,6 +43,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -67,6 +72,10 @@ public class ConnectionView extends VBox {
 
     private RadioButton knownRadioButton;
 
+    private FloatyFieldControl filterField;
+
+    private FilteredList<KnownNode> filteredRows;
+
     @SuppressWarnings("unchecked")
     public ConnectionView() {
         setSpacing(10d);
@@ -77,6 +86,7 @@ public class ConnectionView extends VBox {
         knownRadioButton = new RadioButton("Known nodes");
         // TODO put some style on these radio buttons so that they look like section headers
         newNodeRadioButton.setToggleGroup(group);
+
         knownRadioButton.setToggleGroup(group);
         newNodeRadioButton.setSelected(true);
 
@@ -95,6 +105,11 @@ public class ConnectionView extends VBox {
             }
         });
 
+
+        filterField = new FloatyFieldControl();
+        filterField.getModel().promptTextProperty().set("Filter Known Nodes");
+        filterField.getModel().textProperty().addListener((o) -> { onFilterChanged(); });
+        HBox.setHgrow(filterField, Priority.SOMETIMES);
         knownNodesTable = new TableView<>();
         VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
         knownNodesTable.getColumns().setAll(
@@ -107,7 +122,9 @@ public class ConnectionView extends VBox {
                     knownRadioButton.setSelected(true);
                 }
             });
-        knownNodesTable.getItems().addAll(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
+        ObservableList<KnownNode> rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
+        filteredRows = new FilteredList<KnownNode>(rows);
+        knownNodesTable.setItems(filteredRows);
 
         // button width across the whole scene
         final double connectButtonHeight = 42d;
@@ -118,10 +135,14 @@ public class ConnectionView extends VBox {
         connectButton.setOnAction(this::onConnectButtonPressed);
 
         getChildren().addAll(
-            newNodeRadioButton,
+            newNodeRadioButton, new Separator(),
             nodeNameField, new Separator(),
             cookieField, new Separator(),
             knownRadioButton,
+            new HBox(
+                filterField,
+                searchIcon()),
+            new Separator(),
             knownNodesTable,
             connectButton);
 
@@ -129,6 +150,7 @@ public class ConnectionView extends VBox {
         nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
         cookieField.getModel().getField().disableProperty().bind(isConnecting);
         knownRadioButton.disableProperty().bind(isConnecting);
+        filterField.getModel().getField().disableProperty().bind(isConnecting);
         knownNodesTable.disableProperty().bind(isConnecting);
         connectButton.disableProperty().bind(isConnecting.or(isNodeConnectable.not()));
 
@@ -159,9 +181,23 @@ public class ConnectionView extends VBox {
         }*/
     }
 
-    /**
-     *
-     */
+    private FAIcon searchIcon() {
+        FAIcon icon = FAIcon.create()
+                .icon(AwesomeIcon.SEARCH)
+                .style("-fx-font-family: FontAwesome; -fx-font-size: 1.8em; -fx-text-fill: gray;");
+        // make the icon align with the input text, not with the height of the entire field control
+        icon.setAlignment(Pos.BOTTOM_RIGHT);
+        icon.setMaxHeight(Double.MAX_VALUE);
+        return icon;
+    }
+
+    private void onFilterChanged() {
+        final String filterString = filterField.getModel().getText();
+        filteredRows.setPredicate((node) -> {
+            return "".equals(filterString) || node.getNodeName().contains(filterString);
+        });
+    }
+
     private void onIsConnectableChanged() {
         if(newNodeRadioButton.isSelected()) {
             isNodeConnectable.set(!nodeNameField.getModel().getText().isEmpty());
