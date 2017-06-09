@@ -15,7 +15,7 @@ If you are using `io:format/2` or lager for debugging then erlyberly can save yo
 A one liner to go from zero to erlyberly user.  You will need erlc (erlang compiler) on the path and **JDK 8u20** or higher installed to run erlyberly, download it [here](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), see instructions for command line java installs for some operating systems [here](https://github.com/andytill/erlyberly/wiki/Java-install).  More compile instructions are in the [wiki page](https://github.com/andytill/erlyberly/wiki/Compiling)
 
 ```
-git clone git@github.com:andytill/erlyberly.git && cd erlyberly && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
+git clone https://github.com/andytill/erlyberly.git && cd erlyberly && ./mvnw clean compile install assembly:single && java -jar target/*runnable.jar
 ```
 
 If you already have erlyberly and want to update to have the latest features, run the following from the erlyberly project directory.
