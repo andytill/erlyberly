@@ -52,6 +52,7 @@ import ui.FAIcon;
 /**
  * Connection details control to connect to the remote node.
  */
+@SuppressWarnings({ "unchecked", "restriction" })
 public class ConnectionView extends VBox {
 
     private final SimpleBooleanProperty isConnecting = new SimpleBooleanProperty();
@@ -76,7 +77,6 @@ public class ConnectionView extends VBox {
 
     private FilteredList<KnownNode> filteredRows;
 
-    @SuppressWarnings("unchecked")
     public ConnectionView() {
         setSpacing(10d);
         setPadding(new Insets(10, 10, 10, 10));
@@ -88,7 +88,9 @@ public class ConnectionView extends VBox {
         newNodeRadioButton.setToggleGroup(group);
 
         knownRadioButton.setToggleGroup(group);
+        knownRadioButton.setMaxWidth(Double.MAX_VALUE);
         newNodeRadioButton.setSelected(true);
+        newNodeRadioButton.setMaxWidth(Double.MAX_VALUE);
 
         nodeNameField = new FloatyFieldControl();
         nodeNameField.getModel().promptTextProperty().set("Node Name");
@@ -113,7 +115,7 @@ public class ConnectionView extends VBox {
         knownNodesTable = new TableView<>();
         VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
         knownNodesTable.getColumns().setAll(
-            newColumn("Node Name", "nodeName"),
+            newColumn("Node Name", "nodeName", 250),
             newColumn("Cookie", "cookie")
         );
         knownNodesTable.getSelectionModel().selectedItemProperty().addListener(
@@ -135,21 +137,23 @@ public class ConnectionView extends VBox {
         connectButton.setOnAction(this::onConnectButtonPressed);
 
         getChildren().addAll(
-            newNodeRadioButton, new Separator(),
+            newNodeRadioButton, //new Separator(),
             nodeNameField, new Separator(),
-            cookieField, new Separator(),
+            cookieField, //new Separator(),
             knownRadioButton,
             new HBox(
                 filterField,
                 searchIcon()),
-            new Separator(),
+            //new Separator(),
             knownNodesTable,
             connectButton);
 
         newNodeRadioButton.disableProperty().bind(isConnecting);
+        newNodeRadioButton.getStyleClass().add("erlyberly-header");
         nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
         cookieField.getModel().getField().disableProperty().bind(isConnecting);
         knownRadioButton.disableProperty().bind(isConnecting);
+        knownRadioButton.getStyleClass().add("erlyberly-header");
         filterField.getModel().getField().disableProperty().bind(isConnecting);
         knownNodesTable.disableProperty().bind(isConnecting);
         connectButton.disableProperty().bind(isConnecting.or(isNodeConnectable.not()));
@@ -179,6 +183,12 @@ public class ConnectionView extends VBox {
         else {
             // show the Connection Dialogue...
         }*/
+    }
+
+    private TableColumn<KnownNode, ?> newColumn(String colText, String colPropertyName, double colWidth) {
+        TableColumn<KnownNode, String> col = newColumn(colText, colPropertyName);
+        col.setPrefWidth(colWidth);
+        return col;
     }
 
     private FAIcon searchIcon() {

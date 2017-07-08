@@ -63,6 +63,26 @@
     -fx-text-fill: grey;
 }
 
+.erlyberly-header {
+/*    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+*/    -fx-padding: 5;
+-fx-size: 25;
+    -fx-border-style: solid;
+    -fx-border-color: 
+        /* 
+          Inner border: we have different colours along the top, right, bottom and left.
+          Refer to RT-12298 for the spec.
+        */
+        derive(-fx-base, 80%) 
+        linear-gradient(to bottom, derive(-fx-base,80%) 20%, derive(-fx-base,-10%) 90%)
+        derive(-fx-base, 10%) 
+        linear-gradient(to bottom, derive(-fx-base,80%) 20%, derive(-fx-base,-10%) 90%),
+        /* Outer border: */
+transparent #959595 #959595 transparent;
+-fx-background-color: -fx-body-color;
+
+}
+
 /*
  * used to show trace logs for functions that returned errors.
  */

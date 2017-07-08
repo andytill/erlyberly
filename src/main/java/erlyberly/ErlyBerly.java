@@ -255,8 +255,8 @@ public class ErlyBerly extends Application {
 
         // javafx vertical resizing is laughably ugly, lets just disallow it
         //connectStage.setResizable(false);
-        connectStage.setWidth(400);
-        connectStage.setHeight(800d);
+        connectStage.setWidth(600d);
+        connectStage.setHeight(600d);
         connectStage.setTitle("Connect to Node");
         // if the user closes the window without connecting then close the app
         connectStage.setOnCloseRequest((e) -> {
