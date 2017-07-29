@@ -162,7 +162,9 @@ record_fields([]) ->
 %%% ============================================================================
 
 module_functions() ->
-    [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()].
+    lists:sort(
+        [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()]
+    ).
 
 module_functions2(Mod) when is_atom(Mod) ->
     Exports = Mod:module_info(exports),
@@ -207,7 +209,7 @@ when_process_is_unregistered(ProcName, Fn) ->
 ensure_dbg_started({Eb_Node, Eb_pid}, Max_queue_len) ->
     % restart dbg
     when_process_is_unregistered(dbg, fun dbg:start/0),
-    StartFn = 
+    StartFn =
         fun() -> 
             Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid, Max_queue_len]),
             register(erlyberly_tcollector, Pid),
@@ -247,9 +249,8 @@ erlyberly_tcollector(Node, Pid, Max_queue_len) when is_integer(Max_queue_len) ->
     % apply a trace on the returns of the code module, so we can listen for 
     % code reloads, a code reload removes all traces on that module so when we
     % receive this message, reapply all traces for that module
-    dbg:p(all, [c, timestamp]),
-    dbg:tp(code, x),
-
+    {ok,_} = dbg:p(all, [c, timestamp]),
+    {ok,_} = dbg:tp(code, x),
     erlyberly_tcollector2(#tcollector{ ui_pid = Pid,
                                        max_queue_len = Max_queue_len }).
 
