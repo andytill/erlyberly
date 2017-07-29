@@ -232,9 +232,6 @@ store_trace(Trace) ->
     ui_pid,
 
     %%
-    logs = [],
-
-    %%
     traces = [],
 
     %% the maximum message queue length that the collector can accrue before
