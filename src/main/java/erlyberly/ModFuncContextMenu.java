@@ -175,6 +175,9 @@ public class ModFuncContextMenu extends ContextMenu {
                 OtpUtil.atom(func.getModuleName()),
                 OtpUtil.atom(func.getFuncName()),
                 new OtpErlangLong(func.getArity()));
+            if(!OtpUtil.isTupleTagged(NodeAPI.OK_ATOM, callGraph)) {
+                throw new RuntimeException(callGraph.toString());
+            }
             CallGraphView callGraphView = new CallGraphView(dbgController);
             callGraphView.callGraph((OtpErlangTuple) callGraph);
             ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));

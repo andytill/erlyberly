@@ -623,7 +623,7 @@ seq_trace_match_spec(_) ->
 %%
 xref_analysis(Ignore_mods, M,F,A) when is_integer(A) ->
     Call_stack_set = gb_sets:new(),
-    xref_analysis2({M,F,A}, gb_sets:from_list(Ignore_mods), Call_stack_set, []).
+    catch xref_analysis2({M,F,A}, gb_sets:from_list(Ignore_mods), Call_stack_set, []).
 
 %%
 xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
@@ -631,11 +631,17 @@ xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
         true ->
             {MFA, []};
         false ->
-            {ok, Calls} = xref:analyze(?erlyberly_xref, {call, MFA}),
-            All_calls2 = gb_sets:add(MFA, All_calls),
-            Analysed_calls =
-                [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
-            {MFA, Analysed_calls}
+            %% analyse may not return ok if the module was not compiled with
+            %% the debug_info flag
+            case xref:analyze(?erlyberly_xref, {call, MFA}) of
+                {ok, Calls} ->
+                    All_calls2 = gb_sets:add(MFA, All_calls),
+                    Analysed_calls =
+                        [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
+                    {ok, MFA, Analysed_calls};
+                Error ->
+                    throw(Error)
+            end
     end.
 
 %%
@@ -647,9 +653,33 @@ is_xref_recursion(_,_) ->
 %%
 ensure_xref_started() ->
     catch xref:stop(?erlyberly_xref),
-    {ok, _} = xref:start(?erlyberly_xref),
-    Excluded = ["asn1ct", "/ct-", "dialyzer", "diameter", "hipe", "httpd", "megaco", "xmerl", "wx-"],
-    [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path(), not dir_contains(Dir, Excluded)],
+    {ok, _} = xref:start(?erlyberly_xref, [{verbose, false},{warnings, false}]),
+    Excluded = [
+        "/appmon-", "/asn1-",
+        "/common_test-", "/compiler-", "/cos", "/crypto-", "/ct-",
+        "/debugger-", "/dialyzer", "/diameter",
+        "/edoc", "/eldap", "/erl_docgen", "/erl_interface-", "/erts", "/et-", "/eunit",
+        "/gs-",
+        "/hipe", "/httpd",
+        "/ic-", "/inets",
+        "/jinterface",
+        "/kernel",
+        "/megaco", "/mnesia",
+        "/observer-", "/odbc", "/orber-", "/os_mon", "/otp_mibs",
+        "/parsetools", "/percept-", "/pman", "/public_key",
+        "/reltool", "/runtime_tools",
+        "/sasl", "/snmp", "/ssh", "/ssl", "/stdlib", "/syntax_tools",
+        "/test_server", "/toolbar", "/tools", "/tv-", "/typer",
+        "/webtool", "/wx-",
+        "/xmerl"
+    ],
+    CodePaths =[Dir || Dir <- lists:sort(code:get_path()), not dir_contains(Dir, Excluded)],
+    % [io:format("XREF CODE PATHS ~s~n", [XXX]) || XXX <- CodePaths],
+    {_TimeUs, _} = timer:tc(fun() ->
+        [xref:add_directory(?erlyberly_xref, P) || P <- CodePaths]
+    end),
+    % io:format("TIME ~p",[_TimeUs]),
+    [xref:add_directory(?erlyberly_xref, P) || P <- CodePaths],
     {erlyberly_xref_started}.
 
 dir_contains(_, []) ->

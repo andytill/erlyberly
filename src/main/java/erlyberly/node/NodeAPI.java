@@ -89,7 +89,7 @@ public class NodeAPI {
 
     private static final OtpErlangAtom REX_ATOM = atom("rex");
 
-    private static final OtpErlangAtom OK_ATOM = atom("ok");
+    public static final OtpErlangAtom OK_ATOM = atom("ok");
 
     public interface RpcCallback<T> {
         void callback(T result);
