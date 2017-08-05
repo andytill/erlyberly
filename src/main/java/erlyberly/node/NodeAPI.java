@@ -89,6 +89,8 @@ public class NodeAPI {
 
     private static final OtpErlangAtom REX_ATOM = atom("rex");
 
+    public static final OtpErlangAtom OK_ATOM = atom("ok");
+
     public interface RpcCallback<T> {
         void callback(T result);
     }
@@ -267,10 +269,14 @@ public class NodeAPI {
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
         sendRPC(
             ERLYBERLY, "ensure_dbg_started",
-            list(tuple(atom(self.node()), mbox.self()))
+            list(tuple(atom(self.node()), mbox.self()), PrefBind.getMaxTraceQueueLengthConfig())
         );
-        // flush the return value
-        receiveRPC();
+        // the return should be {ok, TracerPid}
+        // we don't need to store the pid because it is registered
+        OtpErlangObject returnedObject = receiveRPC();
+        if(!OtpUtil.isTupleTagged(OK_ATOM, returnedObject)) {
+            throw new RuntimeException(returnedObject.toString());
+        }
     }
 
     private void loadModulesOnPath(String regex) throws IOException, OtpErlangException {
