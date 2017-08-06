@@ -114,18 +114,13 @@ public class DbgController implements Initializable {
 
     private void traceModFunc(ModFunc function) {
         try {
-            ErlyBerly.nodeAPI().startTrace(function, getMaxTraceQueueLengthConfig());
+            ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
 
             traces.add(function);
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private int getMaxTraceQueueLengthConfig() {
-        Number maxTraceQueueLength = (Number) PrefBind.getOrDefault("maxTraceQueueLength", 1000);
-        return maxTraceQueueLength.intValue();
     }
 
     private void onRemoveTracer(ActionEvent e, ModFunc function) {
@@ -144,8 +139,9 @@ public class DbgController implements Initializable {
 
         for (ModFunc function : tracesCopy) {
             try {
-                ErlyBerly.nodeAPI().startTrace(function, getMaxTraceQueueLengthConfig());
-            } catch (Exception e) {
+                ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
+            }
+            catch (Exception e) {
                 e.printStackTrace();
 
                 traces.remove(function);

@@ -175,6 +175,18 @@ public class ErlangFormatter implements TermFormatter {
     }
 
     @Override
+    public String mapLeft(OtpErlangObject obj) {
+        return "#{";
+    }
+
+    @Override
+    public Boolean isHiddenField(OtpErlangObject key) {return false;}
+
+    @Override
+    public String mapRight() {
+        return "}";
+    }
+    @Override
     public String cons() {
         return "|";
     }

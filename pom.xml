@@ -71,33 +71,6 @@
   <build>
     <plugins>
       <plugin>
-          <groupId>com.mycila</groupId>
-          <artifactId>license-maven-plugin</artifactId>
-          <version>2.11</version>
-          <configuration>
-              <header>src/etc/license_header</header>
-              <properties>
-                  <owner>Andy Till</owner>
-                  <year>2016</year>
-                  <email>kittyburrito@googlemail.com</email>
-              </properties>
-              <excludes>
-                  <exclude>**/pom.xml</exclude>
-                  <exclude>**/LICENSE</exclude>
-                  <exclude>**/checkstyle.xml</exclude>
-                  <exclude>**/README</exclude>
-                  <exclude>**/mvnw</exclude>
-                  <exclude>**/.checkstyle</exclude>
-                  <exclude>**/.mvn/**</exclude>
-                  <exclude>src/etc/**</exclude>
-                  <exclude>src/test/resources/**</exclude>
-                  <exclude>src/main/resources/**</exclude>
-                  <exclude>**/src/main/java/hexstar/HexstarView.java</exclude>
-              </excludes>
-          </configuration>
-      </plugin>
-
-      <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.4.1</version>
         <configuration>
@@ -144,6 +117,7 @@
   <plugin>
     <artifactId>exec-maven-plugin</artifactId>
     <groupId>org.codehaus.mojo</groupId>
+    <version>1.6.0</version>
     <executions>
       <execution><!-- Run our version calculation script -->
         <id>Version Calculation</id>

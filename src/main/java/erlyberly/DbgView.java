@@ -111,7 +111,7 @@ public class DbgView implements Initializable {
 
         sortedTreeModules.setComparator(treeItemModFuncComparator());
 
-        SplitPane.setResizableWithParent(modulesBox, Boolean.FALSE);
+        SplitPane.setResizableWithParent(modulesBox, Boolean.TRUE);
 
         ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 

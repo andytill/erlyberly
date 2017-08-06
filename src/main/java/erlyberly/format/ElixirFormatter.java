@@ -120,24 +120,23 @@ public class ElixirFormatter implements TermFormatter {
                     // Convert Erlang style escaped atoms to Elixir style
                     str = ":\"" + innerStr +"\"";
                 }
+
+            }
+            else {
+                str = ":" + str;
             }
             sb.append(str);
         }
         else if(obj instanceof OtpErlangMap) {
             OtpErlangMap map = (OtpErlangMap) obj;
-            OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCT_KEY);
-            if (map.get(structNameKey) != null) {
-                String structName = stripElixirPrefix(map.get(structNameKey).toString());
-                sb.append("%" + structName + "{");
-                map.remove(structNameKey);
-            }
-            else {
-                sb.append("%{");
-            }
+            sb.append(mapLeft(obj));
             Iterator<Map.Entry<OtpErlangObject,OtpErlangObject>> elemIt = map.entrySet().iterator();
             while(elemIt.hasNext()) {
                 Map.Entry<OtpErlangObject,OtpErlangObject> elem = elemIt.next();
                 if (elem.getKey() instanceof OtpErlangAtom) {
+                    if (isHiddenField(elem.getKey())) {
+                        continue;
+                    }
                     sb.append(elem.getKey().toString());
                     sb.append(": ");
                 }
@@ -156,6 +155,16 @@ public class ElixirFormatter implements TermFormatter {
             sb.append(obj.toString());
         }
         return sb;
+    }
+
+    @Override
+    public  String mapKeyToString(OtpErlangObject obj) {
+        if (obj instanceof OtpErlangAtom) {
+            return obj.toString() + ": ";
+        }
+        else {
+            return appendToString(obj, new StringBuilder()).toString() + " => ";
+        }
     }
 
     private static String pidToString(OtpErlangPid pid) {
@@ -261,6 +270,29 @@ public class ElixirFormatter implements TermFormatter {
     @Override
     public String listRightParen() {
         return "]";
+    }
+
+    @Override
+    public String mapLeft(OtpErlangObject obj)
+    {
+        OtpErlangMap map = (OtpErlangMap) obj;
+        OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCT_KEY);
+        if (map.get(structNameKey) != null) {
+            String structName = stripElixirPrefix(map.get(structNameKey).toString());
+            return "%" + structName + "{";
+        }
+        return "%{";
+    }
+
+    @Override
+    public Boolean isHiddenField(OtpErlangObject key) {
+        OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCT_KEY);
+        return (key instanceof OtpErlangAtom) && key.equals(structNameKey);
+    }
+
+    @Override
+    public String mapRight() {
+        return "}";
     }
 
     @Override

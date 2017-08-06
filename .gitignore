@@ -18,3 +18,15 @@ src/main/resources/erlyberly/beam/erlyberly.beam
 # maven release stuff
 pom.xml.releaseBackup
 release.properties
+
+# intellij
+.idea/
+erlyberly.iml
+
+# eclipse
+.settings/*
+.classpath
+.project
+_config.yml
+.checkstyle
+
