@@ -27,8 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import erlyberly.node.NodeAPI;
-import erlyberly.node.NodeAPI.RpcCallback;
+import erlyberly.node.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -158,7 +157,7 @@ public class DbgController implements Initializable {
         traces.addListener(listener);
     }
 
-    public void requestModFuncs(NodeAPI.RpcCallback<OtpErlangList> rpcCallback) {
+    public void requestModFuncs(RpcCallback<OtpErlangList> rpcCallback) {
         new GetModulesThread(rpcCallback).start();
     }
 

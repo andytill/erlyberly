@@ -89,10 +89,6 @@ public class NodeAPI {
 
     private static final OtpErlangAtom REX_ATOM = atom("rex");
 
-    public interface RpcCallback<T> {
-        void callback(T result);
-    }
-
     private static final OtpErlangAtom MODULE_ATOM = new OtpErlangAtom("module");
 
     private static final String ERLYBERLY_BEAM_PATH = "/erlyberly/beam/erlyberly.beam";
@@ -111,7 +107,7 @@ public class NodeAPI {
 
     private OtpConn connection;
 
-    private OtpSelfNode self;
+    private final OtpSelfNode self;
 
     private String remoteNodeName;
 
@@ -165,6 +161,13 @@ public class NodeAPI {
         xrefStartedProperty = new SimpleBooleanProperty(false);
 
         suspendedProperty = new SimpleBooleanProperty();
+
+        try {
+            self = new OtpSelfNode("erlyberly");
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public NodeAPI connectionInfo(String remoteNodeName, String cookie) {
@@ -194,8 +197,6 @@ public class NodeAPI {
         // clear previous connections and threads if any, before we reconnect
         // TODO: investigate whether we need this ...
         disconnect();
-
-        self = new OtpSelfNode("erlyberly-" + System.currentTimeMillis());
         if(!cookie.isEmpty()) {
             self.setCookie(cookie);
         }
@@ -257,7 +258,6 @@ public class NodeAPI {
             System.out.println(e);
         }
         connection = null;
-        self = null;
         connected = false;
         Platform.runLater(() -> {
             suspendedProperty.set(false);
