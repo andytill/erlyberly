@@ -195,10 +195,14 @@ start_trace({Node, Pid}, Mod, Func, Arity, Max_queue_len) when is_atom(Node),
 
 %%
 stop_trace(Mod, Func, Arity, _IsExported) ->
-    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity}.
+    %% FIXME do a receive to make sure that the call was successful
+    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity},
+    ok.
 %%
 stop_traces() ->
-    erlyberly_tcollector ! stop_traces.
+    %% FIXME do a receive to make sure that the call was successful
+    erlyberly_tcollector ! stop_traces,
+    ok.
 %%
 when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
@@ -285,7 +289,8 @@ collect_overloading_logs(Max_queue_len, TC) ->
 
 receive_next_trace(#tcollector{ traces = Traces } = TC) ->
     receive
-        {start_trace, Mod, Func, Arity, Requester, Ref} ->
+        {start_trace, Mod, Func, Arity, Requester, Ref} when is_pid(Requester),
+                                                             is_reference(Ref) ->
             TC1 = tcollector_start_trace(Mod, Func, Arity, TC),
             Requester ! {ok, Ref},
             erlyberly_tcollector2(TC1);
@@ -422,12 +427,12 @@ trace_to_props(U) ->
 reapply_traces(Loaded_module, Traces) ->
     % filter out the traces for the reloaded, module, could be
     % done in the list comp but it causes a compiler warning
-    Traces_1 = lists:filter(fun(T) -> 
+    Traces_1 = lists:filter(fun(T) ->
                                 element(1, T) == Loaded_module 
                             end, Traces),
 
     % reapply each trace that has the loaded module
-    [erlyberly_tcollector ! {start_trace, M, F, A} || {M, F, A} <- Traces_1],
+    [erlyberly_tcollector ! {start_trace, M, F, A, self(), make_ref()} || {M, F, A} <- Traces_1],
     ok.
 %%
 collect_trace_logs() ->
@@ -623,7 +628,8 @@ seq_trace_match_spec(_) ->
 %%
 xref_analysis(Ignore_mods, M,F,A) when is_integer(A) ->
     Call_stack_set = gb_sets:new(),
-    catch xref_analysis2({M,F,A}, gb_sets:from_list(Ignore_mods), Call_stack_set, []).
+    Ignore_mods_set = gb_sets:from_list(Ignore_mods),
+    {ok, xref_analysis2({M,F,A}, Ignore_mods_set, Call_stack_set, [])}.
 
 %%
 xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
@@ -638,7 +644,7 @@ xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
                     All_calls2 = gb_sets:add(MFA, All_calls),
                     Analysed_calls =
                         [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
-                    {ok, MFA, Analysed_calls};
+                    {MFA, Analysed_calls};
                 Error ->
                     throw(Error)
             end
@@ -652,6 +658,7 @@ is_xref_recursion(_,_) ->
 
 %%
 ensure_xref_started() ->
+    io:format("ENSURE XREF STARTED~n"),
     catch xref:stop(?erlyberly_xref),
     {ok, _} = xref:start(?erlyberly_xref, [{verbose, false},{warnings, false}]),
     Excluded = [
@@ -680,7 +687,7 @@ ensure_xref_started() ->
     end),
     % io:format("TIME ~p",[_TimeUs]),
     [xref:add_directory(?erlyberly_xref, P) || P <- CodePaths],
-    {erlyberly_xref_started}.
+    {ok, erlyberly_xref_started}.
 
 dir_contains(_, []) ->
     false;

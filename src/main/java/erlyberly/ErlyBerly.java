@@ -18,9 +18,12 @@
 package erlyberly;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import erlyberly.format.ErlangFormatter;
 import erlyberly.format.ElixirFormatter;
+import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.NodeAPI;
@@ -47,6 +50,8 @@ import javafx.stage.WindowEvent;
 
 public class ErlyBerly extends Application {
 
+    private static final ExecutorService IO_EXECUTOR = Executors.newCachedThreadPool();
+
     private static final NodeAPI NODE_API = new NodeAPI();
 
     /**
@@ -67,6 +72,20 @@ public class ErlyBerly extends Application {
 
     public static void main(String[] args) throws Exception {
         launch(args);
+    }
+
+    public static void runIO(Runnable runnable) {
+        IO_EXECUTOR.execute(runnable);
+    }
+
+    public static void runIOAndWait(Runnable runnable) {
+        Future<?> future = IO_EXECUTOR.submit(runnable);
+        try {
+            future.get();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -139,17 +158,17 @@ public class ErlyBerly extends Application {
 
         FilterFocusManager.init(scene);
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent t) {
+        primaryStage.setOnCloseRequest((windowEvent) -> {
+            ErlyBerly.runIOAndWait(() -> {
                 try {
                     nodeAPI().manuallyDisconnect();
-                } catch(Exception e) {
+                }
+                catch(Exception e) {
                     System.out.println(e);
                 }
-                Platform.exit();
-                System.exit(0);
-            }
+            });
+            Platform.exit();
+            System.exit(0);
         });
         // run this later because it requires the control's scene to be set, which
         // may not have happened yet.
