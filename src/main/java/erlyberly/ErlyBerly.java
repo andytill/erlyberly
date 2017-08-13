@@ -18,9 +18,11 @@
 package erlyberly;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import erlyberly.format.ElixirFormatter;
 import erlyberly.format.ErlangFormatter;
@@ -50,7 +52,7 @@ import javafx.stage.WindowEvent;
 
 public class ErlyBerly extends Application {
 
-    private static final ExecutorService IO_EXECUTOR = Executors.newCachedThreadPool();
+    private static final ScheduledExecutorService IO_EXECUTOR = Executors.newScheduledThreadPool(4);
 
     private static final NodeAPI NODE_API = new NodeAPI();
 
@@ -86,6 +88,10 @@ public class ErlyBerly extends Application {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static ScheduledFuture<?> scheduledIO(long delayMillis, Runnable runnable) {
+        return IO_EXECUTOR.schedule(runnable, delayMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override

@@ -568,7 +568,9 @@ public class NodeAPI {
     }
 
     private NodeRPC nodeRPC() {
-        return new NodeRPC(self, connection);
+        synchronized (this) {
+            return new NodeRPC(self, connection);
+        }
     }
 
     private NodeRPC nodeRPC(int timeoutMillis) {
@@ -741,6 +743,20 @@ public class NodeAPI {
             throw new OtpErlangException(Objects.toString(result));
         OtpErlangString otpString = (OtpErlangString) result;
         return otpString.stringValue();
+    }
+
+    /**
+     * Attempt to load the given module name into the attached vm. The trace applied
+     * to the code module will see the loaded module and send a message to erlyberly,
+     * which will display it in the tree of modules.
+     */
+    public void loadModule(OtpErlangAtom moduleNameAtom) throws OtpErlangException, IOException {
+        assert moduleNameAtom != null : "module name string is null";
+        assert !"".equals(moduleNameAtom) : " module name string is empty";
+        assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
+        OtpErlangObject result = nodeRPC()
+                .blockingRPC(atom("code"), atom("ensure_loaded"), list(moduleNameAtom));
+        assert isTupleTagged(atom("module"), result) || isTupleTagged(atom("error"), result) : result;
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {
