@@ -56,16 +56,6 @@
       <artifactId>toml4j</artifactId>
       <version>0.6.1</version>
     </dependency>
-    <dependency>
-      <groupId>io.reactivex</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>1.2.3</version>
-  </dependency>
-      <dependency>
-          <groupId>io.reactivex</groupId>
-          <artifactId>rxjavafx</artifactId>
-          <version>0.3.0</version>
-      </dependency>
   </dependencies>
 
   <build>
