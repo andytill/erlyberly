@@ -83,14 +83,25 @@ public class ConnectionView implements Initializable {
 
     @FXML
     public void onConnect() {
-        String cookie;
-
-        cookie = cookieField.getText();
-        cookie = cookie.replaceAll("'", "");
+        final String cookie, remoteNodeName;
+        cookie = cookieField.getText().replaceAll("'", "");
+        remoteNodeName = nodeNameField.getText();
 
         isConnecting.set(true);
+        ErlyBerly.runIO(() -> {
+            try {
+                ErlyBerly
+                    .nodeAPI()
+                    .connectionInfo(remoteNodeName, cookie)
+                    .manualConnect();
 
-        new ConnectorThead(nodeNameField.getText(), cookie).start();
+                Platform.runLater(() -> { closeThisWindow(); });
+            }
+            catch (OtpErlangException | OtpAuthException | IOException e) {
+                e.printStackTrace();
+                Platform.runLater(() -> { connectionFailed(e.getMessage()); });
+            }
+        });
     }
 
     private void connectionFailed(String message) {
@@ -113,36 +124,5 @@ public class ConnectionView implements Initializable {
         Stage stage;
         stage = (Stage) connectButton.getScene().getWindow();
         stage.close();
-    }
-
-    /**
-     * Daemon thread used to connect to the remote node, so it doesn't block the UI.
-     */
-    class ConnectorThead extends Thread {
-        private final String remoteNodeName;
-        private final String cookie;
-
-        public ConnectorThead(String aRemoteNodeName, String aCookie) {
-            remoteNodeName = aRemoteNodeName;
-            cookie = aCookie;
-
-            setDaemon(true);
-            setName("Erlyberly Connector Thread");
-        }
-
-        @Override
-        public void run() {
-            try {
-                ErlyBerly
-                    .nodeAPI()
-                    .connectionInfo(remoteNodeName, cookie)
-                    .manualConnect();
-
-                Platform.runLater(() -> { closeThisWindow(); });
-            }
-            catch (OtpErlangException | OtpAuthException | IOException e) {
-                Platform.runLater(() -> { connectionFailed(e.getMessage()); });
-            }
-        }
     }
 }

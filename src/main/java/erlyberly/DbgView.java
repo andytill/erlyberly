@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.ScheduledFuture;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
@@ -30,6 +31,7 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -175,6 +177,14 @@ public class DbgView implements Initializable {
 
     private TabPane tabPane;
 
+    /**
+     * A scheduled future that gets created when the module filter text is
+     * changed, when it is changed again it is cancelled and a new one is
+     * created. If no change occurs within the delay time then the module in
+     * the filter will be loaded.
+     */
+    private ScheduledFuture<?> scheduledModuleLoadFuture;
+
     private TextField floatyFieldTextField(FxmlLoadable loader) {
         // FIXME floaty field should allow access to the text field
         return (TextField) loader.fxmlNode.getChildrenUnmodifiable().get(1);
@@ -285,6 +295,36 @@ public class DbgView implements Initializable {
 
         // set predicates on the function tree items so that they filter correctly
         filterForFunctionTextMatch(filterTextProperty.get());
+
+        // this listener tries to load a module typed into the filter
+        // so that the user does not have to load it into the vm first
+        // downside is that it dynamically creates atoms at a max rate
+        // of one per second, not a huge amount
+        //
+        // TODO if there is a "production" mode then this feature should
+        //      disabled, alternatively we can check if the application is
+        //      embedded, if it is then all modules should be loaded anyway
+        filterTextProperty.addListener((o, oldString, newString) -> {
+            if(scheduledModuleLoadFuture != null) {
+                scheduledModuleLoadFuture.cancel(true);
+            }
+            String[] split = newString.trim().split(":");
+            if(newString == null || "".equals(newString) || split.length == 0)
+                return;
+            String moduleName = split[0];
+            if(moduleName == null || "".equals(moduleName)) {
+                return;
+            }
+            long delayMillis = 1000;
+            scheduledModuleLoadFuture = ErlyBerly.scheduledIO(delayMillis, () -> {
+                try {
+                    ErlyBerly.nodeAPI().loadModule(OtpUtil.atom(moduleName));
+                }
+                catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            });
+        });
     }
 
     private void createModuleTreeItem(OtpErlangTuple tuple) {

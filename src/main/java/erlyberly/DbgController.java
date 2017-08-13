@@ -27,8 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import erlyberly.node.NodeAPI;
-import erlyberly.node.NodeAPI.RpcCallback;
+import erlyberly.node.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -107,6 +106,10 @@ public class DbgController implements Initializable {
     }
 
     public void toggleTraceModFunc(ModFunc function) {
+        // if tracing is suspended, we can't apply a new trace because that will
+        // leave us in a state where some traces are active and others are not
+        if(ErlyBerly.nodeAPI().isSuspended())
+            return;
         if(traces.contains(function))
             onRemoveTracer(null, function);
         else
@@ -114,47 +117,52 @@ public class DbgController implements Initializable {
     }
 
     private void traceModFunc(ModFunc function) {
-        try {
-            ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
+        ErlyBerly.runIO(() -> {
+            try {
+                ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
 
-            traces.add(function);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
+                Platform.runLater(() -> { traces.add(function); });
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     private void onRemoveTracer(ActionEvent e, ModFunc function) {
-        try {
-            ErlyBerly.nodeAPI().stopTrace(function);
+        ErlyBerly.runIO(() -> {
+            try {
+                ErlyBerly.nodeAPI().stopTrace(function);
 
-            traces.remove(function);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
+                Platform.runLater(() -> { traces.remove(function); });
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     public void reapplyTraces() {
-        ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
-
-        for (ModFunc function : tracesCopy) {
-            try {
-                ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
+        final int maxTraceQueueLengthConfig = PrefBind.getMaxTraceQueueLengthConfig();
+        final ArrayList<ModFunc> tracesCopy = new ArrayList<ModFunc>(traces);
+        ErlyBerly.runIO(() -> {
+            for (ModFunc function : tracesCopy) {
+                try {
+                    ErlyBerly.nodeAPI().startTrace(function, maxTraceQueueLengthConfig);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    Platform.runLater(() -> { traces.remove(function); });
+                }
             }
-            catch (Exception e) {
-                e.printStackTrace();
-
-                traces.remove(function);
-            }
-        }
+        });
     }
 
     public void addTraceListener(InvalidationListener listener) {
         traces.addListener(listener);
     }
 
-    public void requestModFuncs(NodeAPI.RpcCallback<OtpErlangList> rpcCallback) {
+    public void requestModFuncs(RpcCallback<OtpErlangList> rpcCallback) {
         new GetModulesThread(rpcCallback).start();
     }
 
@@ -225,20 +233,18 @@ public class DbgController implements Initializable {
     }
 
     public String moduleFunctionSourceCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
-        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionSourceCode(module, function, arity);
-        return moduleCode;
+        return ErlyBerly.nodeAPI().moduleFunctionSourceCode(module, function, arity);
     }
     public String moduleFunctionSourceCode(String module) throws IOException, OtpErlangException {
-        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionSourceCode(module);
-        return moduleCode;
+        return ErlyBerly.nodeAPI().moduleFunctionSourceCode(module);
     }
 
     public String moduleFunctionAbstCode(String module) throws IOException, OtpErlangException {
-        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstCode(module);
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstractCode(module);
         return moduleCode;
     }
     public String moduleFunctionAbstCode(String module, String function, Integer arity) throws IOException, OtpErlangException {
-        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstCode(module, function, arity);
+        String moduleCode = ErlyBerly.nodeAPI().moduleFunctionAbstractCode(module, function, arity);
         return moduleCode;
     }
 

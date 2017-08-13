@@ -36,11 +36,11 @@
       <version>1.6.0</version>
     </dependency>
     <dependency>
-	    <groupId>junit</groupId>
-	    <artifactId>junit</artifactId>
-	    <version>4.11</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
       <scope>test</scope>
-	  </dependency>
+    </dependency>
     <dependency>
       <groupId>de.jensd</groupId>
       <artifactId>fontawesomefx</artifactId>
