@@ -190,8 +190,9 @@ public class DbgTraceView extends VBox {
     private void onTraceClicked(MouseEvent me) {
         if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
             TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-
-            if(selectedItem != null && selectedItem != null) {
+            // some items may not traces, they might be node down messages for example
+            boolean isActualTrace = !"".equals(selectedItem.getArgs());
+            if(selectedItem != null && selectedItem != null && isActualTrace) {
                 showTraceTermView(selectedItem);
             }
         }
@@ -217,14 +218,15 @@ public class DbgTraceView extends VBox {
         resultTermsTreeView = newTermTreeView();
 
         if(result != null) {
-            resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
+            resultTermsTreeView.populateFromTerm(result);
         }
         else {
+            // the result may be receievd while the term view is open so put a listen
+            // on the result property and show it if is set
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
                 if(newV)
                     resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
             });
-
             traceLog.isCompleteProperty().addListener(listener);
         }
 
@@ -242,9 +244,15 @@ public class DbgTraceView extends VBox {
 
         StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
-        stackTraceView.populateFromMfaList(traceLog.getStackTrace());
-        String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
-        TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
+
+        String stackTraceTitle = "No Stack Trace";
+        OtpErlangList stackTrace = traceLog.getStackTrace();
+        if(stackTrace != null) {
+            stackTraceView.populateFromMfaList(stackTrace);
+            stackTraceTitle = "Stack Trace (" + stackTrace.arity() + ")";
+        }
+        TitledPane titledPane;
+        titledPane = new TitledPane(stackTraceTitle, stackTraceView);
         titledPane.setExpanded(!stackTraceView.isStackTracesEmpty());
         splitPaneH = new SplitPane();
         splitPaneH.setOrientation(Orientation.VERTICAL);

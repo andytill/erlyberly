@@ -19,7 +19,7 @@
 
 -export([collect_seq_trace_logs/0]).
 -export([collect_trace_logs/0]).
--export([ensure_dbg_started/2]).
+-export([ensure_dbg_started/3]).
 -export([ensure_xref_started/0]).
 -export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
@@ -180,7 +180,6 @@ module_functions2(Mod) when is_atom(Mod) ->
 start_trace({Node, Pid}, Mod, Func, Arity, Max_queue_len) when is_atom(Node),
                                                                is_pid(Pid),
                                                                is_integer(Max_queue_len) ->
-    ensure_dbg_started({Node, Pid}, Max_queue_len),
     Ref = make_ref(),
     erlyberly_tcollector ! {start_trace, Mod, Func, Arity, self(), Ref},
     receive
@@ -210,7 +209,8 @@ when_process_is_unregistered(ProcName, Fn) ->
         _         -> ok
     end.
 %%
-ensure_dbg_started({Eb_Node, Eb_pid}, Max_queue_len) ->
+ensure_dbg_started({Eb_Node, Eb_pid}, Port, Max_queue_len) when is_integer(Port),
+                                                                is_integer(Max_queue_len) ->
     % restart dbg
     when_process_is_unregistered(dbg, fun dbg:start/0),
     StartFn =
@@ -219,12 +219,16 @@ ensure_dbg_started({Eb_Node, Eb_pid}, Max_queue_len) ->
             register(erlyberly_tcollector, Pid),
             % create a tracer that will send the trace logs to erlyberly_tcollector
             % to be stored.
-            TraceFn = 
-                fun (Trace, _) -> 
-                    store_trace(Trace),
-                    ok
-                end,
-            dbg:tracer(process, {TraceFn, ok})
+            % TraceFn = 
+            %     fun (Trace, _) -> 
+            %         store_trace(Trace),
+            %         ok
+            %     end,
+
+            %% this starts a TCP server on the port, which erlyberly connects into,
+            %% the max queue len is the limit at which the tracer starts to drop
+            %% messages if it is backed up
+            dbg:tracer(port, dbg:trace_port(ip, Port))
         end,
     when_process_is_unregistered(erlyberly_tcollector, StartFn).
 
@@ -504,9 +508,6 @@ collect_seq_trace_logs() ->
 
 %%
 ensure_seq_tracer_started(Remote_node) ->
-    %% TODO configure value for seq trace max queeu length
-    ensure_dbg_started(Remote_node, 500),
-
     case whereis(?erlyberly_seq_trace) of
         undefined ->
             start_seq_tracer(Remote_node);

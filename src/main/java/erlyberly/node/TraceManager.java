@@ -20,15 +20,15 @@ package erlyberly.node;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
+import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+import erlyberly.ErlyBerly;
 import erlyberly.TraceLog;
 
 public class TraceManager {
@@ -39,8 +39,14 @@ public class TraceManager {
 
     private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
 
-    private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
+    private final HashMap<OtpErlangPid, Stack<TraceLog>> unfinishedCalls = new HashMap<OtpErlangPid, Stack<TraceLog>>();
 
+    /**
+     * Called when a trace log is received.
+     * <br/>
+     * Should only accessed from the FX thread.
+     */
+    private RpcCallback<TraceLog> traceLogCallback;
 
     public List<TraceLog> collateTraces(OtpErlangList traceLogs) {
         final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
@@ -60,53 +66,50 @@ public class TraceManager {
 
     private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
         OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
-        OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
+        OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(2);
 
         if(CALL_ATOM.equals(traceType)) {
             TraceLog trace = proplistToTraceLog(tup);
 
-            Stack<TraceLog> stack = unfinishedCalls.get(trace.getPidString());
+            Stack<TraceLog> stack = unfinishedCalls.get(trace.getPid());
 
             if(stack == null)
                 stack = new Stack<TraceLog>();
 
             stack.add(trace);
 
-            unfinishedCalls.put(trace.getPidString(), stack);
+            unfinishedCalls.put(trace.getPid(), stack);
 
-            traceList.add(trace);
+            if(traceLogCallback != null)
+                traceLogCallback.callback(trace);
         }
         else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
-            Map<Object, Object> map = propsFromTrace(tup);
-
-            Object object = map.get(TraceLog.ATOM_PID);
-
-            if(object != null) {
-                OtpErlangString pidString = (OtpErlangString) object;
-
-                Stack<TraceLog> stack = unfinishedCalls.get(pidString.stringValue());
-                if(stack == null)
-                    return;
-
-                TraceLog traceLog = stack.pop();
-                traceLog.complete(map);
-
-                if(stack.isEmpty())
-                    unfinishedCalls.remove(pidString.stringValue());
-            }
-
+            assert tup.elementAt(1) instanceof OtpErlangPid;
+            OtpErlangPid tracedPid = (OtpErlangPid) tup.elementAt(1);
+            Stack<TraceLog> stack = unfinishedCalls.get(tracedPid);
+            if(stack == null)
+                return;
+            TraceLog traceLog = stack.pop();
+            traceLog.complete(tup, ErlyBerly.getTermFormatter());
+            if(stack.isEmpty())
+                unfinishedCalls.remove(tracedPid);
+        }
+        else {
+            assert false : traceType;
         }
     }
 
     private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
-        Map<Object, Object> map = propsFromTrace(tup);
-
-        TraceLog trace = new TraceLog(map);
+        TraceLog trace = new TraceLog(tup, ErlyBerly.getTermFormatter());
 
         return trace;
     }
 
-    private Map<Object, Object> propsFromTrace(OtpErlangTuple tup) {
-        return OtpUtil.propsToMap((OtpErlangList) tup.elementAt(1));
+    public RpcCallback<TraceLog> getTraceLogCallback() {
+        return traceLogCallback;
+    }
+
+    public void setTraceLogCallback(RpcCallback<TraceLog> traceLogCallback) {
+        this.traceLogCallback = traceLogCallback;
     }
 }

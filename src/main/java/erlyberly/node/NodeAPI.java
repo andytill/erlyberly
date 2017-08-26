@@ -126,17 +126,12 @@ public class NodeAPI {
     private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
 
     /**
-     * Called when a trace log is received.
-     * <br/>
-     * Should only accessed from the FX thread.
-     */
-    private RpcCallback<TraceLog> traceLogCallback;
-
-    /**
      * When tracing is paused, NodeAPI will stop all traces. When tracing is un-suspended
      * the DbgController must reapply all the traces.
      */
     private final SimpleBooleanProperty suspendedProperty;
+
+    private TraceServerConnection traceServerConnection;
 
     public NodeAPI() {
         traceManager = new TraceManager();
@@ -228,6 +223,9 @@ public class NodeAPI {
             checkAliveThread = new CheckAliveThread();
             checkAliveThread.start();
         }
+
+        traceServerConnection = new TraceServerConnection(traceManager);
+        traceServerConnection.connect("localhost", 7777);
     }
 
     public void manuallyDisconnect() throws IOException, OtpErlangException {
@@ -265,7 +263,9 @@ public class NodeAPI {
     }
 
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
-        OtpErlangList argList = list(tuple(atom(self.node()), mbox.self()), PrefBind.getMaxTraceQueueLengthConfig());
+        int maxQueueLen = PrefBind.getMaxTraceQueueLengthConfig();
+        int serverPort = 7777;
+        OtpErlangList argList = list(tuple(atom(self.node()), mbox.self()), serverPort, maxQueueLen);
         OtpErlangObject returnedObject = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("ensure_dbg_started"), argList);
         // the return should be {ok, TracerPid}
@@ -431,7 +431,7 @@ public class NodeAPI {
     }
 
     private void traceLogNotification(OtpErlangTuple receive) {
-        Platform.runLater(() -> {
+      /*  Platform.runLater(() -> {
             OtpErlangTuple traceLog = (OtpErlangTuple) receive.elementAt(1);
             List<TraceLog> collatedTraces = traceManager.collateTraceSingle(traceLog);
             if(traceLogCallback != null) {
@@ -439,7 +439,7 @@ public class NodeAPI {
                     traceLogCallback.callback(log);
                 }
             }
-        });
+        });*/
     }
 
     private static byte[] loadBeamFile() throws IOException {
@@ -760,11 +760,11 @@ public class NodeAPI {
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {
-        return traceLogCallback;
+        return traceManager.getTraceLogCallback();
     }
 
     public void setTraceLogCallback(RpcCallback<TraceLog> traceLogCallback) {
-        this.traceLogCallback = traceLogCallback;
+        traceManager.setTraceLogCallback(traceLogCallback);
     }
 
     public void toggleSuspended() throws OtpErlangException, IOException {

@@ -212,7 +212,7 @@ public class ElixirFormatter implements TermFormatter {
     @Override
     public String moduleNameToString(String moduleName) {
         if(moduleName.startsWith("Elixir."))
-            return moduleName.substring(7);
+            return moduleName.substring("Elixir.".length());
         else
             return ":" + moduleName;
     }

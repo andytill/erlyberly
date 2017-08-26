@@ -29,6 +29,9 @@ public interface TermFormatter {
 
     String modFuncArgsToString(OtpErlangTuple mfa);
 
+    /**
+     * For example mymod:myfunc/2 in an erlang implementation.
+     */
     String modFuncArityToString(OtpErlangTuple mfa);
 
     default String modFuncArityToString(String mod, String func, int arity) { return mod + ":" + func + "/" + arity; }
