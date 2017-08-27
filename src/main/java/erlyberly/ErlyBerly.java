@@ -77,7 +77,16 @@ public class ErlyBerly extends Application {
     }
 
     public static void runIO(Runnable runnable) {
-        IO_EXECUTOR.execute(runnable);
+        IO_EXECUTOR.execute(() -> {
+            try {
+                runnable.run();
+            }
+            catch(Exception e) {
+                // print here or no console output is written at all
+                e.printStackTrace();
+                throw e;
+            }
+        });
     }
 
     public static void runIOAndWait(Runnable runnable) {
@@ -87,6 +96,7 @@ public class ErlyBerly extends Application {
         }
         catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

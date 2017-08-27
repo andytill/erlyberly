@@ -131,7 +131,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private long tupleElementToLong(int index, OtpErlangTuple tuple) {
         assert index < tuple.arity() : tuple;
-        assert tuple.elementAt(index) instanceof OtpErlangLong;
+        assert tuple.elementAt(index) instanceof OtpErlangLong : tuple;
         return ((OtpErlangLong)tuple.elementAt(index)).longValue();
     }
 

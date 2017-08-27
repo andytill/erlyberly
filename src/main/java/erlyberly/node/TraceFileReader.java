@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 
 import com.ericsson.otp.erlang.OtpInputStream;
 
-public class TraceFileReader extends OtpUtilTest {
+public class TraceFileReader {
 
     public static void main(String[] args) throws Exception {
         byte[] bytes = new byte[1024 * 2];

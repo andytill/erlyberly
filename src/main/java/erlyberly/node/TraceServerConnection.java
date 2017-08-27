@@ -43,7 +43,7 @@ public class TraceServerConnection {
                 offset = 0;
                 // read the message type, read blocks but if the read size if less
                 // than 1 then just loop again, docs are a little unclear as to what
-                // circumstance it will ceast to block
+                // circumstance it will cease to block
                 read = inStream.read(buffer, offset++, 1);
                 if(read < 1) {
                     continue;
