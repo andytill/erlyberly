@@ -34,6 +34,7 @@ public class TraceServerConnection {
         FileOutputStream outStream = null;
         buffer = new byte[DEFAULT_BUFFER_SIZE];
         int read = 0;
+        OtpErlangObject traceTerm = null;
         try {
             inStream = new BufferedInputStream(socket.getInputStream());
             outStream = new FileOutputStream("/tmp/erlyberlytrace");
@@ -62,7 +63,7 @@ public class TraceServerConnection {
                 read = inStream.read(buffer, offset, size);
                 assert read == size : "read: " + read + " size: " + size;
                 OtpInputStream otpInputStream = new OtpInputStream(buffer, offset, size, 0);
-                OtpErlangObject traceTerm = otpInputStream.read_any();
+                traceTerm = otpInputStream.read_any();
                 assert traceTerm instanceof OtpErlangTuple : traceTerm;
                 traceManager.collateTraceSingle((OtpErlangTuple) traceTerm);
                 otpInputStream.close();
@@ -71,9 +72,11 @@ public class TraceServerConnection {
             }
         }
         catch (Exception e) {
+            System.out.println("Last traced term was: " + traceTerm);
             e.printStackTrace();
         }
         finally {
+            System.out.println("Last traced term was: " + traceTerm);
             safeCloseStream(outStream);
         }
     }

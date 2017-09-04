@@ -17,16 +17,17 @@
 
 -module(erlyberly).
 
+-export([all_module_functions/0]).
 -export([collect_seq_trace_logs/0]).
 -export([ensure_dbg_started/3]).
 -export([ensure_xref_started/0]).
--export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
 -export([load_modules_on_path/1]).
--export([module_functions/0]).
+-export([module_functions/1]).
 -export([process_info/0]).
+-export([saleyn_fun_src/1]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
@@ -157,15 +158,19 @@ record_fields([]) ->
 %%% module function tree
 %%% ============================================================================
 
-module_functions() ->
+%% return a list of all modules and their exported and unexported functions 
+all_module_functions() ->
     lists:sort(
-        [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()]
+        [begin
+            {ok,Result} = module_functions(Mod),
+            Result
+         end || {Mod, _FPath} <- code:all_loaded()]
     ).
 
-module_functions2(Mod) when is_atom(Mod) ->
+module_functions(Mod) when is_atom(Mod) ->
     Exports = Mod:module_info(exports),
     Unexported = [F || F <- Mod:module_info(functions), not lists:member(F, Exports)],
-    {Mod, Exports, Unexported}.
+    {ok,{Mod, Exports, Unexported}}.
 
 
 %%% ============================================================================
@@ -176,17 +181,11 @@ module_functions2(Mod) when is_atom(Mod) ->
 start_trace({Node, Pid}, Mod, Func, Arity, Max_queue_len) when is_atom(Node),
                                                                is_pid(Pid),
                                                                is_integer(Max_queue_len) ->
-    Ref = make_ref(),
-    erlyberly_tcollector ! {start_trace, Mod, Func, Arity, self(), Ref},
-    receive
-        {ok, Ref} ->
-            {ok, whereis(erlyberly_tcollector)};
-        Error when element(1,Error) == error ->
-            Error
-    after
-        1000 ->
-            {error, timeout}
-    end.
+    Match_spec = [{'_', [], [{message,{process_dump}}, {exception_trace}]}],
+    Trace_spec = {Mod, Func, Arity},
+    {ok,_} = dbg:tpl(Trace_spec, Match_spec),
+    {ok,_} = dbg:p(all, [c, timestamp]),
+    ok.
 
 %%
 stop_trace(Mod, Func, Arity, _IsExported) ->
@@ -213,8 +212,16 @@ ensure_dbg_started({Eb_Node, Eb_pid}, Port, Max_queue_len) when is_integer(Port)
     {ok,_} = dbg:start(),
     {ok,_} = dbg:tracer(port, dbg:trace_port(ip, {Port, Max_queue_len})),
     {ok,_} = dbg:p(all, [c, timestamp]),
-    {ok,_} = dbg:tp({code, ensure_loaded, 1}, c),
+    {ok,_} = dbg:tpl({code_server, try_load_module, '_'}, []),
+    proc_lib:spawn(fun() -> monitor_erlyberly_node(Eb_Node) end),
     ok.
+
+monitor_erlyberly_node(Node_name) ->
+    true = erlang:monitor_node(Node_name, true),
+    receive
+        {nodedown, Node_name} ->
+            dbg:stop_clear()
+    end.
 
 % receive_next_trace(#tcollector{ traces = Traces } = TC) ->
 %     receive

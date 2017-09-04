@@ -17,6 +17,8 @@
  */
 package erlyberly.node;
 
+import static erlyberly.node.OtpUtil.atom;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +32,15 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.ErlyBerly;
 import erlyberly.TraceLog;
+import javafx.application.Platform;
 
 public class TraceManager {
 
-    private static final OtpErlangAtom RETURN_FROM_ATOM = new OtpErlangAtom("return_from");
+    private static final OtpErlangAtom MODULE_ATOM = atom("module");
+
+    private static final OtpErlangAtom CODE_ATOM = atom("code");
+
+    private static final OtpErlangAtom RETURN_FROM_ATOM = atom("return_from");
 
     private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
 
@@ -47,6 +54,8 @@ public class TraceManager {
      * Should only accessed from the FX thread.
      */
     private RpcCallback<TraceLog> traceLogCallback;
+
+    private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
 
     public List<TraceLog> collateTraces(OtpErlangList traceLogs) {
         final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
@@ -64,11 +73,32 @@ public class TraceManager {
         return traceList;
     }
 
+    TraceTuple traceTuple = new TraceTuple();
+
     private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
+        traceTuple.tuple = (OtpErlangTuple) otpErlangObject;
         OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
-        OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(2);
+        OtpErlangAtom traceType = traceTuple.getTraceType();
 
         if(CALL_ATOM.equals(traceType)) {
+            OtpErlangAtom moduleLoad = traceTuple.isModuleLoad();
+            if(moduleLoad != null) {
+                // if a module is reloaded then we need to reload the functions for it
+                // since some may be added or deleted. We also need to reapply traces
+                // since a reload removes all traces on that module
+                System.out.println("code reload");
+                ErlyBerly.runIO(() -> {
+                    try {
+                        OtpErlangTuple moduleFunctions = ErlyBerly.nodeAPI().moduleFunctions(moduleLoad);
+                        Platform.runLater(() -> { moduleLoadedCallback.callback(moduleFunctions); });
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                // don't show the module load to the user as a trace in the table
+                return;
+            }
             TraceLog trace = proplistToTraceLog(tup);
 
             Stack<TraceLog> stack = unfinishedCalls.get(trace.getPid());
@@ -91,11 +121,40 @@ public class TraceManager {
                 return;
             TraceLog traceLog = stack.pop();
             traceLog.complete(tup, ErlyBerly.getTermFormatter());
+
             if(stack.isEmpty())
                 unfinishedCalls.remove(tracedPid);
         }
         else {
             assert false : traceType;
+        }
+    }
+
+    static class TraceTuple {
+        private static final OtpErlangAtom TRY_LOAD_MODULE_ATOM = atom("try_load_module");
+        private static final OtpErlangAtom CODE_SERVER_ATOM = atom("code_server");
+        OtpErlangTuple tuple;
+
+        OtpErlangAtom getTraceType() {
+            return (OtpErlangAtom) tuple.elementAt(2);
+        }
+
+        private OtpErlangAtom isModuleLoad() {
+            if(!CALL_ATOM.equals(getTraceType()))
+                return null;
+            OtpErlangTuple mfa = getMFA();
+            OtpErlangObject mod = mfa.elementAt(0);
+            OtpErlangObject function = mfa.elementAt(1);
+            OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
+            if(CODE_SERVER_ATOM.equals(mod) && TRY_LOAD_MODULE_ATOM.equals(function)) {
+                System.out.println("TRY_LOAD_MODULE " + tuple);
+                return (OtpErlangAtom) args.elementAt(1);
+            }
+            return null;
+        }
+
+        private OtpErlangTuple getMFA() {
+            return (OtpErlangTuple) tuple.elementAt(3);
         }
     }
 
@@ -111,5 +170,10 @@ public class TraceManager {
 
     public void setTraceLogCallback(RpcCallback<TraceLog> traceLogCallback) {
         this.traceLogCallback = traceLogCallback;
+    }
+
+    public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> aModuleLoadedCallback) {
+        moduleLoadedCallback = aModuleLoadedCallback;
+
     }
 }

@@ -18,6 +18,7 @@
 package erlyberly.node;
 
 import static erlyberly.node.OtpUtil.atom;
+import static erlyberly.node.OtpUtil.element;
 import static erlyberly.node.OtpUtil.isTupleTagged;
 import static erlyberly.node.OtpUtil.list;
 import static erlyberly.node.OtpUtil.tuple;
@@ -27,10 +28,13 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpAuthException;
@@ -56,8 +60,10 @@ import erlyberly.ModFunc;
 import erlyberly.PrefBind;
 import erlyberly.ProcInfo;
 import erlyberly.SeqTraceLog;
+import erlyberly.TraceList;
 import erlyberly.TraceLog;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -78,8 +84,6 @@ public class NodeAPI {
     private static final OtpErlangAtom ERLYBERLY_TRACE_LOG = atom("erlyberly_trace_log");
 
     private static final OtpErlangAtom ERLYBERLY_ERROR_REPORT_ATOM = atom("erlyberly_error_report");
-
-    private static final OtpErlangAtom ERLYBERLY_MODULE_RELOADED_ATOM = atom("erlyberly_module_loaded");
 
     private static final OtpErlangAtom ERLYBERLY_ATOM = new OtpErlangAtom(ERLYBERLY);
 
@@ -123,8 +127,7 @@ public class NodeAPI {
 
     private boolean manuallyDisconnected = false;
 
-    private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
-
+    private final TraceList traceList;
     /**
      * When tracing is paused, NodeAPI will stop all traces. When tracing is un-suspended
      * the DbgController must reapply all the traces.
@@ -132,6 +135,9 @@ public class NodeAPI {
     private final SimpleBooleanProperty suspendedProperty;
 
     private TraceServerConnection traceServerConnection;
+
+
+    private final Set<OtpErlangAtom> knownModules = Collections.synchronizedSet(new HashSet<>());
 
     public NodeAPI() {
         traceManager = new TraceManager();
@@ -154,6 +160,8 @@ public class NodeAPI {
         xrefStartedProperty = new SimpleBooleanProperty(false);
 
         suspendedProperty = new SimpleBooleanProperty();
+
+        traceList = new TraceList();
 
         try {
             String ourNodeName = "erlyberly" + new Random().nextInt(9999);
@@ -260,6 +268,7 @@ public class NodeAPI {
         Platform.runLater(() -> {
             suspendedProperty.set(false);
         });
+        knownModules.clear();
     }
 
     private synchronized void ensureDbgStarted() throws IOException, OtpErlangException {
@@ -340,12 +349,6 @@ public class NodeAPI {
             }
             else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, tupleResult)) {
                 Platform.runLater(() -> { crashReports.add(tupleResult.elementAt(1)); });
-            }
-            else if(isTupleTagged(ERLYBERLY_MODULE_RELOADED_ATOM, tupleResult)) {
-                Platform.runLater(() -> {
-                    if(moduleLoadedCallback != null)
-                        moduleLoadedCallback.callback((OtpErlangTuple) tupleResult.elementAt(2));
-                });
             }
             else if(isTupleTagged(ERLYBERLY_TRACE_OVERLOAD_ATOM, tupleResult)) {
                 Platform.runLater(() -> { suspendedProperty.set(true); });
@@ -493,20 +496,44 @@ public class NodeAPI {
         }
     }
 
-    public synchronized OtpErlangList requestFunctions() throws Exception {
+    /**
+     * Returns [{my_module, [{exported_func,3}], [{unexported_func,2}]}].
+     */
+    public synchronized OtpErlangList allModuleFunctions() throws Exception {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
-        OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("module_functions"), list());
+        OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("all_module_functions"), list());
         if(rpcResult == null || !(rpcResult instanceof OtpErlangList)) {
             throw new RuntimeException("Result of module_functions call should be a list but got " + rpcResult);
         }
-        return (OtpErlangList) rpcResult;
+        OtpErlangList result = (OtpErlangList) rpcResult;
+        for (OtpErlangObject elem : result) {
+            knownModules.add((OtpErlangAtom) element(0, elem));
+        }
+        return result;
+    }
+
+    /**
+     * Returns {my_module, [{exported_func,3}], [{unexported_func,2}]}.
+     */
+    public synchronized OtpErlangTuple moduleFunctions(OtpErlangAtom moduleName) throws Exception {
+        assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
+        OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("module_functions"), list(moduleName));
+        assert isSuccessTerm(rpcResult) : rpcResult;
+        assert element(1, rpcResult) instanceof OtpErlangTuple : element(1, rpcResult);
+        return (OtpErlangTuple) element(1, rpcResult);
     }
 
     public synchronized void startTrace(ModFunc mf, int maxQueueLen) throws Exception {
+        // add the trace to the traced list to begin with
+        Platform.runLater(() -> { traceList.add(mf); });
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         assert mf.getFuncName() != null : "function name cannot be null";
-        OtpErlangObject rpcResult = nodeRPC()
-                .blockingRPC(ERLYBERLY_ATOM, atom("start_trace"), toStartTraceFnArgs(mf, maxQueueLen));
+        OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("start_trace"),
+                toStartTraceFnArgs(mf, maxQueueLen));
+        // remove the trace if the rpc failed
+        if(!isSuccessTerm(rpcResult)) {
+            Platform.runLater(() -> { traceList.remove(mf); });
+        }
         assert isSuccessTerm(rpcResult) : rpcResult;
     }
 
@@ -521,6 +548,7 @@ public class NodeAPI {
                             mf.getArity(),
                             mf.getArity()
                         ));
+        Platform.runLater(() -> { traceList.remove(mf); });
         assert isSuccessTerm(rpcResult) : rpcResult;
         // FIXME return the result for errors
     }
@@ -733,7 +761,7 @@ public class NodeAPI {
      * format {atom(), integer()}.
      */
     public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> aModuleLoadedCallback) {
-        moduleLoadedCallback = aModuleLoadedCallback;
+        traceManager.setModuleLoadedCallback(aModuleLoadedCallback);
     }
 
     public synchronized String decompileFun(OtpErlangFun fun) throws IOException, OtpErlangException {
@@ -754,9 +782,13 @@ public class NodeAPI {
         assert moduleNameAtom != null : "module name string is null";
         assert !"".equals(moduleNameAtom) : " module name string is empty";
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
+        // if we already know about this module then there is no to load it again
+        if(knownModules.contains(moduleNameAtom))
+            return;
         OtpErlangObject result = nodeRPC()
                 .blockingRPC(atom("code"), atom("ensure_loaded"), list(moduleNameAtom));
         assert isTupleTagged(atom("module"), result) || isTupleTagged(atom("error"), result) : result;
+        knownModules.add(moduleNameAtom);
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {
@@ -790,5 +822,30 @@ public class NodeAPI {
     public SimpleBooleanProperty suspendedProperty() {
         assert Platform.isFxApplicationThread();
         return suspendedProperty;
+    }
+
+    public boolean isTraced(ModFunc function) {
+        return traceList.isTraces(function);
+    }
+
+    public void reapplyTraces() {
+        final int maxTraceQueueLengthConfig = PrefBind.getMaxTraceQueueLengthConfig();
+        for (ModFunc function : traceList.coptToList()) {
+            try {
+                ErlyBerly.nodeAPI().startTrace(function, maxTraceQueueLengthConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Add a listener to the list of traces on functions.
+     *
+     * NOT on the trace logs.
+     */
+    public void addTraceListener(InvalidationListener listener) {
+        traceList.addListener(listener);
     }
 }

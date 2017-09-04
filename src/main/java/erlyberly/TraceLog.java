@@ -110,11 +110,11 @@ public class TraceLog implements Comparable<TraceLog> {
             ((OtpErlangAtom)mfa.elementAt(0)).atomValue(),
             ((OtpErlangAtom)mfa.elementAt(1)).atomValue(), arity, false, false);
         // the three element tuple timestamp
-        assert tuple.elementAt(4) instanceof OtpErlangTuple : "TRACE WAS " + tuple + " timestamp was " + formatter.toString(tuple.elementAt(4));
-        callTime = tupleToTimestamp((OtpErlangTuple) tuple.elementAt(4));
+        int timestampIndex = tuple.arity()-1;
+        assert tuple.elementAt(timestampIndex) instanceof OtpErlangTuple : "TRACE WAS " + tuple + " timestamp was " + formatter.toString(tuple.elementAt(timestampIndex));
+        callTime = tupleToTimestamp((OtpErlangTuple) tuple.elementAt(timestampIndex));
         functionString = formatter.modFuncArityToString(
             modFunc.getModuleName(), modFunc.getFuncName(), modFunc.getArity());
-
     }
 
     /**

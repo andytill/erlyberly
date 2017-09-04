@@ -277,4 +277,13 @@ public class OtpUtil {
         }
         return (OtpErlangTuple) obj;
     }
+
+    public static OtpErlangObject element(int index, OtpErlangObject term) {
+        if(term instanceof OtpErlangTuple) {
+            return ((OtpErlangTuple)term).elementAt(index);
+        }
+        else {
+            throw new RuntimeException(term.toString());
+        }
+    }
 }

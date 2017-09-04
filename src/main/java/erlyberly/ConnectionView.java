@@ -98,7 +98,7 @@ public class ConnectionView implements Initializable {
                 Platform.runLater(() -> { closeThisWindow(); });
             }
             catch (OtpErlangException | OtpAuthException | IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
                 Platform.runLater(() -> { connectionFailed(e.getMessage()); });
             }
         });
