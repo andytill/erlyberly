@@ -54,7 +54,12 @@ public class ErlyBerly extends Application {
 
     private static final ScheduledExecutorService IO_EXECUTOR = Executors.newScheduledThreadPool(4);
 
-    private static final NodeAPI NODE_API = new NodeAPI();
+    private static final NodeAPI NODE_API;
+
+    static {
+        startEpmd();
+        NODE_API = new NodeAPI();
+    }
 
     /**
      * The preferences tab, that is added when the user presses the 'Preferences'
@@ -366,5 +371,18 @@ public class ErlyBerly extends Application {
     private double configuredProcessesWidth() {
         double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
         return w;
+    }
+
+    private static void startEpmd() {
+        try {
+            Process epmd = Runtime.getRuntime().exec("epmd -daemon");
+            int exitV = epmd.waitFor();
+            if (exitV != 0) {
+                System.err.println(
+                        "Epmd process finished with exit value: " + exitV);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to start epmd: " + e);
+        }
     }
 }
