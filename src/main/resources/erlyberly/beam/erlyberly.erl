@@ -206,15 +206,19 @@ when_process_is_unregistered(ProcName, Fn) ->
 %%
 ensure_dbg_started({Eb_Node, Eb_pid}, Port, Max_queue_len) when is_integer(Port),
                                                                 is_integer(Max_queue_len) ->
-    %% FIXME we still need a process to monitor the erlyberly node going down,
-    %%       and stop dbg if it does.
     ok = dbg:stop(),
     {ok,_} = dbg:start(),
+    proc_lib:spawn(fun() -> monitor_erlyberly_node(Eb_Node) end),
     {ok,_} = dbg:tracer(port, dbg:trace_port(ip, {Port, Max_queue_len})),
     {ok,_} = dbg:p(all, [c, timestamp]),
+    %% trace when a module is loaded so that the traces can be reapplied
     {ok,_} = dbg:tpl({code_server, try_load_module, '_'}, []),
-    proc_lib:spawn(fun() -> monitor_erlyberly_node(Eb_Node) end),
-    ok.
+    %% always trace process registrations because we need to track them so that
+    %% they can be shown in the ui
+    {ok,_} = dbg:tpl({erlang, register, '_'}, []),
+    {ok,_} = dbg:tpl({erlang, unregister, '_'}, []),
+    Registered_procs = [{whereis(Name), Name} || Name <- erlang:registered()],
+    {ok, Registered_procs}.
 
 monitor_erlyberly_node(Node_name) ->
     true = erlang:monitor_node(Node_name, true),

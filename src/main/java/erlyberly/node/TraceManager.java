@@ -17,11 +17,11 @@
  */
 package erlyberly.node;
 
-import static erlyberly.node.OtpUtil.atom;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -36,17 +36,23 @@ import javafx.application.Platform;
 
 public class TraceManager {
 
-    private static final OtpErlangAtom MODULE_ATOM = atom("module");
-
-    private static final OtpErlangAtom CODE_ATOM = atom("code");
-
-    private static final OtpErlangAtom RETURN_FROM_ATOM = atom("return_from");
-
-    private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
-
-    private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
-
     private final HashMap<OtpErlangPid, Stack<TraceLog>> unfinishedCalls = new HashMap<OtpErlangPid, Stack<TraceLog>>();
+
+    /**
+     * A map from processes to their registered name. It is updated when
+     * erlang:register/2 and erlang:unregister/1 calls are made, which are
+     * traced when dbg is started.
+     *
+     * When a process goes down, it is not unregistered which means we may
+     * end up with a lot of keys which are dead processes! FIXME
+     */
+    private final HashMap<OtpErlangPid, OtpErlangAtom> registeredProcesses = new HashMap<>();
+
+    /**
+     * A wrapper for trace tuples to give an API, rather than pull values
+     * from the tuple.
+     */
+    private final TraceTuple traceTuple = new TraceTuple();
 
     /**
      * Called when a trace log is received.
@@ -73,14 +79,12 @@ public class TraceManager {
         return traceList;
     }
 
-    TraceTuple traceTuple = new TraceTuple();
-
     private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
         traceTuple.tuple = (OtpErlangTuple) otpErlangObject;
         OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
         OtpErlangAtom traceType = traceTuple.getTraceType();
 
-        if(CALL_ATOM.equals(traceType)) {
+        if(Atoms.CALL_ATOM.equals(traceType)) {
             OtpErlangAtom moduleLoad = traceTuple.isModuleLoad();
             if(moduleLoad != null) {
                 // if a module is reloaded then we need to reload the functions for it
@@ -99,6 +103,9 @@ public class TraceManager {
                 // don't show the module load to the user as a trace in the table
                 return;
             }
+            else if(traceTuple.isProcessRegistration()) {
+                return;
+            }
             TraceLog trace = proplistToTraceLog(tup);
 
             Stack<TraceLog> stack = unfinishedCalls.get(trace.getPid());
@@ -113,7 +120,7 @@ public class TraceManager {
             if(traceLogCallback != null)
                 traceLogCallback.callback(trace);
         }
-        else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
+        else if(Atoms.RETURN_FROM_ATOM.equals(traceType) || Atoms.EXCEPTION_FROM_ATOM.equals(traceType)) {
             assert tup.elementAt(1) instanceof OtpErlangPid;
             OtpErlangPid tracedPid = (OtpErlangPid) tup.elementAt(1);
             Stack<TraceLog> stack = unfinishedCalls.get(tracedPid);
@@ -130,9 +137,7 @@ public class TraceManager {
         }
     }
 
-    static class TraceTuple {
-        private static final OtpErlangAtom TRY_LOAD_MODULE_ATOM = atom("try_load_module");
-        private static final OtpErlangAtom CODE_SERVER_ATOM = atom("code_server");
+    class TraceTuple {
         OtpErlangTuple tuple;
 
         OtpErlangAtom getTraceType() {
@@ -140,17 +145,50 @@ public class TraceManager {
         }
 
         private OtpErlangAtom isModuleLoad() {
-            if(!CALL_ATOM.equals(getTraceType()))
+            if(!Atoms.CALL_ATOM.equals(getTraceType()))
                 return null;
             OtpErlangTuple mfa = getMFA();
             OtpErlangObject mod = mfa.elementAt(0);
             OtpErlangObject function = mfa.elementAt(1);
             OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
-            if(CODE_SERVER_ATOM.equals(mod) && TRY_LOAD_MODULE_ATOM.equals(function)) {
-                System.out.println("TRY_LOAD_MODULE " + tuple);
+            if(Atoms.CODE_SERVER_ATOM.equals(mod) && Atoms.TRY_LOAD_MODULE_ATOM.equals(function)) {
                 return (OtpErlangAtom) args.elementAt(1);
             }
             return null;
+        }
+
+        private boolean isProcessRegistration() {
+            if(!Atoms.CALL_ATOM.equals(getTraceType()))
+                return false;
+            OtpErlangTuple mfa = getMFA();
+            OtpErlangObject mod = mfa.elementAt(0);
+            OtpErlangObject function = mfa.elementAt(1);
+            OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
+            if(!Atoms.ERLANG_ATOM.equals(mod))
+                return false;
+            if(Atoms.REGISTER_ATOM.equals(function)) {
+                OtpErlangAtom regName = (OtpErlangAtom) args.elementAt(0);
+                OtpErlangPid regPid = (OtpErlangPid) args.elementAt(1);
+                registeredProcesses.put(regPid, regName);
+                return true;
+            }
+            else if(Atoms.UNREGISTER_ATOM.equals(function)) {
+                OtpErlangAtom regName = (OtpErlangAtom) args.elementAt(0);
+                OtpErlangPid regPid = null;
+                for (Entry<OtpErlangPid, OtpErlangAtom> e : registeredProcesses.entrySet()) {
+                    if(regName.equals(e.getValue())) {
+                        regPid = e.getKey();
+                        continue;
+                    }
+                }
+                // do not try to remove the entry from within the loop because that may thrown
+                // a ConcurrentModificationException
+                if(regPid != null) {
+                    registeredProcesses.remove(regPid);
+                }
+                return true;
+            }
+            return false;
         }
 
         private OtpErlangTuple getMFA() {
@@ -159,7 +197,7 @@ public class TraceManager {
     }
 
     private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
-        TraceLog trace = new TraceLog(tup, ErlyBerly.getTermFormatter());
+        TraceLog trace = new TraceLog(tup, registeredProcesses, ErlyBerly.getTermFormatter());
 
         return trace;
     }
@@ -175,5 +213,12 @@ public class TraceManager {
     public void setModuleLoadedCallback(RpcCallback<OtpErlangTuple> aModuleLoadedCallback) {
         moduleLoadedCallback = aModuleLoadedCallback;
 
+    }
+
+    public void setRegisteredProcesses(Map<OtpErlangObject, OtpErlangObject> regProcs) {
+        registeredProcesses.clear();
+        for (Entry<OtpErlangObject, OtpErlangObject> e : regProcs.entrySet()) {
+            registeredProcesses.put((OtpErlangPid)e.getKey(), (OtpErlangAtom)e.getValue());
+        }
     }
 }

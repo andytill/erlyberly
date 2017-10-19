@@ -114,8 +114,8 @@ public class OtpUtil {
     /**
      * Take an {@link OtpErlangList} of erlang key value tuples and converts it to a map.
      */
-    public static Map<Object, Object> propsToMap(OtpErlangList pinfo) {
-        HashMap<Object, Object> map = new HashMap<>();
+    public static Map<OtpErlangObject, OtpErlangObject> propsToMap(OtpErlangList pinfo) {
+        HashMap<OtpErlangObject, OtpErlangObject> map = new HashMap<>();
         for (OtpErlangObject otpErlangObject : pinfo) {
             if(otpErlangObject instanceof OtpErlangTuple && ((OtpErlangTuple) otpErlangObject).arity() == 2) {
                 OtpErlangTuple tuple = ((OtpErlangTuple) otpErlangObject);

@@ -521,7 +521,7 @@ public class TopBarView implements Initializable {
         @Override
         public void run() {
             try {
-                final Map<Object, Object> erlangMemory = ErlyBerly.nodeAPI().erlangMemory();
+                final Map<OtpErlangObject, OtpErlangObject> erlangMemory = ErlyBerly.nodeAPI().erlangMemory();
 
                 // remove stats which are combinations of other stats
                 erlangMemory.remove(OtpUtil.atom("maximum"));
@@ -539,8 +539,8 @@ public class TopBarView implements Initializable {
             }
         }
 
-        private void populatePieData(final Map<Object, Object> erlangMemory) {
-            for (Entry<Object, Object> entry : erlangMemory.entrySet()) {
+        private void populatePieData(final Map<OtpErlangObject, OtpErlangObject> erlangMemory) {
+            for (Entry<OtpErlangObject, OtpErlangObject> entry : erlangMemory.entrySet()) {
                 long kb = (long) (Double.parseDouble(entry.getValue().toString()) / 1024);
                 String label = entry.getKey().toString() + " (" + kb + " KB)";
                 pieData.add(new Data(label, kb));

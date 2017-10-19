@@ -282,6 +282,12 @@ public class NodeAPI {
         if(!isSuccessTerm(returnedObject)) {
             throw new RuntimeException(returnedObject.toString());
         }
+        assert returnedObject instanceof OtpErlangTuple : returnedObject;
+        OtpErlangTuple returnedTuple = (OtpErlangTuple) returnedObject;
+        OtpErlangObject regNames = returnedTuple.elementAt(1);
+        assert regNames instanceof OtpErlangList : regNames;
+        Map<OtpErlangObject, OtpErlangObject> regNamesMap = OtpUtil.propsToMap((OtpErlangList) regNames);
+        traceManager.setRegisteredProcesses(regNamesMap);
     }
 
     private boolean isSuccessTerm(OtpErlangObject term) {
@@ -476,7 +482,7 @@ public class NodeAPI {
             for (OtpErlangObject recv : received) {
                 if(recv instanceof OtpErlangList) {
                     OtpErlangList pinfo = (OtpErlangList) recv;
-                    Map<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
+                    Map<OtpErlangObject, OtpErlangObject> propsToMap = OtpUtil.propsToMap(pinfo);
                     processes.add(ProcInfo.toProcessInfo(propsToMap));
                 }
             }
@@ -669,7 +675,7 @@ public class NodeAPI {
         return null;
     }
 
-    public synchronized Map<Object, Object> erlangMemory() throws IOException, OtpErlangException {
+    public synchronized Map<OtpErlangObject, OtpErlangObject> erlangMemory() throws IOException, OtpErlangException {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject result = nodeRPC().blockingRPC(atom("erlang"), atom("memory"), list());
         assert result instanceof OtpErlangList : result;

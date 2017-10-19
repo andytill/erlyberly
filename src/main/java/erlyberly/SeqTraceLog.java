@@ -42,7 +42,7 @@ public class SeqTraceLog {
         this.timestamp = timestamp;
     }
 
-    public static SeqTraceLog build(Map<Object, Object> props) {
+    public static SeqTraceLog build(Map<OtpErlangObject, OtpErlangObject> props) {
         Object msgType = props.get(OtpUtil.atom("msg_type"));
         Object serial = props.get(OtpUtil.atom("serial"));
         Object from = props.get(OtpUtil.atom("from"));

@@ -19,6 +19,7 @@ package erlyberly;
 
 import static erlyberly.node.OtpUtil.atom;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -80,7 +81,7 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private OtpErlangObject resultTerm;
 
-    public TraceLog(OtpErlangTuple tuple, TermFormatter formatter) {
+    public TraceLog(OtpErlangTuple tuple, HashMap<OtpErlangPid, OtpErlangAtom> registeredProcesses, TermFormatter formatter) {
         instanceNum = INSTANCE_COUNTER.incrementAndGet();
         cssClass = null;
         // FIXME we don't know the registered name from the info we get from the file
@@ -91,6 +92,13 @@ public class TraceLog implements Comparable<TraceLog> {
         assert TRACE_TS.equals(messageType) : messageType;
         assert tuple.elementAt(1) instanceof OtpErlangPid : tuple.elementAt(1);
         pid = (OtpErlangPid) tuple.elementAt(1);
+        OtpErlangAtom aRegName = registeredProcesses.get(pid);
+        if(aRegName == null) {
+            registeredName = "";
+        }
+        else {
+            registeredName = aRegName.atomValue();
+        }
         pidString = formatter.toString(tuple.elementAt(1));
         // we only accept trace types of `call` in the constructor
         OtpErlangObject traceType = tuple.elementAt(2);
