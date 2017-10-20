@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
@@ -63,10 +64,11 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final String cssClass;
 
-    // FIXME registeredName
     private String registeredName = "";
 
     private OtpErlangList stacktrace;
+
+    private OtpErlangBinary stackTraceBinary;
 
     private boolean functionThrewException;
 
@@ -117,6 +119,9 @@ public class TraceLog implements Comparable<TraceLog> {
         modFunc = new ModFunc(
             ((OtpErlangAtom)mfa.elementAt(0)).atomValue(),
             ((OtpErlangAtom)mfa.elementAt(1)).atomValue(), arity, false, false);
+        // stack trace as a binary
+        assert tuple.elementAt(4) instanceof OtpErlangBinary : tuple.elementAt(4);
+        stackTraceBinary = (OtpErlangBinary) tuple.elementAt(4);
         // the three element tuple timestamp
         int timestampIndex = tuple.arity()-1;
         assert tuple.elementAt(timestampIndex) instanceof OtpErlangTuple : "TRACE WAS " + tuple + " timestamp was " + formatter.toString(tuple.elementAt(timestampIndex));
@@ -352,6 +357,10 @@ public class TraceLog implements Comparable<TraceLog> {
         return stacktrace;
     }
 
+    public void setStackTrace(OtpErlangList stacktrace) {
+        this.stacktrace = stacktrace;
+    }
+
     public ModFunc getModFunc() {
         return modFunc;
     }
@@ -362,5 +371,13 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public String getFunction() {
         return functionString;
+    }
+
+    public OtpErlangBinary getStackTraceBinary() {
+        return stackTraceBinary;
+    }
+
+    public void setStackTraceBinary(OtpErlangBinary stackTraceBinary) {
+        this.stackTraceBinary = stackTraceBinary;
     }
 }

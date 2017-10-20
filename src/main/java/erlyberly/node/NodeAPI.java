@@ -786,7 +786,6 @@ public class NodeAPI {
      */
     public void loadModule(OtpErlangAtom moduleNameAtom) throws OtpErlangException, IOException {
         assert moduleNameAtom != null : "module name string is null";
-        assert !"".equals(moduleNameAtom) : " module name string is empty";
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         // if we already know about this module then there is no to load it again
         if(knownModules.contains(moduleNameAtom))
@@ -795,6 +794,14 @@ public class NodeAPI {
                 .blockingRPC(atom("code"), atom("ensure_loaded"), list(moduleNameAtom));
         assert isTupleTagged(atom("module"), result) || isTupleTagged(atom("error"), result) : result;
         knownModules.add(moduleNameAtom);
+    }
+
+    public OtpErlangList stak(OtpErlangBinary stackTraceBinary) throws OtpErlangException, IOException {
+        assert stackTraceBinary != null;
+        OtpErlangObject result = nodeRPC()
+                .blockingRPC(atom("erlyberly"), atom("stak"), list(stackTraceBinary));
+        assert result instanceof OtpErlangList : result;
+        return (OtpErlangList) result;
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {

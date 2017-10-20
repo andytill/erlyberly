@@ -245,14 +245,31 @@ public class DbgTraceView extends VBox {
         StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
 
-        String stackTraceTitle = "No Stack Trace";
-        OtpErlangList stackTrace = traceLog.getStackTrace();
-        if(stackTrace != null) {
-            stackTraceView.populateFromMfaList(stackTrace);
-            stackTraceTitle = "Stack Trace (" + stackTrace.arity() + ")";
-        }
         TitledPane titledPane;
-        titledPane = new TitledPane(stackTraceTitle, stackTraceView);
+        titledPane = new TitledPane("No Stack Trace", stackTraceView);
+        if(traceLog.getStackTrace() != null) {
+            applyStackTraceOnView(traceLog, stackTraceView, titledPane);
+        }
+        else {
+            ErlyBerly.runIO(() -> {
+                OtpErlangList stackTrace;
+                try {
+                    // if the stack trace is null then send the stack trace binary that we
+                    // receive in the trace tuple to the remote node so that it can be decoded
+                    // since we don't want to rewrite that logic in java. Once we receive the
+                    // stack trace as a list we can set the binary to null so it can be gc'ed
+                    stackTrace = ErlyBerly.nodeAPI().stak(traceLog.getStackTraceBinary());
+                    Platform.runLater(() -> {
+                        traceLog.setStackTrace(stackTrace);
+                        traceLog.setStackTraceBinary(null);
+                        applyStackTraceOnView(traceLog, stackTraceView, titledPane);
+                    });
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
         titledPane.setExpanded(!stackTraceView.isStackTracesEmpty());
         splitPaneH = new SplitPane();
         splitPaneH.setOrientation(Orientation.VERTICAL);
@@ -263,6 +280,11 @@ public class DbgTraceView extends VBox {
         traceLog.appendModFuncArity(sb);
 
         ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPaneH));
+    }
+
+    private void applyStackTraceOnView(final TraceLog traceLog, StackTraceView stackTraceView, TitledPane titledPane) {
+        stackTraceView.populateFromMfaList(traceLog.getStackTrace());
+        titledPane.setText("Stack Trace (" + traceLog.getStackTrace().arity() + ")");
     }
 
     private Node labelledTreeView(String label, TermTreeView node) {

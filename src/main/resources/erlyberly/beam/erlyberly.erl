@@ -29,6 +29,7 @@
 -export([process_info/0]).
 -export([saleyn_fun_src/1]).
 -export([seq_trace/5]).
+-export([stak/1]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
 -export([stop_traces/0]).
