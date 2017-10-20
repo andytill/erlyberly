@@ -99,7 +99,7 @@ public class DbgTraceView extends VBox {
 
         TableColumn<TraceLog,String> pidColumn;
         pidColumn = new TableColumn<TraceLog,String>("Pid");
-        pidColumn.setCellValueFactory(new PropertyValueFactory("pid"));
+        pidColumn.setCellValueFactory(new PropertyValueFactory("pidString"));
         configureColumnWidth("pidColumnWidth", pidColumn);
 
         TableColumn<TraceLog,String> regNameColumn;
@@ -270,10 +270,14 @@ public class DbgTraceView extends VBox {
     }
 
     private void onTraceFilterChange(String searchText) {
-        BasicSearch basicSearch = new BasicSearch(searchText);
+        BasicSearch search = new BasicSearch(searchText);
         filteredTraces.setPredicate((t) -> {
-            String logText = t.toString();
-            return basicSearch.matches(logText);
+            boolean matches =
+                    search.matches(t.getArgs())
+                    || search.matches(t.getResult())
+                    || search.matches(t.getPidString())
+                    || search.matches(t.getRegName());
+            return matches;
         });
     }
 
