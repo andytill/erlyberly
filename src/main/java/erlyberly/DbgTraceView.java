@@ -274,6 +274,7 @@ public class DbgTraceView extends VBox {
         filteredTraces.setPredicate((t) -> {
             boolean matches =
                     search.matches(t.getArgs())
+                    || search.matches(t.getFunction())
                     || search.matches(t.getResult())
                     || search.matches(t.getPidString())
                     || search.matches(t.getRegName());
