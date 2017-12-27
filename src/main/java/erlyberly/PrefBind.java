@@ -164,6 +164,14 @@ public class PrefBind {
         store();
     }
 
+    public static void removeKnownNode(KnownNode knownNode) {
+        List<String> nodeAsList = Arrays.asList(knownNode.getNodeName(), knownNode.getCookie());
+        List<List<String>> knownNodes = getKnownNodes();
+        knownNodes.remove(nodeAsList);
+        props.put("knownNodes", knownNodes);
+        store();
+    }
+
     /**
      * The maximum number of traces that can be queued in the trace
      * proccesses queue before tracing is suspended on the node.

@@ -19,10 +19,13 @@ package erlyberly;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import com.ericsson.otp.erlang.OtpAuthException;
+import com.ericsson.otp.erlang.OtpEpmd;
 import com.ericsson.otp.erlang.OtpErlangException;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -34,15 +37,19 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -52,8 +59,8 @@ import ui.FAIcon;
 /**
  * Connection details control to connect to the remote node.
  */
-@SuppressWarnings({ "unchecked", "restriction" })
-public class ConnectionView extends VBox {
+@SuppressWarnings({ "unchecked" })
+public class ConnectionView extends SplitPane {
 
     private final SimpleBooleanProperty isConnecting = new SimpleBooleanProperty();
 
@@ -64,125 +71,100 @@ public class ConnectionView extends VBox {
 
     private FloatyFieldControl nodeNameField;
     private FloatyFieldControl cookieField;
-    private final Button connectButton;
     private Label messageLabel;
-    // private CheckBox autoConnectField;
     private final TableView<KnownNode> knownNodesTable;
-
-    private RadioButton newNodeRadioButton;
-
-    private RadioButton knownRadioButton;
 
     private FloatyFieldControl filterField;
 
     private FilteredList<KnownNode> filteredRows;
 
+    private Button connectButton;
+
+    private ObservableList<KnownNode> rows;
+
     public ConnectionView() {
-        setSpacing(10d);
-        setPadding(new Insets(10, 10, 10, 10));
-
-        ToggleGroup group = new ToggleGroup();
-        newNodeRadioButton = new RadioButton("New node");
-        knownRadioButton = new RadioButton("Known nodes");
-        // TODO put some style on these radio buttons so that they look like section headers
-        newNodeRadioButton.setToggleGroup(group);
-
-        knownRadioButton.setToggleGroup(group);
-        knownRadioButton.setMaxWidth(Double.MAX_VALUE);
-        newNodeRadioButton.setSelected(true);
-        newNodeRadioButton.setMaxWidth(Double.MAX_VALUE);
-
         nodeNameField = new FloatyFieldControl();
+        isNodeConnectable.bind(nodeNameField.getModel().textProperty().isNotEmpty());
         nodeNameField.getModel().promptTextProperty().set("Node Name");
-        nodeNameField.getModel().getField().focusedProperty().addListener((o, oldv, newv) -> {
-            if(newv) {
-                newNodeRadioButton.setSelected(true);
-            }
-        });
         cookieField = new FloatyFieldControl();
         cookieField.getModel().promptTextProperty().set("Cookie");
-        cookieField.getModel().getField().focusedProperty().addListener((o, oldv, newv) -> {
-            if(newv) {
-                newNodeRadioButton.setSelected(true);
-            }
-        });
-
 
         filterField = new FloatyFieldControl();
         filterField.getModel().promptTextProperty().set("Filter Known Nodes");
         filterField.getModel().textProperty().addListener((o) -> { onFilterChanged(); });
         HBox.setHgrow(filterField, Priority.SOMETIMES);
         knownNodesTable = new TableView<>();
-        VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
         knownNodesTable.getColumns().setAll(
-            newColumn("Node Name", "nodeName", 250),
+            newNodeRunningColumn("Is Running", "running", 75),
+            newColumn("Node Name", "nodeName", 200),
             newColumn("Cookie", "cookie")
         );
-        knownNodesTable.getSelectionModel().selectedItemProperty().addListener(
-            (o, oldv, newv) -> {
-                if(newv != null) {
-                    knownRadioButton.setSelected(true);
-                }
-            });
-        ObservableList<KnownNode> rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
+        VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
+        rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
         filteredRows = new FilteredList<KnownNode>(rows);
+
+        MenuItem deleteItem;
+        deleteItem = new MenuItem("Delete");
+        deleteItem.setOnAction(this::onDelete);
+        deleteItem.setAccelerator(KeyCombination.keyCombination("delete"));
+        ContextMenu knownNodeMenu;
+        knownNodeMenu = new ContextMenu();
+        knownNodeMenu.getItems().add(deleteItem);
+
         knownNodesTable.setItems(filteredRows);
+        knownNodesTable.getSelectionModel().selectedItemProperty().addListener(
+                (o, oldv, newv) -> {
+                    if(newv == null)
+                        return;
+                    nodeNameField.getModel().getField().setText(newv.getNodeName());
+                    cookieField.getModel().getField().setText(newv.getCookie());
+                });
+        knownNodesTable.setContextMenu(knownNodeMenu);
 
         // button width across the whole scene
         final double connectButtonHeight = 42d;
-        connectButton = new Button("Connect");
+        connectButton = new Button("Connect to Remote Node");
         connectButton.setPrefWidth(1000d);
         connectButton.setPrefHeight(connectButtonHeight);
         connectButton.setMinHeight(connectButtonHeight);
         connectButton.setOnAction(this::onConnectButtonPressed);
+        connectButton.setDefaultButton(true);
 
-        getChildren().addAll(
-            newNodeRadioButton, //new Separator(),
-            nodeNameField, new Separator(),
-            cookieField, //new Separator(),
-            knownRadioButton,
+        messageLabel = new Label();
+
+        VBox newNodeBox;
+        newNodeBox = new VBox();
+        newNodeBox.setSpacing(10d);
+        newNodeBox.setPadding(new Insets(10, 10, 10, 10));
+        newNodeBox.getChildren().addAll(
+                nodeNameField, new Separator(Orientation.HORIZONTAL),
+                cookieField, new Separator(Orientation.HORIZONTAL),
+                connectButton, messageLabel);
+
+        VBox knownNodeBox;
+        knownNodeBox = new VBox();
+        knownNodeBox.setSpacing(10d);
+        knownNodeBox.setPadding(new Insets(10, 10, 10, 10));
+        knownNodeBox.getChildren().addAll(
             new HBox(
                 filterField,
                 searchIcon()),
-            //new Separator(),
-            knownNodesTable,
-            connectButton);
+            knownNodesTable);
+        getItems().addAll(knownNodeBox, newNodeBox);
 
-        newNodeRadioButton.disableProperty().bind(isConnecting);
-        newNodeRadioButton.getStyleClass().add("erlyberly-header");
         nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
         cookieField.getModel().getField().disableProperty().bind(isConnecting);
-        knownRadioButton.disableProperty().bind(isConnecting);
-        knownRadioButton.getStyleClass().add("erlyberly-header");
         filterField.getModel().getField().disableProperty().bind(isConnecting);
         knownNodesTable.disableProperty().bind(isConnecting);
         connectButton.disableProperty().bind(isConnecting.or(isNodeConnectable.not()));
+    }
 
-        // disable the connect button while there is no node information to connect to
-        newNodeRadioButton.selectedProperty().addListener((o) -> { onIsConnectableChanged(); });
-        nodeNameField.getModel().getField().textProperty().addListener((o) -> { onIsConnectableChanged(); });
-        knownRadioButton.selectedProperty().addListener((o) -> { onIsConnectableChanged(); });
-        knownNodesTable.getSelectionModel().selectedItemProperty().addListener((o) -> { onIsConnectableChanged(); });
-        knownNodesTable.focusedProperty().addListener((o) -> { onIsConnectableChanged(); });
-        onIsConnectableChanged();
-/*
-        PrefBind.bindBoolean("autoConnect", autoConnectField.selectedProperty());
-
-        // TODO: or immediately start connecting when the CMDLINE flag is present...
-        if (autoConnectField.isSelected() && !ErlyBerly.nodeAPI().manuallyDisconnected()) {
-            try {
-                // TODO: This sleep/yield, allows the proc controller to start it's thread,
-                // and to prevent a npointer exception.
-                Thread.sleep(50);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-
-            this.onConnect();
-        }
-        else {
-            // show the Connection Dialogue...
-        }*/
+    private void onDelete(ActionEvent e) {
+        KnownNode selectedItem = knownNodesTable.getSelectionModel().getSelectedItem();
+        if(selectedItem == null)
+            return;
+        rows.remove(selectedItem);
+        PrefBind.removeKnownNode(selectedItem);
     }
 
     private TableColumn<KnownNode, ?> newColumn(String colText, String colPropertyName, double colWidth) {
@@ -208,22 +190,40 @@ public class ConnectionView extends VBox {
         });
     }
 
-    private void onIsConnectableChanged() {
-        if(newNodeRadioButton.isSelected()) {
-            isNodeConnectable.set(!nodeNameField.getModel().getText().isEmpty());
-        }
-        else if(knownRadioButton.isSelected()) {
-            isNodeConnectable.set(knownNodesTable.getSelectionModel().getSelectedItem() != null);
-        }
-    }
-
-//<<<<<<< HEAD
     private List<KnownNode> knownNodesConfigToRowObjects(List<List<String>> knownNodeStrings) {
+        // get node names from epmd to give the user some options as to what to connect to
+        HashSet<String> hashSet = new HashSet<>();
+        try {
+            hashSet.addAll(Arrays.asList(OtpEpmd.lookupNames()));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
         ArrayList<KnownNode> knownNodeRows = new ArrayList<>();
         for (List<String> confStrings : knownNodeStrings) {
-            knownNodeRows.add(
-                new KnownNode(confStrings.get(0), confStrings.get(1))
-            );
+            KnownNode knownNode = new KnownNode(confStrings.get(0), confStrings.get(1));
+            // if this configured node name is in the epmd list then mark it as "running"
+            for (String string : hashSet) {
+                if(string.contains(knownNode.getNodeName())) {
+                    knownNode.setRunning(true);
+                    hashSet.remove(string); // concurrent mod exception?
+                    break;
+                }
+            }
+            knownNodeRows.add(knownNode);
+        }
+        for (String runningNodeName : hashSet) {
+            // don't show erlyberly in the list, weird stuff happens if erlyberly connects to itself!
+            if(runningNodeName.contains("erlyberly"))
+                continue;
+            // for some reason OtpEpmd gives node names in the following format:
+            //     "name gerp at port 52153"
+            // so we have to do some string cutting to get the proper name
+            String[] xxx = runningNodeName.split(" ");
+            KnownNode knownNode = new KnownNode(xxx[1], "");
+            knownNode.setRunning(true);
+            knownNodeRows.add(knownNode);
         }
         Collections.sort(knownNodeRows, (a, b) -> {
             return a.getNodeName().compareTo(b.getNodeName());
@@ -238,24 +238,23 @@ public class ConnectionView extends VBox {
         return column;
     }
 
+    private TableColumn<KnownNode, Boolean> newNodeRunningColumn(String colText, String colPropertyName, double colWidth) {
+        TableColumn<KnownNode, Boolean> column;
+        column = new TableColumn<>(colText);
+        column.setCellValueFactory( node -> { return node.getValue().runningProperty(); });
+        column.setCellFactory( tc -> new CheckBoxTableCell<>());
+        column.setPrefWidth(colWidth);
+        return column;
+    }
+
     private void onConnectButtonPressed(ActionEvent e) {
         String cookie, nodeName;
-        if(newNodeRadioButton.isSelected()) {
-            nodeName = nodeNameField.getModel().getText();
-            cookie = removeApostrophesFromCookie(cookieField.getModel().getText());
-            if(nodeName == null || "".equals(nodeName))
-                return;
-            maybeStoreNodeInfoInConfig(nodeName, cookie);
-            connectToRemoteNode(cookie, nodeName);
-        }
-        else if(knownRadioButton.isSelected()) {
-            KnownNode knownNode = knownNodesTable.getSelectionModel().getSelectedItem();
-            if(knownNode == null)
-                return;
-            nodeName = knownNode.getNodeName();
-            cookie = removeApostrophesFromCookie(knownNode.getCookie());
-            connectToRemoteNode(cookie, nodeName);
-        }
+        nodeName = nodeNameField.getModel().getText();
+        cookie = removeApostrophesFromCookie(cookieField.getModel().getText());
+        if(nodeName == null || "".equals(nodeName))
+            return;
+        maybeStoreNodeInfoInConfig(nodeName, cookie);
+        connectToRemoteNode(cookie, nodeName);
     }
 
     private void maybeStoreNodeInfoInConfig(String nodeName, String cookie) {
@@ -264,13 +263,6 @@ public class ConnectionView extends VBox {
            PrefBind.storeKnownNode(knownNode);
        }
     }
-/*=======
-    @FXML
-    public void onConnect() {
-        final String cookie, remoteNodeName;
-        cookie = cookieField.getText().replaceAll("'", "");
-        remoteNodeName = nodeNameField.getText();
->>>>>>> c2663df42047d4005e47f0ace619013073caca09*/
 
     private void connectToRemoteNode(String cookie, String nodeName) {
         isConnecting.set(true);
@@ -285,12 +277,11 @@ public class ConnectionView extends VBox {
                 Platform.runLater(() -> { closeThisWindow(); });
             }
             catch (OtpErlangException | OtpAuthException | IOException e) {
-                e.printStackTrace();
                 Platform.runLater(() -> { connectionFailed(e.getMessage()); });
             }
         });
     }
-//>>>>>>> c2663df42047d4005e47f0ace619013073caca09
+
     private String removeApostrophesFromCookie(String cookie) {
         return cookie.replaceAll("'", "");
     }
@@ -313,7 +304,7 @@ public class ConnectionView extends VBox {
     // TODO: make into a more generic stage handling function.
     private void closeThisWindow() {
         Stage stage;
-        stage = (Stage) connectButton.getScene().getWindow();
+        stage = (Stage) this.getScene().getWindow();
         stage.close();
     }
 
@@ -353,6 +344,7 @@ public class ConnectionView extends VBox {
      */
     public static class KnownNode {
         private final String nodeName, cookie;
+        private SimpleBooleanProperty running = new SimpleBooleanProperty(false);
         public KnownNode(String nodeName, String cookie) {
             assert nodeName != null;
             assert !"".equals(nodeName);
@@ -364,6 +356,15 @@ public class ConnectionView extends VBox {
         }
         public String getCookie() {
             return cookie;
+        }
+        public boolean isRunning() {
+            return running.get();
+        }
+        public SimpleBooleanProperty runningProperty() {
+            return running;
+        }
+        public void setRunning(boolean running) {
+            this.running.set(running);
         }
         @Override
         public int hashCode() {
