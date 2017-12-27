@@ -217,6 +217,7 @@ public class ConnectionView extends VBox {
         }
     }
 
+//<<<<<<< HEAD
     private List<KnownNode> knownNodesConfigToRowObjects(List<List<String>> knownNodeStrings) {
         ArrayList<KnownNode> knownNodeRows = new ArrayList<>();
         for (List<String> confStrings : knownNodeStrings) {
@@ -263,12 +264,33 @@ public class ConnectionView extends VBox {
            PrefBind.storeKnownNode(knownNode);
        }
     }
+/*=======
+    @FXML
+    public void onConnect() {
+        final String cookie, remoteNodeName;
+        cookie = cookieField.getText().replaceAll("'", "");
+        remoteNodeName = nodeNameField.getText();
+>>>>>>> c2663df42047d4005e47f0ace619013073caca09*/
 
     private void connectToRemoteNode(String cookie, String nodeName) {
         isConnecting.set(true);
         new ConnectorThead(nodeName, cookie).start();
-    }
+        ErlyBerly.runIO(() -> {
+            try {
+                ErlyBerly
+                    .nodeAPI()
+                    .connectionInfo(nodeName, cookie)
+                    .manualConnect();
 
+                Platform.runLater(() -> { closeThisWindow(); });
+            }
+            catch (OtpErlangException | OtpAuthException | IOException e) {
+                e.printStackTrace();
+                Platform.runLater(() -> { connectionFailed(e.getMessage()); });
+            }
+        });
+    }
+//>>>>>>> c2663df42047d4005e47f0ace619013073caca09
     private String removeApostrophesFromCookie(String cookie) {
         return cookie.replaceAll("'", "");
     }

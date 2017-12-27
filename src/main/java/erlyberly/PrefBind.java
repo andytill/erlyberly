@@ -163,4 +163,13 @@ public class PrefBind {
         props.put("knownNodes", knownNodes);
         store();
     }
+
+    /**
+     * The maximum number of traces that can be queued in the trace
+     * proccesses queue before tracing is suspended on the node.
+     */
+    public static int getMaxTraceQueueLengthConfig() {
+        Number maxTraceQueueLength = (Number)getOrDefault("maxTraceQueueLength", 1000);
+        return maxTraceQueueLength.intValue();
+    }
 }

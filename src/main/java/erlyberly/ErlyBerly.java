@@ -18,6 +18,11 @@
 package erlyberly;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import erlyberly.format.ElixirFormatter;
 import erlyberly.format.ErlangFormatter;
@@ -43,11 +48,17 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class ErlyBerly extends Application {
 
-    private static final NodeAPI NODE_API = new NodeAPI();
+    private static final ScheduledExecutorService IO_EXECUTOR = Executors.newScheduledThreadPool(4);
+
+    private static final NodeAPI NODE_API;
+
+    static {
+        startEpmd();
+        NODE_API = new NodeAPI();
+    }
 
     /**
      * The preferences tab, that is added when the user presses the 'Preferences'
@@ -67,6 +78,24 @@ public class ErlyBerly extends Application {
 
     public static void main(String[] args) throws Exception {
         launch(args);
+    }
+
+    public static void runIO(Runnable runnable) {
+        IO_EXECUTOR.execute(runnable);
+    }
+
+    public static void runIOAndWait(Runnable runnable) {
+        Future<?> future = IO_EXECUTOR.submit(runnable);
+        try {
+            future.get();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ScheduledFuture<?> scheduledIO(long delayMillis, Runnable runnable) {
+        return IO_EXECUTOR.schedule(runnable, delayMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -139,17 +168,17 @@ public class ErlyBerly extends Application {
 
         FilterFocusManager.init(scene);
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent t) {
+        primaryStage.setOnCloseRequest((windowEvent) -> {
+            ErlyBerly.runIOAndWait(() -> {
                 try {
                     nodeAPI().manuallyDisconnect();
-                } catch(Exception e) {
+                }
+                catch(Exception e) {
                     System.out.println(e);
                 }
-                Platform.exit();
-                System.exit(0);
-            }
+            });
+            Platform.exit();
+            System.exit(0);
         });
         // run this later because it requires the control's scene to be set, which
         // may not have happened yet.
@@ -349,5 +378,18 @@ public class ErlyBerly extends Application {
     private double configuredProcessesWidth() {
         double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
         return w;
+    }
+
+    private static void startEpmd() {
+        try {
+            Process epmd = Runtime.getRuntime().exec("epmd -daemon");
+            int exitV = epmd.waitFor();
+            if (exitV != 0) {
+                System.err.println(
+                        "Epmd process finished with exit value: " + exitV);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to start epmd: " + e);
+        }
     }
 }

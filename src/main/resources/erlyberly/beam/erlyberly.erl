@@ -162,7 +162,9 @@ record_fields([]) ->
 %%% ============================================================================
 
 module_functions() ->
-    [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()].
+    lists:sort(
+        [module_functions2(Mod) || {Mod, _FPath} <- code:all_loaded()]
+    ).
 
 module_functions2(Mod) when is_atom(Mod) ->
     Exports = Mod:module_info(exports),
@@ -193,10 +195,14 @@ start_trace({Node, Pid}, Mod, Func, Arity, Max_queue_len) when is_atom(Node),
 
 %%
 stop_trace(Mod, Func, Arity, _IsExported) ->
-    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity}.
+    %% FIXME do a receive to make sure that the call was successful
+    erlyberly_tcollector ! {stop_trace, Mod, Func, Arity},
+    ok.
 %%
 stop_traces() ->
-    erlyberly_tcollector ! stop_traces.
+    %% FIXME do a receive to make sure that the call was successful
+    erlyberly_tcollector ! stop_traces,
+    ok.
 %%
 when_process_is_unregistered(ProcName, Fn) ->
     case whereis(ProcName) of
@@ -207,7 +213,7 @@ when_process_is_unregistered(ProcName, Fn) ->
 ensure_dbg_started({Eb_Node, Eb_pid}, Max_queue_len) ->
     % restart dbg
     when_process_is_unregistered(dbg, fun dbg:start/0),
-    StartFn = 
+    StartFn =
         fun() -> 
             Pid = proc_lib:spawn(?MODULE, erlyberly_tcollector, [Eb_Node, Eb_pid, Max_queue_len]),
             register(erlyberly_tcollector, Pid),
@@ -230,9 +236,6 @@ store_trace(Trace) ->
     ui_pid,
 
     %%
-    logs = [],
-
-    %%
     traces = [],
 
     %% the maximum message queue length that the collector can accrue before
@@ -247,9 +250,8 @@ erlyberly_tcollector(Node, Pid, Max_queue_len) when is_integer(Max_queue_len) ->
     % apply a trace on the returns of the code module, so we can listen for 
     % code reloads, a code reload removes all traces on that module so when we
     % receive this message, reapply all traces for that module
-    dbg:p(all, [c, timestamp]),
-    dbg:tp(code, x),
-
+    {ok,_} = dbg:p(all, [c, timestamp]),
+    {ok,_} = dbg:tp(code, x),
     erlyberly_tcollector2(#tcollector{ ui_pid = Pid,
                                        max_queue_len = Max_queue_len }).
 
@@ -287,7 +289,8 @@ collect_overloading_logs(Max_queue_len, TC) ->
 
 receive_next_trace(#tcollector{ traces = Traces } = TC) ->
     receive
-        {start_trace, Mod, Func, Arity, Requester, Ref} ->
+        {start_trace, Mod, Func, Arity, Requester, Ref} when is_pid(Requester),
+                                                             is_reference(Ref) ->
             TC1 = tcollector_start_trace(Mod, Func, Arity, TC),
             Requester ! {ok, Ref},
             erlyberly_tcollector2(TC1);
@@ -424,12 +427,12 @@ trace_to_props(U) ->
 reapply_traces(Loaded_module, Traces) ->
     % filter out the traces for the reloaded, module, could be
     % done in the list comp but it causes a compiler warning
-    Traces_1 = lists:filter(fun(T) -> 
+    Traces_1 = lists:filter(fun(T) ->
                                 element(1, T) == Loaded_module 
                             end, Traces),
 
     % reapply each trace that has the loaded module
-    [erlyberly_tcollector ! {start_trace, M, F, A} || {M, F, A} <- Traces_1],
+    [erlyberly_tcollector ! {start_trace, M, F, A, self(), make_ref()} || {M, F, A} <- Traces_1],
     ok.
 %%
 collect_trace_logs() ->
@@ -625,7 +628,8 @@ seq_trace_match_spec(_) ->
 %%
 xref_analysis(Ignore_mods, M,F,A) when is_integer(A) ->
     Call_stack_set = gb_sets:new(),
-    xref_analysis2({M,F,A}, gb_sets:from_list(Ignore_mods), Call_stack_set, []).
+    Ignore_mods_set = gb_sets:from_list(Ignore_mods),
+    {ok, xref_analysis2({M,F,A}, Ignore_mods_set, Call_stack_set, [])}.
 
 %%
 xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
@@ -633,11 +637,17 @@ xref_analysis2(MFA, Ignore_mods_set, All_calls, Call_stack) ->
         true ->
             {MFA, []};
         false ->
-            {ok, Calls} = xref:analyze(?erlyberly_xref, {call, MFA}),
-            All_calls2 = gb_sets:add(MFA, All_calls),
-            Analysed_calls =
-                [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
-            {MFA, Analysed_calls}
+            %% analyse may not return ok if the module was not compiled with
+            %% the debug_info flag
+            case xref:analyze(?erlyberly_xref, {call, MFA}) of
+                {ok, Calls} ->
+                    All_calls2 = gb_sets:add(MFA, All_calls),
+                    Analysed_calls =
+                        [xref_analysis2(X_mfa, Ignore_mods_set, All_calls2, [MFA | Call_stack]) || X_mfa <- Calls, not is_xref_recursion(MFA, X_mfa)],
+                    {MFA, Analysed_calls};
+                Error ->
+                    throw(Error)
+            end
     end.
 
 %%
@@ -648,11 +658,36 @@ is_xref_recursion(_,_) ->
 
 %%
 ensure_xref_started() ->
+    io:format("ENSURE XREF STARTED~n"),
     catch xref:stop(?erlyberly_xref),
-    {ok, _} = xref:start(?erlyberly_xref),
-    Excluded = ["asn1ct", "/ct-", "dialyzer", "diameter", "hipe", "httpd", "megaco", "xmerl", "wx-"],
-    [xref:add_directory(?erlyberly_xref, Dir) || Dir <- code:get_path(), not dir_contains(Dir, Excluded)],
-    {erlyberly_xref_started}.
+    {ok, _} = xref:start(?erlyberly_xref, [{verbose, false},{warnings, false}]),
+    Excluded = [
+        "/appmon-", "/asn1-",
+        "/common_test-", "/compiler-", "/cos", "/crypto-", "/ct-",
+        "/debugger-", "/dialyzer", "/diameter",
+        "/edoc", "/eldap", "/erl_docgen", "/erl_interface-", "/erts", "/et-", "/eunit",
+        "/gs-",
+        "/hipe", "/httpd",
+        "/ic-", "/inets",
+        "/jinterface",
+        "/kernel",
+        "/megaco", "/mnesia",
+        "/observer-", "/odbc", "/orber-", "/os_mon", "/otp_mibs",
+        "/parsetools", "/percept-", "/pman", "/public_key",
+        "/reltool", "/runtime_tools",
+        "/sasl", "/snmp", "/ssh", "/ssl", "/stdlib", "/syntax_tools",
+        "/test_server", "/toolbar", "/tools", "/tv-", "/typer",
+        "/webtool", "/wx-",
+        "/xmerl"
+    ],
+    CodePaths =[Dir || Dir <- lists:sort(code:get_path()), not dir_contains(Dir, Excluded)],
+    % [io:format("XREF CODE PATHS ~s~n", [XXX]) || XXX <- CodePaths],
+    {_TimeUs, _} = timer:tc(fun() ->
+        [xref:add_directory(?erlyberly_xref, P) || P <- CodePaths]
+    end),
+    % io:format("TIME ~p",[_TimeUs]),
+    [xref:add_directory(?erlyberly_xref, P) || P <- CodePaths],
+    {ok, erlyberly_xref_started}.
 
 dir_contains(_, []) ->
     false;

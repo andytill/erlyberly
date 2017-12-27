@@ -37,6 +37,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.node.NodeAPI;
 import erlyberly.node.OtpUtil;
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -128,11 +129,11 @@ public class ModFuncContextMenu extends ContextMenu {
         BooleanBinding any = isSelectionFunction.or(isSelectionModule);
 
         moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
-        moduleSourceCodeItem.setOnAction(this::onModuleCode);
+        moduleSourceCodeItem.setOnAction(this::onViewCode);
         moduleSourceCodeItem.disableProperty().bind(any.not());
 
         moduleAbstCodeItem = new MenuItem(VIEW_ABST_CODE);
-        moduleAbstCodeItem.setOnAction(this::onModuleCode);
+        moduleAbstCodeItem.setOnAction(this::onViewCode);
         moduleAbstCodeItem.disableProperty().bind(any.not());
 
         NodeAPI nodeAPI = ErlyBerly.nodeAPI();
@@ -169,19 +170,28 @@ public class ModFuncContextMenu extends ContextMenu {
         );
         List<String> skippedModules = getConfiguredSkippedModuleNames(defaultSkippedModules);
         List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
-        try {
-            OtpErlangObject callGraph = ErlyBerly.nodeAPI().callGraph(
-                new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})),
-                OtpUtil.atom(func.getModuleName()),
-                OtpUtil.atom(func.getFuncName()),
-                new OtpErlangLong(func.getArity()));
-            CallGraphView callGraphView = new CallGraphView(dbgController);
-            callGraphView.callGraph((OtpErlangTuple) callGraph);
-            ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
-        }
-        catch (OtpErlangException | IOException e) {
-            e.printStackTrace();
-        }
+        ErlyBerly.runIO(() -> {
+            try {
+                OtpErlangObject rpcResult = ErlyBerly.nodeAPI().callGraph(
+                    new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})),
+                    OtpUtil.atom(func.getModuleName()),
+                    OtpUtil.atom(func.getFuncName()),
+                    new OtpErlangLong(func.getArity()));
+                if(!OtpUtil.isTupleTagged(NodeAPI.OK_ATOM, rpcResult)) {
+                    throw new RuntimeException(rpcResult.toString());
+                }
+                OtpErlangTuple rpcResultTuple = (OtpErlangTuple) rpcResult;
+                OtpErlangObject callGraph = rpcResultTuple.elementAt(1);
+                Platform.runLater(() -> {
+                    CallGraphView callGraphView = new CallGraphView(dbgController);
+                    callGraphView.callGraph((OtpErlangTuple) callGraph);
+                    ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
+                });
+            }
+            catch (OtpErlangException | IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -256,33 +266,36 @@ public class ModFuncContextMenu extends ContextMenu {
        }
     }
 
-   private void onModuleCode(ActionEvent ae){
-        try{
-            MenuItem mi = (MenuItem) ae.getSource();
-            String menuItemClicked = mi.getText();
-            ModFunc mf = selectedItem.get();
-
-            if(mf == null)
-                return;
-
-            String moduleName = mf.getModuleName();
-            String modSrc;
-            if(mf.isModule()) {
-                modSrc = fetchModCode(menuItemClicked, moduleName);
-                showModuleSourceCode(moduleName + " Source code ", modSrc);
+   private void onViewCode(ActionEvent ae) {
+       MenuItem mi = (MenuItem) ae.getSource();
+       String menuItemClicked = mi.getText();
+       ModFunc mf = selectedItem.get();
+       if(mf == null)
+           return;
+       String moduleName = mf.getModuleName();
+       ErlyBerly.runIO(() -> {
+           try{
+               final String title;
+                String modSrc;
+                if(mf.isModule()) {
+                    modSrc = fetchModuleCode(menuItemClicked, moduleName);
+                    title = moduleName + " Source code";
+                }
+                else {
+                    String functionName = mf.getFuncName();
+                    Integer arity = mf.getArity();
+                    modSrc = fetchFunctionCode(menuItemClicked, moduleName, functionName, arity);
+                    title = moduleName;
+                }
+                Platform.runLater(() -> { showModuleSourceCode(title, modSrc); });
             }
-            else {
-                String functionName = mf.getFuncName();
-                Integer arity = mf.getArity();
-                modSrc = fetchModCode(menuItemClicked, moduleName, functionName, arity);
-                showModuleSourceCode(moduleName, modSrc);
+            catch (Exception e) {
+                throw new RuntimeException("failed to load the source code.", e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("failed to load the source code.", e);
-        }
+        });
     }
 
-    private String fetchModCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
+    private String fetchModuleCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
         switch (menuItemClicked){
             case VIEW_SOURCE_CODE:
                 return dbgController.moduleFunctionSourceCode(moduleName);
@@ -293,7 +306,7 @@ public class ModFuncContextMenu extends ContextMenu {
         }
     }
 
-    private String fetchModCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
+    private String fetchFunctionCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
         switch (menuItemClicked){
             case VIEW_SOURCE_CODE:
                 return dbgController.moduleFunctionSourceCode(moduleName, function, arity);

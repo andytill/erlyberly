@@ -3,7 +3,7 @@
 
   <groupId>andytill</groupId>
   <artifactId>erlyberly</artifactId>
-  <version>0.6.9-SNAPSHOT</version>
+  <version>0.7.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>erlyberly</name>
@@ -36,11 +36,11 @@
       <version>1.6.0</version>
     </dependency>
     <dependency>
-	    <groupId>junit</groupId>
-	    <artifactId>junit</artifactId>
-	    <version>4.11</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
       <scope>test</scope>
-	  </dependency>
+    </dependency>
     <dependency>
       <groupId>de.jensd</groupId>
       <artifactId>fontawesomefx</artifactId>
@@ -60,33 +60,6 @@
 
   <build>
     <plugins>
-      <plugin>
-          <groupId>com.mycila</groupId>
-          <artifactId>license-maven-plugin</artifactId>
-          <version>2.11</version>
-          <configuration>
-              <header>src/etc/license_header</header>
-              <properties>
-                  <owner>Andy Till</owner>
-                  <year>2016</year>
-                  <email>kittyburrito@googlemail.com</email>
-              </properties>
-              <excludes>
-                  <exclude>**/pom.xml</exclude>
-                  <exclude>**/LICENSE</exclude>
-                  <exclude>**/checkstyle.xml</exclude>
-                  <exclude>**/README</exclude>
-                  <exclude>**/mvnw</exclude>
-                  <exclude>**/.checkstyle</exclude>
-                  <exclude>**/.mvn/**</exclude>
-                  <exclude>src/etc/**</exclude>
-                  <exclude>src/test/resources/**</exclude>
-                  <exclude>src/main/resources/**</exclude>
-                  <exclude>**/src/main/java/hexstar/HexstarView.java</exclude>
-              </excludes>
-          </configuration>
-      </plugin>
-
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.4.1</version>

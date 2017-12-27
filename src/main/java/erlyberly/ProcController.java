@@ -25,7 +25,7 @@ import java.util.Comparator;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
-import erlyberly.node.NodeAPI.RpcCallback;
+import erlyberly.node.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;

@@ -172,12 +172,15 @@ public class TopBarView implements Initializable {
         xrefAnalysisButton.disableProperty().bind(
                 ErlyBerly.nodeAPI().connectedProperty().not().or(isXrefAnalysing).or(ErlyBerly.nodeAPI().xrefStartedProperty()));
         xrefAnalysisButton.setOnAction((e) -> {
-            try {
-                ErlyBerly.nodeAPI().asyncEnsureXRefStarted();
-                isXrefAnalysing.set(true);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            isXrefAnalysing.set(true);
+            ErlyBerly.runIO(() -> {
+                try {
+                        ErlyBerly.nodeAPI().ensureXRefStarted();
+                }
+                catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            });
         });
 
         disconnectButton.setGraphic(FAIcon.create().icon(AwesomeIcon.EJECT));
@@ -188,7 +191,8 @@ public class TopBarView implements Initializable {
         disconnectButton.setOnAction((e) -> {
             try {
                 disconnect();
-            } catch (Exception e1) {
+            }
+            catch (Exception e1) {
                 e1.printStackTrace();
             }
         });
@@ -451,11 +455,17 @@ public class TopBarView implements Initializable {
         refreshModulesButton.setOnAction(refreshModulesAction);
     }
 
-    public void disconnect() throws IOException, OtpErlangException{
-        ErlyBerly.nodeAPI().manuallyDisconnect();
-        ErlyBerly.nodeAPI().disconnect();
-        Stage s = new Stage();
-        displayConnectionPopup(s);
+    public void disconnect() throws IOException, OtpErlangException {
+        ErlyBerly.runIOAndWait(() -> {
+            try {
+                ErlyBerly.nodeAPI().manuallyDisconnect();
+                ErlyBerly.nodeAPI().disconnect();
+            }
+            catch(Exception e) {
+                System.out.println(e);
+            }
+        });
+        displayConnectionPopup(new Stage());
     }
 
     // TODO: (improve) lazy copy paste
@@ -479,10 +489,6 @@ public class TopBarView implements Initializable {
                 if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
                     Platform.exit();
                 }
-
-                Platform.runLater(() -> {
-                    //primaryStage.setResizable(true);
-                });
             }});
 
         connectStage.show();
