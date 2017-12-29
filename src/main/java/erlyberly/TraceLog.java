@@ -208,8 +208,10 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public String getPidString() {
         OtpErlangString s = (OtpErlangString)map.get(ATOM_PID);
-
-        return s.stringValue();
+        if(s == null)
+            return "";
+        else
+            return s.stringValue();
     }
 
     public OtpErlangObject getResultFromMap() {

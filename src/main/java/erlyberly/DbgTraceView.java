@@ -268,7 +268,8 @@ public class DbgTraceView extends VBox {
                     search.matches(t.getArgs())
                     || search.matches(t.getResult())
                     || search.matches(t.getPidString())
-                    || search.matches(t.getRegName());
+                    || search.matches(t.getRegName())
+                    || search.matches(t.getFunction());
             return matches;
         });
     }
