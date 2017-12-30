@@ -69,6 +69,10 @@ import javafx.collections.ObservableList;
 
 public class NodeAPI {
 
+    private static final OtpErlangAtom TRY_LOAD_MODULE_ATOM = atom("try_load_module");
+
+    private static final OtpErlangAtom ERROR_ATOM = atom("error");
+
     private static final OtpErlangAtom ERLYBERLY_TRACE_OVERLOAD_ATOM = atom("erlyberly_trace_overload");
 
     private static final String ERLYBERLY = "erlyberly";
@@ -750,13 +754,13 @@ public class NodeAPI {
      * to the code module will see the loaded module and send a message to erlyberly,
      * which will display it in the tree of modules.
      */
-    public void loadModule(OtpErlangAtom moduleNameAtom) throws OtpErlangException, IOException {
+    public void tryLoadModule(String moduleNameAtom) throws OtpErlangException, IOException {
         assert moduleNameAtom != null : "module name string is null";
         assert !"".equals(moduleNameAtom) : " module name string is empty";
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject result = nodeRPC()
-                .blockingRPC(atom("code"), atom("ensure_loaded"), list(moduleNameAtom));
-        assert isTupleTagged(atom("module"), result) || isTupleTagged(atom("error"), result) : result;
+                .blockingRPC(ERLYBERLY_ATOM, TRY_LOAD_MODULE_ATOM, list(atom(moduleNameAtom)));
+        assert isTupleTagged(MODULE_ATOM, result) || isTupleTagged(ERROR_ATOM, result) : result;
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {

@@ -31,7 +31,6 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -318,7 +317,7 @@ public class DbgView implements Initializable {
             long delayMillis = 1000;
             scheduledModuleLoadFuture = ErlyBerly.scheduledIO(delayMillis, () -> {
                 try {
-                    ErlyBerly.nodeAPI().loadModule(OtpUtil.atom(moduleName));
+                    ErlyBerly.nodeAPI().tryLoadModule(moduleName);
                 }
                 catch (Exception e1) {
                     e1.printStackTrace();
