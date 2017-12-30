@@ -21,17 +21,18 @@
 -export([collect_trace_logs/0]).
 -export([ensure_dbg_started/2]).
 -export([ensure_xref_started/0]).
--export([saleyn_fun_src/1]).
 -export([get_abstract_code/1]).
 -export([get_process_state/1]).
 -export([get_source_code/1]).
 -export([load_modules_on_path/1]).
 -export([module_functions/0]).
 -export([process_info/0]).
+-export([saleyn_fun_src/1]).
 -export([seq_trace/5]).
 -export([start_trace/5]).
 -export([stop_trace/4]).
 -export([stop_traces/0]).
+-export([try_load_module/1]).
 -export([xref_analysis/4]).
 
 %% exported for spawned processes
@@ -695,6 +696,15 @@ dir_contains(Dir, [Str|Tail]) ->
     case string:str(Dir, Str) of
         0 -> dir_contains(Dir, Tail);
         _ -> true
+    end.
+
+%% load a module if it is not already loaded
+try_load_module(Module_name) when is_atom(Module_name) ->
+    case code:is_loaded(Module_name) of
+        false ->
+            code:ensure_loaded(Module_name);
+        {file, _} ->
+            ok
     end.
 
 %%% ============================================================================
