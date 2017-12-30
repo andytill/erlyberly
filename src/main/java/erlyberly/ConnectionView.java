@@ -192,28 +192,31 @@ public class ConnectionView extends SplitPane {
 
     private List<KnownNode> knownNodesConfigToRowObjects(List<List<String>> knownNodeStrings) {
         // get node names from epmd to give the user some options as to what to connect to
-        HashSet<String> hashSet = new HashSet<>();
+        HashSet<String> runningNodeNames = new HashSet<>();
         try {
-            hashSet.addAll(Arrays.asList(OtpEpmd.lookupNames()));
+            runningNodeNames.addAll(Arrays.asList(OtpEpmd.lookupNames()));
         }
         catch (IOException e) {
             e.printStackTrace();
         }
+        // a lit of node names that are running according to epmd but do not appear in the list
+        // of node names we have accessed before
+        ArrayList<String> unknownRunningNodeNames = new ArrayList<>(runningNodeNames);
 
         ArrayList<KnownNode> knownNodeRows = new ArrayList<>();
         for (List<String> confStrings : knownNodeStrings) {
             KnownNode knownNode = new KnownNode(confStrings.get(0), confStrings.get(1));
             // if this configured node name is in the epmd list then mark it as "running"
-            for (String string : hashSet) {
+            for (String string : runningNodeNames) {
                 if(string.contains(knownNode.getNodeName())) {
                     knownNode.setRunning(true);
-                    hashSet.remove(string); // concurrent mod exception?
+                    unknownRunningNodeNames.remove(string);
                     break;
                 }
             }
             knownNodeRows.add(knownNode);
         }
-        for (String runningNodeName : hashSet) {
+        for (String runningNodeName : unknownRunningNodeNames) {
             // don't show erlyberly in the list, weird stuff happens if erlyberly connects to itself!
             if(runningNodeName.contains("erlyberly"))
                 continue;
