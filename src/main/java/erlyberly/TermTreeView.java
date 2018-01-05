@@ -18,6 +18,7 @@
 package erlyberly;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -25,12 +26,13 @@ import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.ericsson.otp.erlang.OtpErlangMap;
 
 import erlyberly.format.TermFormatter;
 import erlyberly.node.OtpUtil;
+import erlyberly.node.RecordManager;
 import hextstar.HexstarView;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ContextMenu;
@@ -47,6 +49,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     private static final OtpErlangAtom DICT_ATOM = OtpUtil.atom("dict");
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
+    private OtpErlangAtom moduleName;
 
     public TermTreeView() {
         getStyleClass().add("term-tree");
@@ -123,6 +126,12 @@ public class TermTreeView extends TreeView<TermTreeItem> {
     }
 
     public void populateFromTerm(OtpErlangObject obj) {
+        populateFromTerm(null, obj);
+    }
+
+
+    public void populateFromTerm(OtpErlangAtom moduleName, OtpErlangObject obj) {
+        this.moduleName = moduleName;
         setShowRoot(false);
         addToTreeItem(getRoot(), obj);
     }
@@ -144,6 +153,8 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             else {
                 TreeItem<TermTreeItem> tupleItem;
                 if(OtpUtil.isErlyberlyRecord(obj)) {
+                    // this is the "old" way show tuples with record metadata, where the metadata is in the
+                    // term itself, rather than stored separately in the RecordManager
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
 
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, f.tupleLeftParen()));
@@ -170,22 +181,37 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                         addToTreeItem(tupleItem, value);
                 }
                 else {
-                    tupleItem = new TreeItem<>();
-                    tupleItem.setExpanded(true);
+                    List<String> recordNames = null;
+                    OtpErlangTuple objTuple = (OtpErlangTuple) obj;
+                    if((recordNames = findRecordDef(objTuple)) != null) {
+                        String recordNameText = "#" + OtpUtil.tupleElement(0, obj) + " ";
 
-                    if(OtpUtil.isLittleTerm(obj)) {
-                        tupleItem.setValue(new TermTreeItem(obj, f.toString(obj)));
+                        tupleItem = new TreeItem<>(new TermTreeItem(obj, f.tupleLeftParen()));
+                        tupleItem.setGraphic(recordLabel(recordNameText));
                         parent.getChildren().add(tupleItem);
-                    }
-                    else {
-                        tupleItem.setValue(new TermTreeItem(obj, f.tupleLeftParen()));
-                        for (OtpErlangObject e : elements) {
-                            addToTreeItem(tupleItem, e);
+                        tupleItem.setExpanded(true);
+                        elements = objTuple.elements();
+                        for (int i = 1; i < elements.length; i++) {
+                            addToTreeItem(tupleItem, OtpUtil.tuple(ERLYBERLY_RECORD_FIELD_ATOM, recordNames.get(i-1), elements[i]));
                         }
-                        parent.getChildren().add(tupleItem);
                         parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.tupleRightParen())));
                     }
-
+                    else {
+                        tupleItem = new TreeItem<>();
+                        tupleItem.setExpanded(true);
+                        if(OtpUtil.isLittleTerm(obj)) {
+                            tupleItem.setValue(new TermTreeItem(obj, f.toString(obj)));
+                            parent.getChildren().add(tupleItem);
+                        }
+                        else {
+                            tupleItem.setValue(new TermTreeItem(obj, f.tupleLeftParen()));
+                            for (OtpErlangObject e : elements) {
+                                addToTreeItem(tupleItem, e);
+                            }
+                            parent.getChildren().add(tupleItem);
+                            parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.tupleRightParen())));
+                        }
+                    }
                 }
             }
         }
@@ -245,6 +271,17 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         else {
             parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.toString(obj))));
         }
+    }
+
+    /**
+     * return null if this tuple is not a known record, or a string list
+     * of record field names if it is.
+     */
+    private List<String> findRecordDef(OtpErlangTuple obj) {
+        if(obj.arity() == 0 || !(obj.elementAt(0) instanceof OtpErlangAtom))
+            return null;
+        OtpErlangAtom recordName = (OtpErlangAtom) obj.elementAt(0);
+        return ErlyBerly.nodeAPI().getRecordManager().get(new RecordManager.RecordKey(moduleName, recordName));
     }
 
     private Label recordLabel(String recordNameText) {

@@ -129,6 +129,8 @@ public class NodeAPI {
 
     private RpcCallback<OtpErlangTuple> moduleLoadedCallback;
 
+    private final RecordManager recordManager = new RecordManager();
+
     /**
      * Called when a trace log is received.
      * <br/>
@@ -763,6 +765,26 @@ public class NodeAPI {
         assert isTupleTagged(MODULE_ATOM, result) || isTupleTagged(ERROR_ATOM, result) : result;
     }
 
+
+    public void loadModuleRecords(OtpErlangAtom moduleName) throws OtpErlangException, IOException {
+        OtpErlangObject result = nodeRPC()
+                .blockingRPC(ERLYBERLY_ATOM, atom("load_module_records"), list(moduleName));
+        assert isTupleTagged(OK_ATOM, result) : result;
+        OtpErlangTuple resultTuple = (OtpErlangTuple) result;
+        OtpErlangList records = (OtpErlangList) resultTuple.elementAt(1);
+        for (OtpErlangObject obj : records) {
+            OtpErlangTuple record = (OtpErlangTuple) obj;
+            OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(0);
+            OtpErlangList fieldNameAtoms = (OtpErlangList) record.elementAt(1);
+            ArrayList<String> recordNames = new ArrayList<>();
+            for (OtpErlangObject nameObj : fieldNameAtoms) {
+                OtpErlangAtom nameAtom = (OtpErlangAtom) nameObj;
+                recordNames.add(nameAtom.atomValue());
+            }
+            recordManager.put(new RecordManager.RecordKey(moduleName, recordName), recordNames);
+        }
+    }
+
     public RpcCallback<TraceLog> getTraceLogCallback() {
         return traceLogCallback;
     }
@@ -794,5 +816,9 @@ public class NodeAPI {
     public SimpleBooleanProperty suspendedProperty() {
         assert Platform.isFxApplicationThread();
         return suspendedProperty;
+    }
+
+    public RecordManager getRecordManager() {
+        return recordManager;
     }
 }

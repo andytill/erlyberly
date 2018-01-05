@@ -25,6 +25,7 @@
 -export([get_process_state/1]).
 -export([get_source_code/1]).
 -export([load_modules_on_path/1]).
+-export([load_module_records/1]).
 -export([module_functions/0]).
 -export([process_info/0]).
 -export([saleyn_fun_src/1]).
@@ -133,8 +134,7 @@ format_record(Rec, Mod) when is_list(Rec) ->
     [format_record(R, Mod) || R <- Rec];
 format_record(Rec, Mod) when is_atom(element(1, Rec)) ->
     try
-        File = code:which(Mod),
-        {ok,{_Mod,[{abstract_code,{_Version,Forms}},{"CInf",_CB}]}} = beam_lib:chunks(File, [abstract_code,"CInf"]),
+        {ok, Forms} = load_module_forms(Mod),
         [Name | RecValues] = tuple_to_list(Rec),
         [FieldNames] = [record_fields(Fields) || {attribute,_,record,{Tag,Fields}} <- Forms, Tag =:= Name],
         FieldsAsTuples = lists:zipwith(
@@ -158,6 +158,20 @@ record_fields([{record_field,_,{atom,_,Field},_} | Fs]) ->
 record_fields([]) ->
     [].
 
+load_module_forms(Mod) ->
+    File = code:which(Mod),
+    {ok,{_Mod,[{abstract_code,{_Version,Forms}},{"CInf",_CB}]}} = beam_lib:chunks(File, [abstract_code,"CInf"]),
+    {ok, Forms}.
+
+%% get the records for a module.
+%%
+%% (derp@mac)4> erlyberly:load_module_records(gen_event).
+%% [{handler,[module,id,state,supervised]}]
+load_module_records(Mod) ->
+    {ok, Forms} = load_module_forms(Mod),
+    Records = [{Tag, record_fields(Fields)} || {attribute,_,record,{Tag,Fields}} <- Forms],
+    {ok, Records}.
+
 %%% ============================================================================
 %%% module function tree
 %%% ============================================================================
@@ -171,7 +185,6 @@ module_functions2(Mod) when is_atom(Mod) ->
     Exports = Mod:module_info(exports),
     Unexported = [F || F <- Mod:module_info(functions), not lists:member(F, Exports)],
     {Mod, Exports, Unexported}.
-
 
 %%% ============================================================================
 %%% tracing

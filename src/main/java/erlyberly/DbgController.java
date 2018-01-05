@@ -27,6 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+import erlyberly.node.OtpUtil;
 import erlyberly.node.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -122,6 +123,8 @@ public class DbgController implements Initializable {
                 ErlyBerly.nodeAPI().startTrace(function, PrefBind.getMaxTraceQueueLengthConfig());
 
                 Platform.runLater(() -> { traces.add(function); });
+
+                ErlyBerly.nodeAPI().loadModuleRecords(OtpUtil.atom(function.getModuleName()));
             }
             catch (Exception ex) {
                 ex.printStackTrace();

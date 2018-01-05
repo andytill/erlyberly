@@ -20,6 +20,7 @@ package erlyberly;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
+import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -217,7 +218,8 @@ public class DbgTraceView extends VBox {
         resultTermsTreeView = newTermTreeView();
 
         if(result != null) {
-            resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
+            String moduleName = traceLog.getModFunc().getModuleName();
+            resultTermsTreeView.populateFromTerm(OtpUtil.atom(moduleName), traceLog.getResultFromMap());
         }
         else {
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
