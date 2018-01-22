@@ -228,7 +228,8 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     continue;
                 String keyStr = f.mapKeyToString(e.getKey());
                 String valStr = f.toString(e.getValue());
-                if (valStr.length() < 50) {
+                // Inline short values that are not maps
+                if (!((OtpErlangObject)e.getValue() instanceof OtpErlangMap) && (valStr.length() < 50 )) {
                     TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), valStr));
                     key.setGraphic(recordLabel(keyStr));
                     mapNode.getChildren().add(key);
