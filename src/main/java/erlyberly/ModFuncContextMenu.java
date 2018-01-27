@@ -275,7 +275,7 @@ public class ModFuncContextMenu extends ContextMenu {
        String moduleName = mf.getModuleName();
        ErlyBerly.runIO(() -> {
            try{
-               final String title;
+                final String title;
                 String modSrc;
                 if(mf.isModule()) {
                     modSrc = fetchModuleCode(menuItemClicked, moduleName);

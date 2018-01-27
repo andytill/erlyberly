@@ -28,6 +28,7 @@ import com.ericsson.otp.erlang.OtpErlangFun;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangString;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.format.TermFormatter;
@@ -169,7 +170,8 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 }
                 else if(isRecordField(obj)) {
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, " "));
-                    tupleItem.setGraphic(recordLabel(OtpUtil.tupleElement(1, obj) + " =  "));
+                    OtpErlangString recordField = (OtpErlangString) OtpUtil.tupleElement(1, obj);
+                    tupleItem.setGraphic(recordLabel(recordField.stringValue() + " =  "));
                     tupleItem.setExpanded(true);
 
                     parent.getChildren().add(tupleItem);
@@ -185,7 +187,6 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     OtpErlangTuple objTuple = (OtpErlangTuple) obj;
                     if((recordNames = findRecordDef(objTuple)) != null) {
                         String recordNameText = "#" + OtpUtil.tupleElement(0, obj) + " ";
-
                         tupleItem = new TreeItem<>(new TermTreeItem(obj, f.tupleLeftParen()));
                         tupleItem.setGraphic(recordLabel(recordNameText));
                         parent.getChildren().add(tupleItem);
