@@ -767,6 +767,8 @@ public class NodeAPI {
 
 
     public void loadModuleRecords(OtpErlangAtom moduleName) throws OtpErlangException, IOException {
+        if(recordManager.isModuleManaged(moduleName))
+            return;
         OtpErlangObject result = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("load_module_records"), list(moduleName));
         assert isTupleTagged(OK_ATOM, result) : result;

@@ -1,6 +1,7 @@
 package erlyberly.node;
 
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
@@ -54,5 +55,13 @@ public class RecordManager {
                 return false;
             return true;
         }
+    }
+
+    public boolean isModuleManaged(OtpErlangAtom moduleName) {
+        for (Entry<RecordKey, List<String>> entry : records.entrySet()) {
+            if(moduleName.equals(entry.getKey().module))
+                return true;
+        }
+        return false;
     }
 }
