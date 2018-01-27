@@ -17,6 +17,7 @@
  */
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
@@ -217,9 +218,10 @@ public class DbgTraceView extends VBox {
 
         resultTermsTreeView = newTermTreeView();
 
+        OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
+
         if(result != null) {
-            String moduleName = traceLog.getModFunc().getModuleName();
-            resultTermsTreeView.populateFromTerm(OtpUtil.atom(moduleName), traceLog.getResultFromMap());
+            resultTermsTreeView.populateFromTerm(moduleName, traceLog.getResultFromMap());
         }
         else {
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
@@ -231,7 +233,7 @@ public class DbgTraceView extends VBox {
         }
 
         argTermsTreeView = newTermTreeView();
-        argTermsTreeView.populateFromListContents((OtpErlangList)args);
+        argTermsTreeView.populateFromListContents(moduleName, (OtpErlangList)args);
 
         SplitPane splitPane, splitPaneH;
 

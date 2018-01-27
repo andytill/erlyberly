@@ -120,10 +120,14 @@ public class TermTreeView extends TreeView<TermTreeItem> {
         }
     }
 
-    public void populateFromListContents(OtpErlangList list) {
+    public void populateFromListContents(OtpErlangAtom moduleName, OtpErlangList list) {
         for (OtpErlangObject a : list) {
-            populateFromTerm(a);
+            populateFromTerm(moduleName, a);
         }
+    }
+
+    public void populateFromListContents(OtpErlangList list) {
+        populateFromListContents(null, list);
     }
 
     public void populateFromTerm(OtpErlangObject obj) {
