@@ -174,8 +174,16 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 }
                 else if(isRecordField(obj)) {
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, " "));
-                    OtpErlangString recordField = (OtpErlangString) OtpUtil.tupleElement(1, obj);
-                    tupleItem.setGraphic(recordLabel(recordField.stringValue() + " =  "));
+                    String recordField = "";
+                    OtpErlangObject recordFieldNameObj = OtpUtil.tupleElement(1, obj);
+                    // do not toString an OtpErlangString because that will add the quotes around it
+                    if(recordFieldNameObj instanceof OtpErlangString) {
+                        recordField = ((OtpErlangString)recordFieldNameObj).stringValue();
+                    }
+                    else {
+                        recordField = recordFieldNameObj.toString();
+                    }
+                    tupleItem.setGraphic(recordLabel(recordField + " = "));
                     tupleItem.setExpanded(true);
 
                     parent.getChildren().add(tupleItem);
