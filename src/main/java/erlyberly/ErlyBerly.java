@@ -76,6 +76,8 @@ public class ErlyBerly extends Application {
 
     private static TermFormatter termFormatter;
 
+    private static Stage primaryStage;
+
     public static void main(String[] args) throws Exception {
         launch(args);
     }
@@ -99,7 +101,8 @@ public class ErlyBerly extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage aPrimaryStage) {
+        primaryStage = aPrimaryStage;
         try {
             PrefBind.setup();
         } catch (IOException e) {
@@ -164,7 +167,7 @@ public class ErlyBerly extends Application {
         primaryStage.setResizable(true);
         primaryStage.show();
 
-        displayConnectionPopup(primaryStage);
+        displayConnectionPopup();
 
         FilterFocusManager.init(scene);
 
@@ -263,7 +266,7 @@ public class ErlyBerly extends Application {
         return entopPane;
     }
 
-    private void displayConnectionPopup(Stage primaryStage) {
+    public static void displayConnectionPopup() {
         Scene scene = new Scene(new ConnectionView());
 
         // close the app when escape is pressed on the connection window
