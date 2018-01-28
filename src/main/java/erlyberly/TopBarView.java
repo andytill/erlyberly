@@ -68,9 +68,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import ui.FAIcon;
 
 public class TopBarView implements Initializable {
@@ -465,33 +462,7 @@ public class TopBarView implements Initializable {
                 System.out.println(e);
             }
         });
-        displayConnectionPopup(new Stage());
-    }
-
-    // TODO: (improve) lazy copy paste
-    // TODO: THIS was a ugly copy paste effort
-    private void displayConnectionPopup(Stage primaryStage) {
-        Stage connectStage;
-
-        connectStage = new Stage();
-        connectStage.initModality(Modality.WINDOW_MODAL);
-        connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
-        connectStage.setAlwaysOnTop(true);
-
-        // javafx vertical resizing is laughably ugly, lets just disallow it
-        connectStage.setResizable(false);
-        connectStage.setWidth(400);
-
-        // if the user closes the window without connecting then close the app
-        connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                if(!ErlyBerly.nodeAPI().connectedProperty().get()) {
-                    Platform.exit();
-                }
-            }});
-
-        connectStage.show();
+        ErlyBerly.displayConnectionPopup();
     }
 
     private void displayPreferencesPane() {
