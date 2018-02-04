@@ -17,9 +17,11 @@
  */
 package erlyberly;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
+import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -217,8 +219,10 @@ public class DbgTraceView extends VBox {
 
         resultTermsTreeView = newTermTreeView();
 
+        OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
+
         if(result != null) {
-            resultTermsTreeView.populateFromTerm(result);
+            resultTermsTreeView.populateFromTerm(moduleName, result);
         }
         else {
             // the result may be receievd while the term view is open so put a listen
@@ -231,7 +235,7 @@ public class DbgTraceView extends VBox {
         }
 
         argTermsTreeView = newTermTreeView();
-        argTermsTreeView.populateFromListContents((OtpErlangList)args);
+        argTermsTreeView.populateFromListContents(moduleName, (OtpErlangList)args);
 
         SplitPane splitPane, splitPaneH;
 
@@ -296,10 +300,10 @@ public class DbgTraceView extends VBox {
         filteredTraces.setPredicate((t) -> {
             boolean matches =
                     search.matches(t.getArgs())
-                    || search.matches(t.getFunction())
                     || search.matches(t.getResult())
                     || search.matches(t.getPidString())
-                    || search.matches(t.getRegName());
+                    || search.matches(t.getRegName())
+                    || search.matches(t.getFunction());
             return matches;
         });
     }

@@ -230,15 +230,6 @@ public class TraceLog implements Comparable<TraceLog> {
     }
 
     public OtpErlangObject getResultFromMap() {
-      /*  Object object = map.get(RESULT_ATOM);
-        if(object == null) {
-            OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
-
-            if(exception != null) {
-                return exception.elementAt(1);
-            }
-        }
-        return (OtpErlangObject) object;*/
         return resultTerm;
     }
 
@@ -251,31 +242,6 @@ public class TraceLog implements Comparable<TraceLog> {
      * Called when we get a return_from trace which completes t
      */
     public void complete(OtpErlangTuple tuple, TermFormatter formatter) {
-/*
-        Object e = resultMap.get(EXCEPTION_FROM_ATOM);
-        Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
-        Object r = resultMap.get(RESULT_ATOM);
-        if(e != null) {
-            map.put(EXCEPTION_FROM_ATOM, e);
-            if(r == null) {
-                r = e;
-            }
-        }
-
-        if(r != null) {
-            map.put(RESULT_ATOM, r);
-            String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
-            result.set(resultString);
-        }
-        if(ts != null)
-            map.put(TIMESTAMP_RETURN_ATOM, ts);
-
-        duration.set(durationFromMap());
-
-        Platform.runLater(() -> { summary.set(toString()); complete.set(true); });*/
-
-        // {trace_ts,#Pid<derp@vagrant-ubuntu-trusty-64.154.0>,return_from,{code,module_info,1},[{objfile_extension,0},{load_file,1},{ensure_loaded,1},{load_abs,1},{load_abs,2},{load_binary,3},{load_native_partial,2},{load_native_sticky,3},{delete,1},{purge,1},{soft_purge,1},{is_loaded,1},{get_object_code,1},{all_loaded,0},{stop,0},{root_dir,0},{lib_dir,0},{lib_dir,1},{lib_dir,2},{compiler_dir,0},{priv_dir,1},{stick_dir,1},{unstick_dir,1},{stick_mod,1},{unstick_mod,1},{is_sticky,1},{set_path,1},{get_path,0},{add_path,1},{add_pathz,1},{add_patha,1},{add_paths,1},{add_pathsz,1},{add_pathsa,1},{del_path,1},{replace_path,2},{rehash,0},{get_mode,0},{call,1},{start_link,0},{start_link,1},{do_start,1},{load_code_server_prerequisites,0},{do_stick_dirs,0},{do_s,1},{get_mode,1},{which,1},{which2,1},{which,3},{where_is_file,1},{where_is_file,2},{set_primary_archive,4},{clash,0},{search,1},{build,1},{decorate,2},{filter,3},{filter2,3},{has_ext,3},{load_native_code_for_all_loaded,0},{module_info,0},{module_info,1},{'-load_native_code_for_all_loaded/0-fun-0-',2},{'-set_primary_archive/4-lc$^0/1-0-',2},{'-load_code_server_prerequisites/0-lc$^0/1-0-',1}],{1502,773031,999016}}
-
         assert TRACE_TS.equals(tuple.elementAt(0));
         assert tuple.elementAt(1) instanceof OtpErlangPid : tuple;
         assert pid.equals(tuple.elementAt(1)) : tuple;

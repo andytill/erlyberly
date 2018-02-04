@@ -27,6 +27,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 
 import erlyberly.StackTraceView.ErlyberlyStackTraceElement;
 import erlyberly.node.OtpUtil;
+import javafx.application.Platform;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -53,16 +54,20 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
                             if(stackElement.isError())
                                 return;
                             ModFunc mf = stackElement.getModFunc();
-                            try {
-                                String source = ErlyBerly.nodeAPI().moduleFunctionSourceCode(
-                                        mf.getModuleName(), mf.getFuncName(), mf.getArity());
-                                ErlyBerly.showPane(
-                                    "Crash Report Stack",
-                                    ErlyBerly.wrapInPane(new CodeView(source))
-                                );
-                            } catch (Exception e1) {
-                                e1.printStackTrace();
-                            }
+                            ErlyBerly.runIO(() -> {
+                                try {
+                                    String source = ErlyBerly.nodeAPI().moduleFunctionSourceCode(
+                                            mf.getModuleName(), mf.getFuncName(), mf.getArity());
+                                    Platform.runLater(() -> {
+                                        ErlyBerly.showPane(
+                                            "Crash Report Stack",
+                                            ErlyBerly.wrapInPane(new CodeView(source))
+                                        );
+                                    });
+                                } catch (Exception e1) {
+                                    e1.printStackTrace();
+                                }
+                            });
                         });
                     }
 

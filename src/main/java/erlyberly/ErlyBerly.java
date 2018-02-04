@@ -48,13 +48,17 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class ErlyBerly extends Application {
 
     private static final ScheduledExecutorService IO_EXECUTOR = Executors.newScheduledThreadPool(4);
 
-    private static final NodeAPI NODE_API = new NodeAPI();
+    private static final NodeAPI NODE_API;
+
+    static {
+        startEpmd();
+        NODE_API = new NodeAPI();
+    }
 
     /**
      * The preferences tab, that is added when the user presses the 'Preferences'
@@ -71,6 +75,8 @@ public class ErlyBerly extends Application {
     private static TabPane tabPane;
 
     private static TermFormatter termFormatter;
+
+    private static Stage primaryStage;
 
     public static void main(String[] args) throws Exception {
         launch(args);
@@ -105,7 +111,8 @@ public class ErlyBerly extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage aPrimaryStage) {
+        primaryStage = aPrimaryStage;
         try {
             PrefBind.setup();
         } catch (IOException e) {
@@ -170,7 +177,7 @@ public class ErlyBerly extends Application {
         primaryStage.setResizable(true);
         primaryStage.show();
 
-        displayConnectionPopup(primaryStage);
+        displayConnectionPopup();
 
         FilterFocusManager.init(scene);
 
@@ -269,29 +276,37 @@ public class ErlyBerly extends Application {
         return entopPane;
     }
 
-    private void displayConnectionPopup(Stage primaryStage) {
-        Stage connectStage;
+    public static void displayConnectionPopup() {
+        Scene scene = new Scene(new ConnectionView());
 
+        // close the app when escape is pressed on the connection window
+        scene.setOnKeyPressed((e) -> {
+            if(e.getCode() == KeyCode.ESCAPE) {
+               Stage aStage = (Stage) scene.getWindow();
+               aStage.close();
+               primaryStage.close();
+            }
+        });
+        applyCssToWIndow(scene);
+
+        Stage connectStage;
         connectStage = new Stage();
         connectStage.initModality(Modality.WINDOW_MODAL);
-        connectStage.setScene(new Scene(new FxmlLoadable("/erlyberly/connection.fxml").load()));
+        connectStage.setScene(scene);
         connectStage.setAlwaysOnTop(true);
 
         // javafx vertical resizing is laughably ugly, lets just disallow it
-        connectStage.setResizable(false);
-        connectStage.setWidth(400);
-
+        //connectStage.setResizable(false);
+        connectStage.setWidth(800d);
+        connectStage.setHeight(400d);
+        connectStage.setTitle("Connect to Remote Node");
         // if the user closes the window without connecting then close the app
-        connectStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                if(!NODE_API.connectedProperty().get()) {
-                    Platform.exit();
-                }
-
-                Platform.runLater(() -> { primaryStage.setResizable(true); });
-            }});
-
+        connectStage.setOnCloseRequest((e) -> {
+            if(!NODE_API.connectedProperty().get()) {
+                Platform.exit();
+            }
+            Platform.runLater(() -> { primaryStage.setResizable(true); });
+        });
         connectStage.show();
     }
 
@@ -376,5 +391,18 @@ public class ErlyBerly extends Application {
     private double configuredProcessesWidth() {
         double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
         return w;
+    }
+
+    private static void startEpmd() {
+        try {
+            Process epmd = Runtime.getRuntime().exec("epmd -daemon");
+            int exitV = epmd.waitFor();
+            if (exitV != 0) {
+                System.err.println(
+                        "Epmd process finished with exit value: " + exitV);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to start epmd: " + e);
+        }
     }
 }

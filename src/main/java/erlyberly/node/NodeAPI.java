@@ -75,6 +75,10 @@ import javafx.collections.ObservableList;
 
 public class NodeAPI {
 
+    private static final OtpErlangAtom TRY_LOAD_MODULE_ATOM = atom("try_load_module");
+
+    private static final OtpErlangAtom ERROR_ATOM = atom("error");
+
     private static final OtpErlangAtom ERLYBERLY_TRACE_OVERLOAD_ATOM = atom("erlyberly_trace_overload");
 
     private static final String ERLYBERLY = "erlyberly";
@@ -128,6 +132,9 @@ public class NodeAPI {
     private boolean manuallyDisconnected = false;
 
     private final TraceList traceList;
+
+    private final RecordManager recordManager = new RecordManager();
+
     /**
      * When tracing is paused, NodeAPI will stop all traces. When tracing is un-suspended
      * the DbgController must reapply all the traces.
@@ -784,16 +791,15 @@ public class NodeAPI {
      * to the code module will see the loaded module and send a message to erlyberly,
      * which will display it in the tree of modules.
      */
-    public void loadModule(OtpErlangAtom moduleNameAtom) throws OtpErlangException, IOException {
+    public void tryLoadModule(String moduleNameAtom) throws OtpErlangException, IOException {
         assert moduleNameAtom != null : "module name string is null";
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         // if we already know about this module then there is no to load it again
         if(knownModules.contains(moduleNameAtom))
             return;
         OtpErlangObject result = nodeRPC()
-                .blockingRPC(atom("code"), atom("ensure_loaded"), list(moduleNameAtom));
-        assert isTupleTagged(atom("module"), result) || isTupleTagged(atom("error"), result) : result;
-        knownModules.add(moduleNameAtom);
+            .blockingRPC(ERLYBERLY_ATOM, TRY_LOAD_MODULE_ATOM, list(atom(moduleNameAtom)));
+        assert isTupleTagged(MODULE_ATOM, result) || isTupleTagged(ERROR_ATOM, result) : result;
     }
 
     public OtpErlangList stak(OtpErlangBinary stackTraceBinary) throws OtpErlangException, IOException {
@@ -802,6 +808,28 @@ public class NodeAPI {
                 .blockingRPC(atom("erlyberly"), atom("stak"), list(stackTraceBinary));
         assert result instanceof OtpErlangList : result;
         return (OtpErlangList) result;
+    }
+
+
+    public void loadModuleRecords(OtpErlangAtom moduleName) throws OtpErlangException, IOException {
+        if(recordManager.isModuleManaged(moduleName))
+            return;
+        OtpErlangObject result = nodeRPC()
+                .blockingRPC(ERLYBERLY_ATOM, atom("load_module_records"), list(moduleName));
+        assert isTupleTagged(OK_ATOM, result) : result;
+        OtpErlangTuple resultTuple = (OtpErlangTuple) result;
+        OtpErlangList records = (OtpErlangList) resultTuple.elementAt(1);
+        for (OtpErlangObject obj : records) {
+            OtpErlangTuple record = (OtpErlangTuple) obj;
+            OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(0);
+            OtpErlangList fieldNameAtoms = (OtpErlangList) record.elementAt(1);
+            ArrayList<String> recordNames = new ArrayList<>();
+            for (OtpErlangObject nameObj : fieldNameAtoms) {
+                OtpErlangAtom nameAtom = (OtpErlangAtom) nameObj;
+                recordNames.add(nameAtom.atomValue());
+            }
+            recordManager.put(new RecordManager.RecordKey(moduleName, recordName), recordNames);
+        }
     }
 
     public RpcCallback<TraceLog> getTraceLogCallback() {
@@ -860,5 +888,9 @@ public class NodeAPI {
      */
     public void addTraceListener(InvalidationListener listener) {
         traceList.addListener(listener);
+    }
+
+    public RecordManager getRecordManager() {
+        return recordManager;
     }
 }
