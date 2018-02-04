@@ -198,14 +198,9 @@ stop_traces() ->
     %% FIXME do a receive to make sure that the call was successful
     erlyberly_tcollector ! stop_traces,
     ok.
+
 %%
-when_process_is_unregistered(ProcName, Fn) ->
-    case whereis(ProcName) of
-        undefined -> Fn();
-        _         -> ok
-    end.
-%%
-ensure_dbg_started({Eb_Node, Eb_pid}, Port, Max_queue_len) when is_integer(Port),
+ensure_dbg_started({Eb_Node, _Eb_pid}, Port, Max_queue_len) when is_integer(Port),
                                                                 is_integer(Max_queue_len) ->
     ok = dbg:stop(),
     {ok,_} = dbg:start(),
