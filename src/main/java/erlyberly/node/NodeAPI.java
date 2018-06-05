@@ -639,7 +639,7 @@ public class NodeAPI {
 
     public synchronized OtpErlangObject getProcessState(String pidString) throws IOException, OtpErlangException {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
-        OtpErlangObject result = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("seq_trace"), list(pidString));
+        OtpErlangObject result = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("get_process_state"), list(pidString));
         if(isTupleTagged(OK_ATOM, result)) {
             return ((OtpErlangTuple)result).elementAt(1);
         }
