@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
@@ -153,6 +154,22 @@ public class OtpUtilTest  {
         Assert.assertEquals(
                 "('hello, #B(\"x\").'world)",
                 new LFEFormatter().toString(improper));
+    }
+
+    @Test
+    public void bitstringErlang() throws OtpErlangException {
+        OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
+        Assert.assertEquals(
+                "<<42, 156, 3:3>>",
+                new ErlangFormatter().toString(bitstr));
+    }
+
+    @Test
+    public void bitstringLFE() throws OtpErlangException {
+        OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
+        Assert.assertEquals(
+                "#B(42 156 (3 (size 3)))",
+                new LFEFormatter().toString(bitstr));
     }
 
 	private String bin() {

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
@@ -36,6 +37,11 @@ public class ErlangFormatter implements TermFormatter {
         if(obj instanceof OtpErlangBinary) {
             sb.append("<<");
             Formatting.binaryToString((OtpErlangBinary) obj, ", ", sb);
+            sb.append(">>");
+        }
+        else if(obj instanceof OtpErlangBitstr) {
+            sb.append("<<");
+            Formatting.bitstringToString((OtpErlangBitstr) obj, ", ", "%d:%d", sb);
             sb.append(">>");
         }
         else if(obj instanceof OtpErlangPid) {

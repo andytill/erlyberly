@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
@@ -79,6 +80,11 @@ public class LFEFormatter implements TermFormatter {
 
             sb.append("#B(");
             Formatting.binaryToString((OtpErlangBinary) obj, " ", sb);
+            sb.append(")");
+        }
+        else if(obj instanceof OtpErlangBitstr) {
+            sb.append("#B(");
+            Formatting.bitstringToString((OtpErlangBitstr) obj, " ", "(%d (size %d))", sb);
             sb.append(")");
         }
         else if(OtpUtil.isErlyberlyRecordField(obj)) {

@@ -18,6 +18,7 @@
 package erlyberly.format;
 
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangString;
 
 /**
@@ -103,6 +104,18 @@ class Formatting {
         if(inString) {
             sb.append("\"");
         }
+    }
+
+    public static void bitstringToString(OtpErlangBitstr bits, String sep,
+                                         String bitsFormat, StringBuilder sb) {
+        byte[] binValue = bits.binaryValue();
+        for (int i=0; i < bits.size(); i++) {
+            int b = binValue[i]>=0 ? binValue[i] : binValue[i]+256;
+            sb.append(String.format("%d%s", b, sep));
+        }
+        int b = binValue[bits.size()];
+        b = (b>=0 ? b : b+256) >> bits.pad_bits();
+        sb.append(String.format(bitsFormat, b, 8-bits.pad_bits()));
     }
 
     private static boolean isDisplayableChar(int b) {
