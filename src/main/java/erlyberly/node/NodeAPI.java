@@ -93,7 +93,13 @@ public class NodeAPI {
 
     private static final OtpErlangAtom MODULE_ATOM = new OtpErlangAtom("module");
 
+    private static final String ERLYBERLY_ERL_PATH = "/erlyberly/beam/erlyberly.erl";
+
     private static final String ERLYBERLY_BEAM_PATH = "/erlyberly/beam/erlyberly.beam";
+
+    private static final String ERLYBERLY_REMOTE_ERL_PATH = "/tmp/erlyberly.erl";
+
+    private static final int ERL_SIZE_LIMIT = 1024 * 50;
 
     private static final int BEAM_SIZE_LIMIT = 1024 * 50;
 
@@ -422,12 +428,32 @@ public class NodeAPI {
             OtpErlangObject e0 = ((OtpErlangTuple) result).elementAt(0);
 
             if(!MODULE_ATOM.equals(e0)) {
-                throw new RuntimeException("error loading the erlyberly module, result was " + result);
+                compileAndLoadRemoteErlyberly();
             }
         }
         else {
-            throw new RuntimeException("error loading the erlyberly module, result was " + result);
+            compileAndLoadRemoteErlyberly();
         }
+    }
+
+    private void compileAndLoadRemoteErlyberly() throws IOException, OtpErlangException {
+        OtpErlangString tmpFileName = new OtpErlangString(ERLYBERLY_REMOTE_ERL_PATH);
+        OtpErlangBinary erlBin = new OtpErlangBinary(loadErlFile());
+        OtpErlangObject result = nodeRPC().blockingRPC(atom("file"), atom("write_file"),
+                                                       list(tmpFileName, erlBin));
+        if (!(atom("ok").equals(result))) {
+            loadErlyberlyError(result);
+        }
+        String remotePathNoErl = ERLYBERLY_REMOTE_ERL_PATH.replaceFirst(".erl$","");
+        result = nodeRPC().blockingRPC(atom("compile"), atom("file"), list(remotePathNoErl, list()));
+        if (!(tuple(atom("ok"), ERLYBERLY_ATOM).equals(result))) {
+            loadErlyberlyError(result);
+        }
+        nodeRPC().blockingRPC(atom("file"), atom("delete"), list(ERLYBERLY_REMOTE_ERL_PATH));
+    }
+
+    private void loadErlyberlyError(OtpErlangObject result) {
+        throw new RuntimeException("error loading the erlyberly module, result was " + result);
     }
 
     private void unloadRemoteErlyberly() throws IOException, OtpErlangException {
@@ -449,19 +475,27 @@ public class NodeAPI {
     }
 
     private static byte[] loadBeamFile() throws IOException {
-        InputStream resourceAsStream = OtpUtil.class.getResourceAsStream(ERLYBERLY_BEAM_PATH);
+        return loadFile(ERLYBERLY_BEAM_PATH, BEAM_SIZE_LIMIT);
+    }
 
-        byte[] b = new byte[BEAM_SIZE_LIMIT];
+    private static byte[] loadErlFile() throws IOException {
+        return loadFile(ERLYBERLY_ERL_PATH, ERL_SIZE_LIMIT);
+    }
+
+    private static byte[] loadFile(String resourcePath, int maxSize) throws IOException {
+        InputStream resourceAsStream = OtpUtil.class.getResourceAsStream(resourcePath);
+
+        byte[] b = new byte[maxSize];
         int total = 0;
         int read = 0;
 
         do {
             total += read;
-            read = resourceAsStream.read(b, total, BEAM_SIZE_LIMIT - total);
+            read = resourceAsStream.read(b, total, maxSize - total);
         } while (read != -1);
 
-        if(total >= BEAM_SIZE_LIMIT) {
-            throw new RuntimeException("erlyberly.beam file is too big");
+        if(total >= maxSize) {
+            throw new RuntimeException(resourcePath.replaceAll("[^/]*/","") + " file is too big");
         }
 
         return Arrays.copyOf(b, total);
