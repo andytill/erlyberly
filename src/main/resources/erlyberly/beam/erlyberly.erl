@@ -161,9 +161,16 @@ record_fields([]) ->
     [].
 
 load_module_forms(Mod) ->
-    File = code:which(Mod),
-    {ok,{_Mod,[{abstract_code,{_Version,Forms}},{"CInf",_CB}]}} = beam_lib:chunks(File, [abstract_code,"CInf"]),
-    {ok, Forms}.
+    BeamPath = code:which(Mod),
+    case beam_lib:chunks(BeamPath, [abstract_code]) of
+        {ok,{_Mod,[{abstract_code,{_Version,Forms}}]}} ->
+            {ok, Forms};
+        Error -> %% no beam file or no abstract code, try source
+            case [ Src || {source, Src} <- Mod:module_info(compile) ] of
+                [SrcPath] -> epp:parse_file(SrcPath, []);
+                [] -> Error
+            end
+    end.
 
 %% get the records for a module.
 %%
