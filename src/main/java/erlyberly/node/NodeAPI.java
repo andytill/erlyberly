@@ -445,8 +445,13 @@ public class NodeAPI {
             loadErlyberlyError(result);
         }
         String remotePathNoErl = ERLYBERLY_REMOTE_ERL_PATH.replaceFirst(".erl$","");
-        result = nodeRPC().blockingRPC(atom("compile"), atom("file"), list(remotePathNoErl, list()));
-        if (!(tuple(atom("ok"), ERLYBERLY_ATOM).equals(result))) {
+        result = nodeRPC().blockingRPC(atom("compile"), atom("file"), list(remotePathNoErl, list(atom("binary"))));
+        if (!(result instanceof OtpErlangTuple && atom("ok").equals(((OtpErlangTuple)result).elementAt(0)))) {
+            loadErlyberlyError(result);
+        }
+        OtpErlangBinary beamBin = (OtpErlangBinary) ((OtpErlangTuple)result).elementAt(2);
+        result = nodeRPC().blockingRPC(atom("code"), atom("load_binary"), list(ERLYBERLY_ATOM, ERLYBERLY_ATOM, beamBin));
+        if (!tuple(atom("module"), ERLYBERLY_ATOM).equals(result)) {
             loadErlyberlyError(result);
         }
         nodeRPC().blockingRPC(atom("file"), atom("delete"), list(ERLYBERLY_REMOTE_ERL_PATH));
