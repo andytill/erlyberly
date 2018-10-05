@@ -166,8 +166,19 @@ load_module_forms(Mod) ->
         {ok,{_Mod,[{abstract_code,{_Version,Forms}}]}} ->
             {ok, Forms};
         Error -> %% no beam file or no abstract code, try source
-            case [ Src || {source, Src} <- Mod:module_info(compile) ] of
-                [SrcPath] -> epp:parse_file(SrcPath, []);
+            CompileInfo = Mod:module_info(compile),
+            case [ Src || {source, Src} <- CompileInfo ] of
+                [SrcPath] ->
+                    Opts = [ {includes, IPath}
+                             || {options, COpts} <- CompileInfo,
+                                {i, IPath} <- COpts ] ++
+                           [ {macros, Macro}
+                             || {options, COpts} <- CompileInfo,
+                                {d, Macro} <- COpts ] ++
+                           [ {macros, Macro, Value}
+                             || {options, COpts} <- CompileInfo,
+                                {d, Macro, Value} <- COpts ],
+                    epp:parse_file(SrcPath, Opts);
                 [] -> Error
             end
     end.
