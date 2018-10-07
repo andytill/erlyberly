@@ -104,7 +104,7 @@ public class PrefBind {
             //props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
             new TomlWriter().write(props, new FileOutputStream(erlyberlyConfig));
         }
-        catch (IOException e) {
+        catch (IOException | NoClassDefFoundError e) {
             e.printStackTrace();
         }
     }
