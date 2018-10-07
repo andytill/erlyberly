@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangBinary;
+import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
@@ -64,6 +65,11 @@ public class ElixirFormatter implements TermFormatter {
                 Formatting.binaryToString(bin, ", ", sb);
                 sb.append(">>");
             }
+        }
+        else if(obj instanceof OtpErlangBitstr) {
+            sb.append("<<");
+            Formatting.bitstringToString((OtpErlangBitstr) obj, ", ", "%d::size(%d)", sb);
+            sb.append(">>");
         }
         else if(obj instanceof OtpErlangPid) {
             sb.append(pidToString((OtpErlangPid) obj));
