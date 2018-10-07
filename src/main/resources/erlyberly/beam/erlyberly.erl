@@ -169,16 +169,13 @@ load_module_forms(Mod) ->
             CompileInfo = Mod:module_info(compile),
             case [ Src || {source, Src} <- CompileInfo ] of
                 [SrcPath] ->
-                    Opts = [ {includes, IPath}
-                             || {options, COpts} <- CompileInfo,
-                                {i, IPath} <- COpts ] ++
-                           [ {macros, Macro}
-                             || {options, COpts} <- CompileInfo,
-                                {d, Macro} <- COpts ] ++
-                           [ {macros, Macro, Value}
-                             || {options, COpts} <- CompileInfo,
-                                {d, Macro, Value} <- COpts ],
-                    epp:parse_file(SrcPath, Opts);
+                    Includes = [IPath || {options, COpts} <- CompileInfo,
+                                          {i, IPath} <- COpts],
+                    Macros = [Macro || {options, COpts} <- CompileInfo,
+                                       {d, Macro} <- COpts] ++
+                             [{Macro, Value} || {options, COpts} <- CompileInfo,
+                                                {d, Macro, Value} <- COpts],
+                    epp:parse_file(SrcPath, Includes, Macros);
                 [] -> Error
             end
     end.
