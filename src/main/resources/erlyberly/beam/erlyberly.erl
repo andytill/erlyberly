@@ -155,6 +155,8 @@ record_fields([{record_field,_,{atom,_,Field}} | Fs]) ->
     [Field | record_fields(Fs)];
 record_fields([{record_field,_,{atom,_,Field},_} | Fs]) ->
     [Field | record_fields(Fs)];
+record_fields([{typed_record_field, {record_field,_,{atom,_,Field}}, _} | Fs]) ->
+    [Field | record_fields(Fs)];
 record_fields([{typed_record_field, {record_field,_,{atom,_,Field},_}, _} | Fs]) ->
     [Field | record_fields(Fs)];
 record_fields([]) ->
