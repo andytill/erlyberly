@@ -203,6 +203,10 @@ public class OtpUtil {
             OtpErlangString s = (OtpErlangString) obj;
             return new OtpErlangList(s.stringValue()).elements();
         }
+        else if(obj instanceof OtpErlangMap){
+            OtpErlangMap m = (OtpErlangMap) obj;
+            return new OtpErlangList(m.keys()).elements();
+        }
         else {
             throw new RuntimeException("" + obj + " cannot return OtpErlangObject[]");
         }
