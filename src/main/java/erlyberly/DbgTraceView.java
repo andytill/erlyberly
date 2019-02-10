@@ -192,8 +192,9 @@ public class DbgTraceView extends VBox {
     private void onTraceClicked(MouseEvent me) {
         if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
             TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
-
-            if(selectedItem != null && selectedItem != null) {
+            // some items may not traces, they might be node down messages for example
+            boolean isActualTrace = !"".equals(selectedItem.getArgs());
+            if(selectedItem != null && selectedItem != null && isActualTrace) {
                 showTraceTermView(selectedItem);
             }
         }
@@ -221,14 +222,15 @@ public class DbgTraceView extends VBox {
         OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
 
         if(result != null) {
-            resultTermsTreeView.populateFromTerm(moduleName, traceLog.getResultFromMap());
+            resultTermsTreeView.populateFromTerm(moduleName, result);
         }
         else {
+            // the result may be receievd while the term view is open so put a listen
+            // on the result property and show it if is set
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
                 if(newV)
                     resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
             });
-
             traceLog.isCompleteProperty().addListener(listener);
         }
 
@@ -246,9 +248,32 @@ public class DbgTraceView extends VBox {
 
         StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
-        stackTraceView.populateFromMfaList(traceLog.getStackTrace());
-        String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
-        TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
+
+        TitledPane titledPane;
+        titledPane = new TitledPane("No Stack Trace", stackTraceView);
+        if(traceLog.getStackTrace() != null) {
+            applyStackTraceOnView(traceLog, stackTraceView, titledPane);
+        }
+        else {
+            ErlyBerly.runIO(() -> {
+                OtpErlangList stackTrace;
+                try {
+                    // if the stack trace is null then send the stack trace binary that we
+                    // receive in the trace tuple to the remote node so that it can be decoded
+                    // since we don't want to rewrite that logic in java. Once we receive the
+                    // stack trace as a list we can set the binary to null so it can be gc'ed
+                    stackTrace = ErlyBerly.nodeAPI().stak(traceLog.getStackTraceBinary());
+                    Platform.runLater(() -> {
+                        traceLog.setStackTrace(stackTrace);
+                        traceLog.setStackTraceBinary(null);
+                        applyStackTraceOnView(traceLog, stackTraceView, titledPane);
+                    });
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
         titledPane.setExpanded(!stackTraceView.isStackTracesEmpty());
         splitPaneH = new SplitPane();
         splitPaneH.setOrientation(Orientation.VERTICAL);
@@ -259,6 +284,11 @@ public class DbgTraceView extends VBox {
         traceLog.appendModFuncArity(sb);
 
         ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPaneH));
+    }
+
+    private void applyStackTraceOnView(final TraceLog traceLog, StackTraceView stackTraceView, TitledPane titledPane) {
+        stackTraceView.populateFromMfaList(traceLog.getStackTrace());
+        titledPane.setText("Stack Trace (" + traceLog.getStackTrace().arity() + ")");
     }
 
     private Node labelledTreeView(String label, TermTreeView node) {

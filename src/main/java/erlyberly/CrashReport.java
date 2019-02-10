@@ -47,7 +47,7 @@ public class CrashReport {
 
     private static final OtpErlangAtom ATOM_LINE = OtpUtil.atom("line");
 
-    private final Map<Object, Object> crashProps;
+    private final Map<OtpErlangObject, OtpErlangObject> crashProps;
 
     private final String registeredName;
 
@@ -89,7 +89,7 @@ public class CrashReport {
                 OtpErlangList list = (OtpErlangList) argsOrArity;
                 arity = new OtpErlangLong(list.arity());
             }
-            Map<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
+            Map<OtpErlangObject, OtpErlangObject> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
             OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
             OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
 

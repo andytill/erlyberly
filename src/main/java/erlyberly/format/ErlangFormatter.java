@@ -94,7 +94,7 @@ public class ErlangFormatter implements TermFormatter {
     }
 
     private static String pidToString(OtpErlangPid pid) {
-        return pid.toString();
+        return "<" + pid.node().toString() + "." + pid.id() + "." + pid.serial() + ">";
     }
 
     public String bracketsForTerm(OtpErlangObject obj) {

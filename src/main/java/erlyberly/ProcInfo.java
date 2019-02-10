@@ -23,6 +23,7 @@ import java.util.Objects;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
+import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 
 import javafx.beans.property.LongProperty;
@@ -165,7 +166,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
         return reductions;
     }
 
-    public static ProcInfo toProcessInfo(Map<Object, Object> propList) {
+    public static ProcInfo toProcessInfo(Map<OtpErlangObject, OtpErlangObject> propList) {
         Object processName = propList.get(REGISTERED_NAME_ATOM);
         Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
 

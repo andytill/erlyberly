@@ -112,6 +112,8 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
     }
 
     public void populateFromMfaList(OtpErlangList stackTrace) {
+        if(stackTrace == null)
+            return;
         try {
             for (OtpErlangObject obj : stackTrace) {
                 if(obj instanceof OtpErlangString) {

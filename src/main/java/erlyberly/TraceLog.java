@@ -17,19 +17,20 @@
  */
 package erlyberly;
 
+import static erlyberly.node.OtpUtil.atom;
+
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangBinary;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
+import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import erlyberly.node.OtpUtil;
-import javafx.application.Platform;
+import erlyberly.format.TermFormatter;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -37,18 +38,15 @@ import javafx.beans.property.SimpleStringProperty;
 
 public class TraceLog implements Comparable<TraceLog> {
 
-    private static final OtpErlangAtom FN_ATOM = new OtpErlangAtom("fn");
-    public static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
+    private static final OtpErlangAtom EXCEPTION_FROM = atom("exception_from");
+    public static final OtpErlangAtom TRACE_TS = atom("trace_ts");
+    public static final OtpErlangAtom FN_ATOM = new OtpErlangAtom("fn");
     public static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
-    public static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
+    public static final OtpErlangAtom PID_ATOM = new OtpErlangAtom("pid");
     public static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
-    public static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
-    private static final Object TIMESTAMP_CALL_ATOM = new OtpErlangAtom("timetamp_call_us");
-    private static final Object TIMESTAMP_RETURN_ATOM = new OtpErlangAtom("timetamp_return_us");
+    public static final OtpErlangAtom UNDEFINED_ATOM = new OtpErlangAtom("undefined");
 
     private static final AtomicLong INSTANCE_COUNTER = new AtomicLong();
-
-    private final Map<Object, Object> map;
 
     private final long instanceNum;
 
@@ -60,41 +58,109 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final SimpleBooleanProperty complete = new SimpleBooleanProperty(false);
 
-    private String tracePropsToString;
+    private final String pidString, argsString, functionString;
 
-    private final String pid, registeredName, function, argsString;
+    private final OtpErlangPid pid;
 
     private final String cssClass;
 
-    public TraceLog(Map<Object, Object> map) {
-        this.map = map;
+    private String registeredName = "";
+
+    private OtpErlangList stacktrace;
+
+    private OtpErlangBinary stackTraceBinary;
+
+    private boolean functionThrewException;
+
+    private ModFunc modFunc;
+
+    /**
+     * The timestamp in microseconds of when the function was called.
+     */
+    private long callTime;
+
+    private OtpErlangList args;
+
+    private OtpErlangObject resultTerm;
+
+    public TraceLog(OtpErlangTuple tuple, HashMap<OtpErlangPid, OtpErlangAtom> registeredProcesses, TermFormatter formatter) {
         instanceNum = INSTANCE_COUNTER.incrementAndGet();
-        pid = getPidString();
-        registeredName = regNameString().intern();
-        function =  appendModFuncArity(new StringBuilder()).toString().intern();
-        argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
         cssClass = null;
+        // FIXME we don't know the registered name from the info we get from the file
+        //       may have to get the registered names from tracing registrations
+        //       http://erlang.org/doc/man/erlang.html#trace_3_trace_messages_register
+        // {trace_ts,<0.79.0>,call,{code,all_loaded,[]},{1502,734505,108159}}
+        OtpErlangObject messageType = tuple.elementAt(0);
+        assert TRACE_TS.equals(messageType) : messageType;
+        assert tuple.elementAt(1) instanceof OtpErlangPid : tuple.elementAt(1);
+        pid = (OtpErlangPid) tuple.elementAt(1);
+        OtpErlangAtom aRegName = registeredProcesses.get(pid);
+        if(aRegName == null) {
+            registeredName = "";
+        }
+        else {
+            registeredName = aRegName.atomValue();
+        }
+        pidString = formatter.toString(tuple.elementAt(1));
+        // we only accept trace types of `call` in the constructor
+        OtpErlangObject traceType = tuple.elementAt(2);
+        assert traceType instanceof OtpErlangAtom : traceType;
+        assert traceType.equals(atom("call")) : traceType;
+        OtpErlangObject mfaObject = tuple.elementAt(3);
+        assert mfaObject instanceof OtpErlangTuple : mfaObject;
+        OtpErlangTuple mfa = (OtpErlangTuple) mfaObject;
+        assert mfa.arity() == 3 : mfa;
+        assert mfa.elementAt(0) instanceof OtpErlangAtom : mfa;
+        assert mfa.elementAt(1) instanceof OtpErlangAtom : mfa;
+        assert mfa.elementAt(2) instanceof OtpErlangList : mfa;
+        args = (OtpErlangList) mfa.elementAt(2);
+        argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
+        int arity = args.arity();
+        modFunc = new ModFunc(
+            ((OtpErlangAtom)mfa.elementAt(0)).atomValue(),
+            ((OtpErlangAtom)mfa.elementAt(1)).atomValue(), arity, false, false);
+        // stack trace as a binary
+        assert tuple.elementAt(4) instanceof OtpErlangBinary : tuple.elementAt(4);
+        stackTraceBinary = (OtpErlangBinary) tuple.elementAt(4);
+        // the three element tuple timestamp
+        int timestampIndex = tuple.arity()-1;
+        assert tuple.elementAt(timestampIndex) instanceof OtpErlangTuple : "TRACE WAS " + tuple + " timestamp was " + formatter.toString(tuple.elementAt(timestampIndex));
+        callTime = tupleToTimestamp((OtpErlangTuple) tuple.elementAt(timestampIndex));
+        functionString = formatter.modFuncArityToString(
+            modFunc.getModuleName(), modFunc.getFuncName(), modFunc.getArity());
+    }
+
+    /**
+     * Convert the annoying erlang 3 element timestamp to microseconds.
+     */
+    private long tupleToTimestamp(OtpErlangTuple tuple) {
+        assert tuple.arity() == 3;
+        long mega, sec, micros;
+        mega = tupleElementToLong(0, tuple);
+        sec = tupleElementToLong(1, tuple);
+        micros = tupleElementToLong(2, tuple);
+        return (((mega * 1000000) + sec) * 1000000) + micros;
+    }
+
+    private long tupleElementToLong(int index, OtpErlangTuple tuple) {
+        assert index < tuple.arity() : tuple;
+        assert tuple.elementAt(index) instanceof OtpErlangLong : tuple;
+        return ((OtpErlangLong)tuple.elementAt(index)).longValue();
     }
 
     public TraceLog(String aCssClass, String text) {
-        function = text;
         instanceNum = INSTANCE_COUNTER.incrementAndGet();
-        map = new HashMap<>(0);
         cssClass = aCssClass;
-        pid = "";
+        pidString = "";
         registeredName = "";
         argsString = "";
+        pid = null;
+        // this is what shows up in the table
+        functionString = text;
     }
 
     public long getInstanceNum() {
         return instanceNum;
-    }
-
-    private String regNameString() {
-        Object object = map.get(ATOM_REG_NAME);
-        if(ATOM_UNDEFINED.equals(object))
-            return "";
-        return object.toString();
     }
 
     public SimpleStringProperty summaryProperty() {
@@ -104,14 +170,7 @@ public class TraceLog implements Comparable<TraceLog> {
         return summary;
     }
 
-    @Override
-    public String toString() {
-        if(tracePropsToString == null)
-            tracePropsToString = tracePropsToString();
-        return tracePropsToString;
-    }
-
-    private String tracePropsToString() {
+/*    private String tracePropsToString() {
         StringBuilder sb = new StringBuilder(1024);
 
         boolean appendArity = false;
@@ -129,64 +188,30 @@ public class TraceLog implements Comparable<TraceLog> {
             );
         }
         return sb.toString();
-    }
+    }*/
 
     private StringBuilder toCallString(StringBuilder sb, boolean appendArity) {
-        OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
-
-        if(regName != null && !ATOM_UNDEFINED.equals(regName)) {
-            sb.append(regName.atomValue());
+        if(!"".equals(registeredName)) {
+            sb.append(registeredName);
         }
         else {
-            OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-            if(pidString == null)
-                sb.append("<NULL PID>");
-            else
-                sb.append(pidString.stringValue());
+            sb.append(pidString);
         }
         sb.append(" ");
 
-        sb.append("+").append(durationFromMap()).append("us");
+        sb.append("+").append(duration).append("us");
 
         appendModFuncArity(sb);
 
         return sb;
     }
 
-    private long durationFromMap() {
-        Object tsCall = map.get(TIMESTAMP_CALL_ATOM);
-        Object tsReturn = map.get(TIMESTAMP_RETURN_ATOM);
-
-        if(tsCall == null|| tsReturn == null)
-            return 0;
-
-        return ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
-    }
-
-    /**
-     * Returns an MFA.
-     */
-    private OtpErlangTuple getFunctionFromMap() {
-        return (OtpErlangTuple)map.get(FN_ATOM);
-    }
-
     public boolean isExceptionThrower() {
-        return map.containsKey(EXCEPTION_FROM_ATOM);
-    }
-
-    public StringBuilder appendFunctionToString(StringBuilder sb) {
-        OtpErlangTuple tuple = getFunctionFromMap();
-
-        return sb.append(ErlyBerly.getTermFormatter().modFuncArgsToString(tuple));
+        return functionThrewException;
     }
 
     public StringBuilder appendModFuncArity(StringBuilder sb) {
-        OtpErlangTuple fn = getFunctionFromMap();
-        // there might be no function if this TraceLog is acting as a NODE DOWN
-        if(fn == null) {
-            return sb;
-        }
-        return sb.append(ErlyBerly.getTermFormatter().modFuncArityToString(fn));
+        return sb.append(functionString);
     }
 
     private StringBuilder appendArgsToString(StringBuilder sb, OtpErlangObject[] elements) {
@@ -201,29 +226,11 @@ public class TraceLog implements Comparable<TraceLog> {
     }
 
     public OtpErlangList getArgsList() {
-        OtpErlangTuple tuple = getFunctionFromMap();
-        OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2));
         return args;
     }
 
-    public String getPidString() {
-        OtpErlangString s = (OtpErlangString)map.get(ATOM_PID);
-        if(s == null)
-            return "";
-        else
-            return s.stringValue();
-    }
-
     public OtpErlangObject getResultFromMap() {
-        Object object = map.get(RESULT_ATOM);
-        if(object == null) {
-            OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
-
-            if(exception != null) {
-                return exception.elementAt(1);
-            }
-        }
-        return (OtpErlangObject) object;
+        return resultTerm;
     }
 
     @Override
@@ -231,29 +238,24 @@ public class TraceLog implements Comparable<TraceLog> {
         return Long.compare(instanceNum, o.instanceNum);
     }
 
-    public void complete(Map<Object, Object> resultMap) {
-        tracePropsToString = null;
-        Object e = resultMap.get(EXCEPTION_FROM_ATOM);
-        Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
-        Object r = resultMap.get(RESULT_ATOM);
-        if(e != null) {
-            map.put(EXCEPTION_FROM_ATOM, e);
-            if(r == null) {
-                r = e;
-            }
-        }
-
-        if(r != null) {
-            map.put(RESULT_ATOM, r);
-            String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
-            result.set(resultString);
-        }
-        if(ts != null)
-            map.put(TIMESTAMP_RETURN_ATOM, ts);
-
-        duration.set(durationFromMap());
-
-        Platform.runLater(() -> { summary.set(toString()); complete.set(true); });
+    /**
+     * Called when we get a return_from trace which completes t
+     */
+    public void complete(OtpErlangTuple tuple, TermFormatter formatter) {
+        assert TRACE_TS.equals(tuple.elementAt(0));
+        assert tuple.elementAt(1) instanceof OtpErlangPid : tuple;
+        assert pid.equals(tuple.elementAt(1)) : tuple;
+        assert tuple.elementAt(2) instanceof OtpErlangAtom : tuple;
+        OtpErlangAtom traceType = (OtpErlangAtom) tuple.elementAt(2);
+        assert atom("return_from").equals(traceType) || EXCEPTION_FROM.equals(traceType) : tuple;
+        functionThrewException = EXCEPTION_FROM.equals(traceType);
+        // index 3 is the mfa which we already have from the call trace message
+        resultTerm = tuple.elementAt(4);
+        result.set(formatter.toString(resultTerm));
+        OtpErlangTuple tsTuple = (OtpErlangTuple) tuple.elementAt(5);
+        long returnTs = tupleToTimestamp(tsTuple);
+        duration.set(returnTs - callTime);
+        complete.set(true);
     }
 
     public ReadOnlyBooleanProperty isCompleteProperty() {
@@ -273,7 +275,7 @@ public class TraceLog implements Comparable<TraceLog> {
         return toCallString(sb, appendArity).toString();
     }
 
-    public String getPid() {
+    public OtpErlangPid getPid() {
         return pid;
     }
 
@@ -287,10 +289,6 @@ public class TraceLog implements Comparable<TraceLog> {
 
     public SimpleLongProperty durationProperty() {
         return duration;
-    }
-
-    public String getFunction() {
-        return function;
     }
 
     public String getArgs() {
@@ -322,17 +320,30 @@ public class TraceLog implements Comparable<TraceLog> {
     }
 
     public OtpErlangList getStackTrace() {
-        OtpErlangList stacktrace = (OtpErlangList) map.get(OtpUtil.atom("stack_trace"));
-        if(stacktrace == null)
-            stacktrace = new OtpErlangList();
         return stacktrace;
     }
 
+    public void setStackTrace(OtpErlangList stacktrace) {
+        this.stacktrace = stacktrace;
+    }
+
     public ModFunc getModFunc() {
-        OtpErlangTuple mfa = getFunctionFromMap();
-        OtpErlangAtom module = (OtpErlangAtom) mfa.elementAt(0);
-        OtpErlangAtom function = (OtpErlangAtom) mfa.elementAt(1);
-        int arity = ((OtpErlangList) mfa.elementAt(2)).arity();
-        return new ModFunc(module.atomValue(), function.atomValue(), arity, false, false);
+        return modFunc;
+    }
+
+    public String getPidString() {
+        return pidString;
+    }
+
+    public String getFunction() {
+        return functionString;
+    }
+
+    public OtpErlangBinary getStackTraceBinary() {
+        return stackTraceBinary;
+    }
+
+    public void setStackTraceBinary(OtpErlangBinary stackTraceBinary) {
+        this.stackTraceBinary = stackTraceBinary;
     }
 }
