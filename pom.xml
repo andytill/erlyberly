@@ -30,6 +30,35 @@
   </properties>
 
   <dependencies>
+     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx</artifactId>
+      <version>16-ea+1</version>
+      <type>pom</type>
+    </dependency>
+     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <version>16-ea+1</version>
+      <type>pom</type>
+    </dependency>
+     <dependency> <groupId>org.openjfx</groupId> <artifactId>javafx-graphics</artifactId> <version>16-ea+1</version> <type>pom</type> </dependency>
+     <dependency> <groupId>org.openjfx</groupId> <artifactId>javafx-controls</artifactId> <version>16-ea+1</version> <type>pom</type> </dependency>
+     <dependency> <groupId>org.openjfx</groupId> <artifactId>javafx-fxml</artifactId> <version>16-ea+1</version> <type>pom</type> </dependency>
+     <dependency> <groupId>org.openjfx</groupId> <artifactId>javafx-media</artifactId> <version>16-ea+1</version> <type>pom</type> </dependency>
+     <dependency> <groupId>org.openjfx</groupId> <artifactId>javafx-media</artifactId> <version>16-ea+1</version> <type>pom</type> </dependency>
+     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-maven-archetypes</artifactId>
+      <version>0.0.5</version>
+      <type>pom</type>
+    </dependency>
+     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-archetype-fxml</artifactId>
+      <version>0.0.5</version>
+      <type>pom</type>
+    </dependency>
     <dependency>
       <groupId>com.github.andytill</groupId>
       <artifactId>jinterface</artifactId>
@@ -76,6 +105,15 @@
           </archive>
         </configuration>
       </plugin>     
+
+      <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.4</version>
+        <configuration>
+              <mainClass>erlyberly.ErlyBerly</mainClass>
+        </configuration>
+      </plugin>
   
       <plugin>
        <groupId>org.apache.maven.plugins</groupId>
