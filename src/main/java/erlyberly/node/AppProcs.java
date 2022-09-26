@@ -24,16 +24,17 @@ public class AppProcs {
 
     private final LocalDateTime dateTime;
 
-    public AppProcs(int theProcCount, LocalDateTime theDateTime) {
-        procCount = theProcCount;
-        dateTime = theDateTime;
+    AppProcs(final int theProcCount, final LocalDateTime theDateTime) {
+        super();
+        this.procCount = theProcCount;
+        this.dateTime = theDateTime;
     }
 
     public int getProcCount() {
-        return procCount;
+        return this.procCount;
     }
 
     public LocalDateTime getDateTime() {
-        return dateTime;
+        return this.dateTime;
     }
 }

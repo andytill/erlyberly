@@ -31,11 +31,11 @@ public interface TermFormatter {
 
     String modFuncArityToString(OtpErlangTuple mfa);
 
-    default String modFuncArityToString(String mod, String func, int arity) {
+    default String modFuncArityToString(final String mod, final String func, final int arity) {
         return mod + ":" + func + "/" + arity;
     }
 
-    default String moduleNameToString(String modName) {
+    default String moduleNameToString(final String modName) {
         return modName;
     }
 
@@ -43,12 +43,12 @@ public interface TermFormatter {
 
     StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb);
 
-    default String toString(OtpErlangObject obj) {
-        return appendToString(obj, new StringBuilder()).toString();
+    default String toString(final OtpErlangObject obj) {
+        return this.appendToString(obj, new StringBuilder()).toString();
     }
 
-    default String mapKeyToString(OtpErlangObject obj) {
-        return toString(obj) + " => ";
+    default String mapKeyToString(final OtpErlangObject obj) {
+        return this.toString(obj) + " => ";
     }
 
     String emptyTupleString();

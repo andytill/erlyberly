@@ -21,11 +21,12 @@ import com.ericsson.otp.erlang.*;
 import erlyberly.node.OtpUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ErlangFormatter implements TermFormatter {
 
     @Override
-    public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
+    public StringBuilder appendToString(final OtpErlangObject obj, final StringBuilder sb) {
         if (obj instanceof OtpErlangBinary) {
             sb.append("<<");
             Formatting.binaryToString((OtpErlangBinary) obj, ", ", sb);
@@ -37,36 +38,36 @@ public class ErlangFormatter implements TermFormatter {
         } else if (obj instanceof OtpErlangPid) {
             sb.append(pidToString((OtpErlangPid) obj));
         } else if (OtpUtil.isErlyberlyRecord(obj)) {
-            OtpErlangTuple record = (OtpErlangTuple) obj;
-            OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(1);
-            OtpErlangList fields = (OtpErlangList) record.elementAt(2);
+            final OtpErlangTuple record = (OtpErlangTuple) obj;
+            final OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(1);
+            final OtpErlangList fields = (OtpErlangList) record.elementAt(2);
             sb.append("{").append(recordName).append(", ");
             for (int i = 0; i < fields.arity(); i++) {
-                if (i != 0) {
+                if (0 != i) {
                     sb.append(", ");
                 }
-                appendToString(fields.elementAt(i), sb);
+                this.appendToString(fields.elementAt(i), sb);
             }
             sb.append("}");
         } else if (OtpUtil.isErlyberlyRecordField(obj)) {
-            OtpErlangObject fieldObj = ((OtpErlangTuple) obj).elementAt(2);
-            appendToString(fieldObj, sb);
+            final OtpErlangObject fieldObj = ((OtpErlangTuple) obj).elementAt(2);
+            this.appendToString(fieldObj, sb);
         } else if (obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
-            String brackets = bracketsForTerm(obj);
-            OtpErlangObject[] elements = OtpUtil.elementsForTerm(obj);
+            final String brackets = ErlangFormatter.bracketsForTerm(obj);
+            final OtpErlangObject[] elements = OtpUtil.elementsForTerm(obj);
 
             sb.append(brackets.charAt(0));
 
             for (int i = 0; i < elements.length; i++) {
-                if (i != 0) {
+                if (0 != i) {
                     sb.append(", ");
                 }
-                appendToString(elements[i], sb);
+                this.appendToString(elements[i], sb);
             }
 
             if (obj instanceof OtpErlangList && !((OtpErlangList) obj).isProper()) {
-                sb.append(cons());
-                appendToString(((OtpErlangList) obj).getLastTail(), sb);
+                sb.append(this.cons());
+                this.appendToString(((OtpErlangList) obj).getLastTail(), sb);
             }
 
             sb.append(brackets.charAt(1));
@@ -78,12 +79,12 @@ public class ErlangFormatter implements TermFormatter {
         return sb;
     }
 
-    private static String pidToString(OtpErlangPid pid) {
+    private static String pidToString(final OtpErlangPid pid) {
         return pid.toString();
     }
 
-    public String bracketsForTerm(OtpErlangObject obj) {
-        assert obj != null;
+    private static String bracketsForTerm(final OtpErlangObject obj) {
+        assert null != obj;
 
         if (obj instanceof OtpErlangTuple)
             return "{}";
@@ -95,44 +96,44 @@ public class ErlangFormatter implements TermFormatter {
 
     /**
      * Convert an MFA tuple to a string, where the MFA must have the type:
-     *
+     * <p>
      * {Module::atom(), Function::atom(), Args::[any()]}.
      */
     @Override
-    public String modFuncArgsToString(OtpErlangTuple mfa) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
+    public String modFuncArgsToString(final OtpErlangTuple mfa) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
                 .append(":")
-                .append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+                .append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
                 .append("(");
-        OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
-        ArrayList<String> stringArgs = new ArrayList<>();
-        for (OtpErlangObject arg : args) {
-            stringArgs.add(toString(arg));
+        final OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
+        final List<String> stringArgs = new ArrayList<>();
+        for (final OtpErlangObject arg : args) {
+            stringArgs.add(this.toString(arg));
         }
         sb.append(String.join(", ", stringArgs));
         sb.append(")");
         return sb.toString();
     }
 
-    private String atomToStringNoQuotes(OtpErlangAtom atom) {
+    private static String atomToStringNoQuotes(final OtpErlangAtom atom) {
         return atom.atomValue();
     }
 
     @Override
-    public String modFuncArityToString(OtpErlangTuple mfa) {
-        StringBuilder sb = new StringBuilder();
-        OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
-        sb.append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
+    public String modFuncArityToString(final OtpErlangTuple mfa) {
+        final StringBuilder sb = new StringBuilder();
+        final OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
+        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
                 .append(":")
-                .append(atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+                .append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
                 .append("/").append(argsList.arity());
         return sb.toString();
     }
 
     @Override
-    public String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason) {
-        return errorClass + ":" + toString(errorReason);
+    public String exceptionToString(final OtpErlangAtom errorClass, final OtpErlangObject errorReason) {
+        return errorClass + ":" + this.toString(errorReason);
     }
 
     @Override
@@ -166,12 +167,12 @@ public class ErlangFormatter implements TermFormatter {
     }
 
     @Override
-    public String mapLeft(OtpErlangObject obj) {
+    public String mapLeft(final OtpErlangObject obj) {
         return "#{";
     }
 
     @Override
-    public Boolean isHiddenField(OtpErlangObject key) {
+    public Boolean isHiddenField(final OtpErlangObject key) {
         return false;
     }
 

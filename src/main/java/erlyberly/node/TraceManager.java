@@ -22,7 +22,7 @@ import erlyberly.TraceLog;
 
 import java.util.*;
 
-public class TraceManager {
+class TraceManager {
 
     private static final OtpErlangAtom RETURN_FROM_ATOM = new OtpErlangAtom("return_from");
 
@@ -30,73 +30,71 @@ public class TraceManager {
 
     private static final OtpErlangAtom CALL_ATOM = new OtpErlangAtom("call");
 
-    private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<String, Stack<TraceLog>>();
+    private final HashMap<String, Stack<TraceLog>> unfinishedCalls = new HashMap<>();
 
 
-    public List<TraceLog> collateTraces(OtpErlangList traceLogs) {
-        final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
+    List<TraceLog> collateTraces(final OtpErlangList traceLogs) {
+        final List<TraceLog> traceList = new ArrayList<>();
 
-        for (OtpErlangObject obj : traceLogs) {
-            decodeTraceLog(obj, traceList);
+        for (final OtpErlangObject obj : traceLogs) {
+            this.decodeTraceLog(obj, traceList);
         }
 
         return traceList;
     }
 
-    public List<TraceLog> collateTraceSingle(OtpErlangTuple traceLog) {
-        final ArrayList<TraceLog> traceList = new ArrayList<TraceLog>();
-        decodeTraceLog(traceLog, traceList);
+    List<TraceLog> collateTraceSingle(final OtpErlangTuple traceLog) {
+        final List<TraceLog> traceList = new ArrayList<>();
+        this.decodeTraceLog(traceLog, traceList);
         return traceList;
     }
 
-    private void decodeTraceLog(OtpErlangObject otpErlangObject, ArrayList<TraceLog> traceList) {
-        OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
-        OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
+    private void decodeTraceLog(final OtpErlangObject otpErlangObject, final List<TraceLog> traceList) {
+        final OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
+        final OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
 
         if (CALL_ATOM.equals(traceType)) {
-            TraceLog trace = proplistToTraceLog(tup);
+            final TraceLog trace = TraceManager.proplistToTraceLog(tup);
 
-            Stack<TraceLog> stack = unfinishedCalls.get(trace.getPidString());
+            Stack<TraceLog> stack = this.unfinishedCalls.get(trace.getPidString());
 
-            if (stack == null)
-                stack = new Stack<TraceLog>();
+            if (null == stack)
+                stack = new Stack<>();
 
             stack.add(trace);
 
-            unfinishedCalls.put(trace.getPidString(), stack);
+            this.unfinishedCalls.put(trace.getPidString(), stack);
 
             traceList.add(trace);
         } else if (RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
-            Map<Object, Object> map = propsFromTrace(tup);
+            final Map<Object, Object> map = TraceManager.propsFromTrace(tup);
 
-            Object object = map.get(TraceLog.ATOM_PID);
+            final Object object = map.get(TraceLog.ATOM_PID);
 
-            if (object != null) {
-                OtpErlangString pidString = (OtpErlangString) object;
+            if (null != object) {
+                final OtpErlangString pidString = (OtpErlangString) object;
 
-                Stack<TraceLog> stack = unfinishedCalls.get(pidString.stringValue());
-                if (stack == null)
+                final Stack<TraceLog> stack = this.unfinishedCalls.get(pidString.stringValue());
+                if (null == stack)
                     return;
 
-                TraceLog traceLog = stack.pop();
+                final TraceLog traceLog = stack.pop();
                 traceLog.complete(map);
 
                 if (stack.isEmpty())
-                    unfinishedCalls.remove(pidString.stringValue());
+                    this.unfinishedCalls.remove(pidString.stringValue());
             }
 
         }
     }
 
-    private TraceLog proplistToTraceLog(OtpErlangTuple tup) {
-        Map<Object, Object> map = propsFromTrace(tup);
+    private static TraceLog proplistToTraceLog(final OtpErlangTuple tup) {
+        final Map<Object, Object> map = TraceManager.propsFromTrace(tup);
 
-        TraceLog trace = new TraceLog(map);
-
-        return trace;
+        return new TraceLog(map);
     }
 
-    private Map<Object, Object> propsFromTrace(OtpErlangTuple tup) {
+    private static Map<Object, Object> propsFromTrace(final OtpErlangTuple tup) {
         return OtpUtil.propsToMap((OtpErlangList) tup.elementAt(1));
     }
 }

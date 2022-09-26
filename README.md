@@ -107,8 +107,8 @@ erlyberly is not meant to trace production systems. There is no overload protect
 
 Easily find what you're looking for by using the filter fields.
 
-|        Filter       |                             What is searched?                             |
-| ------------------- | :-----------------------------------------------------------------------: |
+| Filter              |                             What is searched?                             |
+|---------------------|:-------------------------------------------------------------------------:|
 | processes           |                          pid and registered name                          |
 | modules & functions | modules, functions can be filtered using a colon i.e. `my_module:my_func` |
 | trace logs          |                        All text shown in the trace                        |
@@ -192,14 +192,14 @@ Tested on OSX, Linux Ubuntu, RHEL and CentOS.
 
 On OSX all shortcuts use `cmd` instead of `ctrl`.
 
-|      Keys      |                                           Action                                           |
-| -------------- | :----------------------------------------------------------------------------------------: |
-| `escape`       |                                     Close sub windows.                                     |
-| `ctrl+f`       |       Focus on the last focused filter field, or the next if one is already focused.       |
-| `ctrl+m`       |                        Toggle visibility of modules and functions.                         |
-| `ctrl+n`       |                                     Clear trace logs                                       |
-| `ctrl+p`       |                              Toggle visibility of processes.                               |
-| `ctrl+t`       |                Toggle tracing for the selected function in the module tree.                |
+| Keys           |                                                 Action                                                  |
+|----------------|:-------------------------------------------------------------------------------------------------------:|
+| `escape`       |                                           Close sub windows.                                            |
+| `ctrl+f`       |             Focus on the last focused filter field, or the next if one is already focused.              |
+| `ctrl+m`       |                               Toggle visibility of modules and functions.                               |
+| `ctrl+n`       |                                            Clear trace logs                                             |
+| `ctrl+p`       |                                     Toggle visibility of processes.                                     |
+| `ctrl+t`       |                      Toggle tracing for the selected function in the module tree.                       |
 | `ctrl+shift+t` | Press in the module/function filter field to apply traces to all functions that have not been filtered. |
 
 ### Trouble Shooting

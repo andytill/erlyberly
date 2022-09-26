@@ -21,25 +21,26 @@ import com.ericsson.otp.erlang.*;
 import erlyberly.node.OtpUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LFEFormatter implements TermFormatter {
 
     /**
      * Convert an MFA tuple to a string, where the MFA must have the type:
-     *
+     * <p>
      * {Module::atom(), Function::atom(), Args::[any()]}.
      */
     @Override
-    public String modFuncArgsToString(OtpErlangTuple mfa) {
-        StringBuilder sb = new StringBuilder();
+    public String modFuncArgsToString(final OtpErlangTuple mfa) {
+        final StringBuilder sb = new StringBuilder();
         sb.append("(")
                 .append(mfa.elementAt(0))
                 .append(":")
                 .append(mfa.elementAt(1));
-        OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
-        ArrayList<String> stringArgs = new ArrayList<>();
-        for (OtpErlangObject arg : args) {
-            stringArgs.add(toString(arg));
+        final OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
+        final List<String> stringArgs = new ArrayList<>();
+        for (final OtpErlangObject arg : args) {
+            stringArgs.add(this.toString(arg));
         }
         sb.append(String.join(", ", stringArgs))
                 .append(")");
@@ -47,9 +48,9 @@ public class LFEFormatter implements TermFormatter {
     }
 
     @Override
-    public String modFuncArityToString(OtpErlangTuple mfa) {
-        StringBuilder sb = new StringBuilder();
-        OtpErlangList argsList = (OtpErlangList) mfa.elementAt(2);
+    public String modFuncArityToString(final OtpErlangTuple mfa) {
+        final StringBuilder sb = new StringBuilder();
+        final OtpErlangList argsList = (OtpErlangList) mfa.elementAt(2);
         sb.append("(")
                 .append(mfa.elementAt(0))
                 .append(":")
@@ -60,12 +61,12 @@ public class LFEFormatter implements TermFormatter {
     }
 
     @Override
-    public String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason) {
-        return toString(errorClass) + ": " + toString(errorReason);
+    public String exceptionToString(final OtpErlangAtom errorClass, final OtpErlangObject errorReason) {
+        return this.toString(errorClass) + ": " + this.toString(errorReason);
     }
 
     @Override
-    public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
+    public StringBuilder appendToString(final OtpErlangObject obj, final StringBuilder sb) {
         if (obj instanceof OtpErlangAtom) {
             sb.append("'").append(obj);
         } else if (obj instanceof OtpErlangBinary) {
@@ -78,18 +79,18 @@ public class LFEFormatter implements TermFormatter {
             Formatting.bitstringToString((OtpErlangBitstr) obj, " ", "(%d (size %d))", sb);
             sb.append(")");
         } else if (OtpUtil.isErlyberlyRecordField(obj)) {
-            OtpErlangObject fieldObj = ((OtpErlangTuple) obj).elementAt(2);
-            appendToString(fieldObj, sb);
+            final OtpErlangObject fieldObj = ((OtpErlangTuple) obj).elementAt(2);
+            this.appendToString(fieldObj, sb);
         } else if (obj instanceof OtpErlangTuple) {
             sb.append("#(");
-            elementsToString(sb, ((OtpErlangTuple) obj).elements());
+            this.elementsToString(sb, ((OtpErlangTuple) obj).elements());
             sb.append(")");
         } else if (obj instanceof OtpErlangList) {
             sb.append("(");
-            elementsToString(sb, ((OtpErlangList) obj).elements());
+            this.elementsToString(sb, ((OtpErlangList) obj).elements());
             if (!((OtpErlangList) obj).isProper()) {
-                sb.append(cons());
-                appendToString(((OtpErlangList) obj).getLastTail(), sb);
+                sb.append(this.cons());
+                this.appendToString(((OtpErlangList) obj).getLastTail(), sb);
             }
             sb.append(")");
         } else if (obj instanceof OtpErlangString) {
@@ -100,12 +101,12 @@ public class LFEFormatter implements TermFormatter {
         return sb;
     }
 
-    private void elementsToString(StringBuilder sb, OtpErlangObject[] elements) {
+    private void elementsToString(final StringBuilder sb, final OtpErlangObject[] elements) {
         for (int i = 0; i < elements.length; i++) {
-            if (i != 0) {
+            if (0 != i) {
                 sb.append(", ");
             }
-            appendToString(elements[i], sb);
+            this.appendToString(elements[i], sb);
         }
     }
 
@@ -140,7 +141,7 @@ public class LFEFormatter implements TermFormatter {
     }
 
     @Override
-    public String mapLeft(OtpErlangObject obj) {
+    public String mapLeft(final OtpErlangObject obj) {
         return "#M(";
     }
 
@@ -150,7 +151,7 @@ public class LFEFormatter implements TermFormatter {
     }
 
     @Override
-    public Boolean isHiddenField(OtpErlangObject key) {
+    public Boolean isHiddenField(final OtpErlangObject key) {
         return false;
     }
 

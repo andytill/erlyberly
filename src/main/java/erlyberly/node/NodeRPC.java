@@ -4,14 +4,11 @@ import com.ericsson.otp.erlang.*;
 
 import java.io.IOException;
 
-import static erlyberly.node.OtpUtil.atom;
-import static erlyberly.node.OtpUtil.tuple;
+class NodeRPC {
 
-public class NodeRPC {
+    private static final OtpErlangAtom CALL_ATOM = OtpUtil.atom("call");
 
-    private static final OtpErlangAtom CALL_ATOM = atom("call");
-
-    private static final OtpErlangAtom USER_ATOM = atom("user");
+    private static final OtpErlangAtom USER_ATOM = OtpUtil.atom("user");
 
     private final OtpConn connection;
 
@@ -19,42 +16,43 @@ public class NodeRPC {
 
     private final int timeout;
 
-    public NodeRPC(OtpSelfNode self, OtpConn connection) {
+    NodeRPC(final OtpSelfNode self, final OtpConn connection) {
+        super();
         this.connection = connection;
         this.self = self;
         this.timeout = 5000;
     }
 
-    public NodeRPC(OtpSelfNode self, OtpConn connection, int timeoutMillis) {
+    NodeRPC(final OtpSelfNode self, final OtpConn connection, final int timeoutMillis) {
+        super();
         this.connection = connection;
         this.self = self;
         this.timeout = timeoutMillis;
     }
 
-    public OtpErlangObject blockingRPC(OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException, OtpErlangException {
-        OtpMbox mbox = self.createMbox();
+    OtpErlangObject blockingRPC(final OtpErlangAtom mod, final OtpErlangAtom fun, final OtpErlangList args) throws IOException, OtpErlangException {
+        final OtpMbox mbox = this.self.createMbox();
         try {
-            sendRPC(mbox, mod, fun, args);
-            return receiveResult(mbox);
+            this.sendRPC(mbox, mod, fun, args);
+            return this.receiveResult(mbox);
         } finally {
             mbox.close();
         }
     }
 
-    private OtpErlangObject receiveResult(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
-        OtpErlangObject message = mbox.receive(timeout);
-        if (message == null)
+    private OtpErlangObject receiveResult(final OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
+        final OtpErlangObject message = mbox.receive(this.timeout);
+        if (null == message)
             return null;
         if (!(message instanceof OtpErlangTuple))
             throw new RuntimeException("RPC response expected tuple but got " + message);
-        OtpErlangTuple tupleMessage = (OtpErlangTuple) message;
-        OtpErlangObject result = tupleMessage.elementAt(1);
-        return result;
+        final OtpErlangTuple tupleMessage = (OtpErlangTuple) message;
+        return tupleMessage.elementAt(1);
     }
 
-    private void sendRPC(OtpMbox m, OtpErlangAtom mod, OtpErlangAtom fun, OtpErlangList args) throws IOException {
-        OtpErlangTuple rpcMessage = tuple(m.self(), tuple(CALL_ATOM, mod, fun, args, USER_ATOM));
+    private void sendRPC(final OtpMbox m, final OtpErlangAtom mod, final OtpErlangAtom fun, final OtpErlangList args) throws IOException {
+        final OtpErlangTuple rpcMessage = OtpUtil.tuple(m.self(), OtpUtil.tuple(CALL_ATOM, mod, fun, args, USER_ATOM));
 
-        connection.send(m.self(), "rex", rpcMessage);
+        this.connection.send(m.self(), "rex", rpcMessage);
     }
 }
