@@ -720,7 +720,15 @@ public class NodeAPI {
         final OtpErlangObject result = this.nodeRPC().blockingRPC(ERLYBERLY_ATOM, OtpUtil.atom("load_module_records"), OtpUtil.list(moduleName));
         assert OtpUtil.isTupleTagged(OK_ATOM, result) : result;
         final OtpErlangTuple resultTuple = (OtpErlangTuple) result;
-        final OtpErlangList records = (OtpErlangList) resultTuple.elementAt(1);
+        final OtpErlangObject objList = resultTuple.elementAt(1);
+        OtpErlangList records = new OtpErlangList();
+        if (null != objList) {
+            try {
+                records = (OtpErlangList) objList;
+            } catch (final Exception ignored) {
+
+            }
+        }
         for (final OtpErlangObject obj : records) {
             final OtpErlangTuple record = (OtpErlangTuple) obj;
             final OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(0);
