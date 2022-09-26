@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,7 +24,6 @@ import java.util.ResourceBundle;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -52,7 +51,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import ui.FAIcon;
+import org.controlsfx.glyphfont.FontAwesome;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}.
@@ -107,35 +106,37 @@ public class ProcView implements Initializable {
         // loses selection making the right click context menu no longer enabled since
         // no process is selected
         processView
-            .getContextMenu()
-            .showingProperty()
-            .addListener((o, oldv, newv) -> { procController.setTemporarilySuspendPolling(newv); });
+                .getContextMenu()
+                .showingProperty()
+                .addListener((o, oldv, newv) -> {
+                    procController.setTemporarilySuspendPolling(newv);
+                });
 
         final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 
         ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 
-        heapPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
+        heapPieButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.PIE_CHART));
         heapPieButton.getStyleClass().add("erlyberly-icon-button");
         heapPieButton.setStyle("-fx-background-color: transparent;");
         heapPieButton.setText("");
         heapPieButton.disableProperty().bind(notConnected);
 
-        stackPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
+        stackPieButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.PIE_CHART));
         stackPieButton.setStyle("-fx-background-color: transparent;");
         stackPieButton.setText("");
         stackPieButton.disableProperty().bind(notConnected);
 
-        totalHeapPieButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
+        totalHeapPieButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.PIE_CHART));
         totalHeapPieButton.setStyle("-fx-background-color: transparent;");
         totalHeapPieButton.setText("");
         totalHeapPieButton.disableProperty().bind(notConnected);
 
-        refreshButton.setGraphic(FAIcon.create().icon(AwesomeIcon.ROTATE_LEFT));
+        refreshButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.ROTATE_LEFT));
         refreshButton.setGraphicTextGap(8d);
         refreshButton.disableProperty().bind(procController.pollingProperty().or(notConnected));
 
-        pollButton.setGraphic(FAIcon.create().icon(AwesomeIcon.REFRESH));
+        pollButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.REFRESH));
         pollButton.setGraphicTextGap(9d);
         pollButton.disableProperty().bind(notConnected);
 
@@ -208,14 +209,16 @@ public class ProcView implements Initializable {
     private void onShowProcessStateClicked(ActionEvent e) {
         ProcInfo proc = processView.getSelectionModel().getSelectedItem();
 
-        if(proc == null)
+        if (proc == null)
             return;
 
-        procController.processState(proc, (eobj) -> {showProcessStateInWindow(proc, eobj); });
+        procController.processState(proc, (eobj) -> {
+            showProcessStateInWindow(proc, eobj);
+        });
     }
 
     private void showProcessStateInWindow(ProcInfo procInfo, OtpErlangObject obj) {
-        if(obj == null)
+        if (obj == null)
             obj = new OtpErlangString("Error, erlyberly cannot get process state. Probably not OTP compliant process");
 
         TermTreeView termTreeView;
@@ -230,21 +233,27 @@ public class ProcView implements Initializable {
 
     @FXML
     private void onHeapPie() {
-        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getHeapSize(); });
+        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {
+            return p.getHeapSize();
+        });
 
         showPieChart("Process Heap", data);
     }
 
     @FXML
     private void onStackPie() {
-        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getStackSize(); });
+        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {
+            return p.getStackSize();
+        });
 
         showPieChart("Process Stack", data);
     }
 
     @FXML
     private void onTotalHeapPie() {
-        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {return p.getTotalHeapSize(); });
+        ObservableList<PieChart.Data> data = buildData(chartableProcs(), (p) -> {
+            return p.getTotalHeapSize();
+        });
 
         showPieChart("Total Heap", data);
     }
@@ -268,13 +277,13 @@ public class ProcView implements Initializable {
         for (ProcInfo proc : procs) {
             double value = extractor.call(proc);
 
-            if(value >= threshold)
+            if (value >= threshold)
                 data.add(new Data(procDescription(proc), extractor.call(proc)));
             else
                 other += value;
         }
 
-        if(other > 0)
+        if (other > 0)
             data.add(new Data("All processes less than 0.5% of total", other));
 
         return data;
@@ -283,7 +292,7 @@ public class ProcView implements Initializable {
     private ObservableList<ProcInfo> chartableProcs() {
         ObservableList<ProcInfo> procs = processView.getSelectionModel().getSelectedItems();
 
-        if(procs.isEmpty() || procs.size() == 1) {
+        if (procs.isEmpty() || procs.size() == 1) {
             procs = procController.getProcs();
         }
         return procs;
@@ -296,7 +305,7 @@ public class ProcView implements Initializable {
         pieChart.getData().stream().forEach(d -> {
             Tooltip tooltip;
             tooltip = new Tooltip();
-            String percent = percentFormatter.format((d.getPieValue()/total)*100);
+            String percent = percentFormatter.format((d.getPieValue() / total) * 100);
             tooltip.setText(d.getName() + " " + percent + "%");
             Tooltip.install(d.getNode(), tooltip);
         });
@@ -305,17 +314,17 @@ public class ProcView implements Initializable {
 
     private String procDescription(ProcInfo proc) {
         String pid = proc.getProcessName();
-        if(pid == null || "".equals(pid)) {
+        if (pid == null || "".equals(pid)) {
             pid = proc.getPid();
         }
-        if(pid == null || "".equals(pid)) {
+        if (pid == null || "".equals(pid)) {
             pid = "unknown pid";
         }
         return pid;
     }
 
     private void onPollingChange(Observable o) {
-        if(procController.pollingProperty().get())
+        if (procController.pollingProperty().get())
             pollButton.setText("Stop Polling");
         else
             pollButton.setText("Start Polling");
@@ -335,7 +344,7 @@ public class ProcView implements Initializable {
 
         boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
 
-        if(connected) {
+        if (connected) {
             procController.refreshOnce();
         } else {
             procController.clearProcesses();
@@ -357,7 +366,7 @@ public class ProcView implements Initializable {
         public void invalidated(Observable ob) {
             ProcSort procSort = null;
 
-            if(!processView.getSortOrder().isEmpty()) {
+            if (!processView.getSortOrder().isEmpty()) {
                 TableColumn<ProcInfo, ?> tableColumn = processView.getSortOrder().get(0);
 
                 procSort = new ProcSort(tableColumn.getId(), tableColumn.getSortType());

@@ -5,12 +5,13 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<SplitPane fx:id="dbgSplitPane" dividerPositions="0.5" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
-   <items>
-      <VBox fx:id="modulesBox" spacing="5.0" SplitPane.resizableWithParent="false">
-         <children>
-            <TreeView fx:id="modulesTree" prefHeight="200.0" VBox.vgrow="ALWAYS" />
-         </children>
-      </VBox>
-   </items>
+<SplitPane fx:id="dbgSplitPane" dividerPositions="0.5" xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.DbgView">
+    <items>
+        <VBox fx:id="modulesBox" spacing="5.0" SplitPane.resizableWithParent="false">
+            <children>
+                <TreeView fx:id="modulesTree" prefHeight="200.0" VBox.vgrow="ALWAYS"/>
+            </children>
+        </VBox>
+    </items>
 </SplitPane>

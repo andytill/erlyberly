@@ -6,49 +6,51 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<ToolBar fx:id="topBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.TopBarView">
-   <items>
-      <ToggleButton fx:id="hideProcessesButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Processes">
-         <font>
-            <Font size="10.0" />
-         </font></ToggleButton>
-      <ToggleButton fx:id="hideFunctionsButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Modules">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </ToggleButton>
-      <Button fx:id="refreshModulesButton" mnemonicParsing="false" text="Refresh Modules">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="erlangMemoryButton" mnemonicParsing="false" text="Erlang Memory">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="xrefAnalysisButton" mnemonicParsing="false" text="xref Analysis">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="disconnectButton" mnemonicParsing="false" text="Disconnect">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="prefButton" mnemonicParsing="false" text="Preferences">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="suspendButton" mnemonicParsing="false" text="Unsuspend">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-   </items>
-   <padding>
-      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-   </padding>
+<ToolBar fx:id="topBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="erlyberly.TopBarView">
+    <items>
+        <ToggleButton fx:id="hideProcessesButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Processes">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </ToggleButton>
+        <ToggleButton fx:id="hideFunctionsButton" contentDisplay="TOP" mnemonicParsing="false" text="Hide Modules">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </ToggleButton>
+        <Button fx:id="refreshModulesButton" mnemonicParsing="false" text="Refresh Modules">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+        <Button fx:id="erlangMemoryButton" mnemonicParsing="false" text="Erlang Memory">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+        <Button fx:id="xrefAnalysisButton" mnemonicParsing="false" text="xref Analysis">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+        <Button fx:id="disconnectButton" mnemonicParsing="false" text="Disconnect">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+        <Button fx:id="prefButton" mnemonicParsing="false" text="Preferences">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+        <Button fx:id="suspendButton" mnemonicParsing="false" text="Unsuspend">
+            <font>
+                <Font size="10.0"/>
+            </font>
+        </Button>
+    </items>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+    </padding>
 </ToolBar>

@@ -1,4 +1,3 @@
-
 @font-face {
     src: url('/erlyberly/SourceCodePro-Medium.ttf');
 }
@@ -29,13 +28,14 @@
     -fx-font-family: "Source Code Pro";
 }
 
-.hyperlink:selected{
-   -fx-text-fill: white;
+.hyperlink:selected {
+    -fx-text-fill: white;
 }
 
 .list-cell:selected > .hyperlink {
     -fx-text-fill: white;
 }
+
 /*
  * a break row, to show a change of state between traces.
  */
@@ -43,6 +43,7 @@
 .table-row-cell:breaker-row {
     -fx-background-color: lightslategray;
 }
+
 .table-row-cell:breaker-row > .table-cell {
     -fx-text-fill: whitesmoke;
 }
@@ -50,6 +51,7 @@
 .table-row-cell:breaker-row:odd {
     -fx-background-color: slategrey;
 }
+
 .table-row-cell:breaker-row:odd > .table-cell {
     -fx-text-fill: whitesmoke;
 }
@@ -58,6 +60,7 @@
     /* invert the colours when the cell is selected */
     -fx-background-color: gainsboro;
 }
+
 .table-row-cell:breaker-row:selected > .table-cell {
     /* invert the colours when the cell is selected */
     -fx-text-fill: grey;
@@ -70,6 +73,7 @@
 .table-row-cell:exception {
     -fx-background-color: #F9F2F4;
 }
+
 .table-row-cell:exception > .table-cell {
     -fx-text-fill: #C7254E;
 }
@@ -78,6 +82,7 @@
     /* make the background a little darker for alternate cells */
     -fx-background-color: #F1E0E4;
 }
+
 .table-row-cell:exception:odd > .table-cell {
     -fx-text-fill: #C7254E;
 }
@@ -86,6 +91,7 @@
     /* invert the colours when the cell is selected */
     -fx-background-color: #C7254E;
 }
+
 .table-row-cell:exception:selected > .table-cell {
     /* invert the colours when the cell is selected */
     -fx-text-fill: white;
@@ -99,6 +105,7 @@
 .table-row-cell:not-completed {
     -fx-background-color: #FFEB9C;
 }
+
 .table-row-cell:not-completed > .table-cell {
     -fx-text-fill: #9C6500;
 }
@@ -107,6 +114,7 @@
     /* make the background a little darker for alternate cells */
     -fx-background-color: #FFD93E;
 }
+
 .table-row-cell:not-completed:odd > .table-cell {
     -fx-text-fill: #9C6500;
 }
@@ -115,6 +123,7 @@
     /* invert the colours when the cell is selected */
     -fx-background-color: #9C6500;
 }
+
 .table-row-cell:not-completed:selected > .table-cell {
     -fx-text-fill: #FFEB9C;
 }
@@ -141,7 +150,7 @@
  */
 
 .floaty-label .text-field {
-	-fx-font-size: 1.7em;
+    -fx-font-size: 1.7em;
 }
 
 /*
@@ -180,13 +189,14 @@
     -fx-background-radius: 5;
 }
 
-.mod-src{
+.mod-src {
     -fx-font: 1.0em "monospace";
 }
 
 .button-suspended {
     -fx-base: #EE2211;
 }
+
 .button-suspended:hover {
     -fx-base: #EE2211;
     -fx-text-fill: white;

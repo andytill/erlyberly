@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -73,7 +73,7 @@ import javafx.stage.WindowEvent;
  * }
  * </pre> Tabs can then be detached simply by dragging a tab title to the desired window position.
  *
-/**
+ /**
  *
  * @author Jens Deters (www.jensd.de)
  * @version 1.0.0
@@ -119,7 +119,7 @@ public class TabPaneDetacher {
      * @param alwaysOnTop The state to be set.
      * @return The current TabPaneDetacher instance.
      */
-    public TabPaneDetacher alwaysOnTop(boolean alwaysOnTop){
+    public TabPaneDetacher alwaysOnTop(boolean alwaysOnTop) {
         alwaysOnTopProperty().set(alwaysOnTop);
         return this;
     }
@@ -152,7 +152,7 @@ public class TabPaneDetacher {
         });
         tabPane.getTabs().addListener((Observable o) -> {
             for (Tab tabX : tabPane.getTabs()) {
-                if(!(tabX.getContent() instanceof Pane)) {
+                if (!(tabX.getContent() instanceof Pane)) {
                     throw new RuntimeException("Tab added where the content node was not a subclass of Pane, this means it cannot be dragged by TabPaneDetacher.");
                 }
             }
@@ -195,7 +195,7 @@ public class TabPaneDetacher {
      * @param tab The {@link Tab} to get the content from.
      */
     public void openTabInStage(final Tab tab) {
-        if(tab == null){
+        if (tab == null) {
             return;
         }
         int originalTab = originalTabs.indexOf(tab);
@@ -220,7 +220,7 @@ public class TabPaneDetacher {
             SortedSet<Integer> keys = new TreeSet<>(tapTransferMap.keySet());
             for (Integer key : keys) {
                 Tab value = tapTransferMap.get(key);
-                if(!tabPane.getTabs().contains(value)){
+                if (!tabPane.getTabs().contains(value)) {
                     tabPane.getTabs().add(index, value);
                 }
                 index++;

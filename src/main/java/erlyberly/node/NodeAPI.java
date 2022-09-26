@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -158,10 +158,11 @@ public class NodeAPI {
             @Override
             public void changed(ObservableValue<? extends Boolean> obv, Boolean o, Boolean n) {
                 connected = n;
-                if(!n) {
+                if (!n) {
                     xrefStartedProperty.set(false);
                 }
-            }});
+            }
+        });
         summary = new SimpleStringProperty("erlyberly not connected");
 
         appProcs = new SimpleObjectProperty<AppProcs>(new AppProcs(0, LocalDateTime.now()));
@@ -175,8 +176,7 @@ public class NodeAPI {
         try {
             String ourNodeName = "erlyberly" + new Random().nextInt(9999);
             self = new OtpSelfNode(ourNodeName);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -209,13 +209,13 @@ public class NodeAPI {
         // clear previous connections and threads if any, before we reconnect
         // TODO: investigate whether we need this ...
         disconnect();
-        if(!cookie.isEmpty()) {
+        if (!cookie.isEmpty()) {
             self.setCookie(cookie);
         }
 
         // if the node name does not contain a host then assume it is on the
         // same machine
-        if(!remoteNodeName.contains("@")) {
+        if (!remoteNodeName.contains("@")) {
             String[] split = self.toString().split("\\@");
 
             remoteNodeName += "@" + split[1];
@@ -234,9 +234,11 @@ public class NodeAPI {
 
         loadModulesOnPath(PrefBind.getOrDefault("loadModulesRegex", "").toString());
 
-        Platform.runLater(() -> { connectedProperty.set(true); });
+        Platform.runLater(() -> {
+            connectedProperty.set(true);
+        });
 
-        if(checkAliveThread == null) {
+        if (checkAliveThread == null) {
             checkAliveThread = new CheckAliveThread();
             checkAliveThread.start();
         }
@@ -255,7 +257,9 @@ public class NodeAPI {
         removeErrorLoggerHandler();
         unloadRemoteErlyberly();
         mbox.close();
-        Platform.runLater(() -> { connectedProperty.set(false); });
+        Platform.runLater(() -> {
+            connectedProperty.set(false);
+        });
     }
 
     public void disconnect() {
@@ -265,8 +269,7 @@ public class NodeAPI {
         try {
             if (connection != null)
                 connection.close();
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
         connection = null;
@@ -282,7 +285,7 @@ public class NodeAPI {
                 .blockingRPC(ERLYBERLY_ATOM, atom("ensure_dbg_started"), argList);
         // the return should be {ok, TracerPid}
         // we don't need to store the pid because it is registered
-        if(!isSuccessTerm(returnedObject)) {
+        if (!isSuccessTerm(returnedObject)) {
             throw new RuntimeException(returnedObject.toString());
         }
     }
@@ -301,7 +304,7 @@ public class NodeAPI {
      * @see https://github.com/andytill/erlyberly/wiki/Preload-modules
      */
     private void loadModulesOnPath(String regex) throws IOException, OtpErlangException {
-        if(regex == null || "".equals(regex))
+        if (regex == null || "".equals(regex))
             return;
         OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("load_modules_on_path"), list(regex));
         // work is done asynchronously so just the pid doing the work is returned.
@@ -326,12 +329,12 @@ public class NodeAPI {
 
         public CheckAliveThread() {
             setDaemon(true);
-            setName("Erlyberly Check Alive "+ CHECK_ALIVE_THREAD_COUNTER.incrementAndGet());
+            setName("Erlyberly Check Alive " + CHECK_ALIVE_THREAD_COUNTER.incrementAndGet());
         }
 
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 if (!manuallyDisconnected) {
                     ensureAlive();
                 }
@@ -341,28 +344,28 @@ public class NodeAPI {
 
         private OtpErlangObject receiveRPC(OtpErlangObject receive)
                 throws OtpErlangExit, OtpErlangDecodeException, IOException, OtpErlangException {
-            if(receive == null)
+            if (receive == null)
                 return null;
-            if(!(receive instanceof OtpErlangTuple))
+            if (!(receive instanceof OtpErlangTuple))
                 throw new RuntimeException("Expected tuple but got " + receive);
 
             OtpErlangTuple tupleResult = (OtpErlangTuple) receive;
-            if(isTupleTagged(ERLYBERLY_TRACE_LOG, tupleResult)) {
+            if (isTupleTagged(ERLYBERLY_TRACE_LOG, tupleResult)) {
                 traceLogNotification(tupleResult);
-            }
-            else if(isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, tupleResult)) {
-                Platform.runLater(() -> { crashReports.add(tupleResult.elementAt(1)); });
-            }
-            else if(isTupleTagged(ERLYBERLY_MODULE_RELOADED_ATOM, tupleResult)) {
+            } else if (isTupleTagged(ERLYBERLY_ERROR_REPORT_ATOM, tupleResult)) {
                 Platform.runLater(() -> {
-                    if(moduleLoadedCallback != null)
+                    crashReports.add(tupleResult.elementAt(1));
+                });
+            } else if (isTupleTagged(ERLYBERLY_MODULE_RELOADED_ATOM, tupleResult)) {
+                Platform.runLater(() -> {
+                    if (moduleLoadedCallback != null)
                         moduleLoadedCallback.callback((OtpErlangTuple) tupleResult.elementAt(2));
                 });
-            }
-            else if(isTupleTagged(ERLYBERLY_TRACE_OVERLOAD_ATOM, tupleResult)) {
-                Platform.runLater(() -> { suspendedProperty.set(true); });
-            }
-            else if(!isTupleTagged(REX_ATOM, tupleResult)) {
+            } else if (isTupleTagged(ERLYBERLY_TRACE_OVERLOAD_ATOM, tupleResult)) {
+                Platform.runLater(() -> {
+                    suspendedProperty.set(true);
+                });
+            } else if (!isTupleTagged(REX_ATOM, tupleResult)) {
                 throw new RuntimeException("Expected tuple tagged with atom rex but got " + tupleResult);
             }
             OtpErlangObject result = tupleResult.elementAt(1);
@@ -383,32 +386,30 @@ public class NodeAPI {
                     receiveResult = mbox.receive(timeout);
                     try {
                         receiveRPC(receiveResult);
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } while(receiveResult != null);
+                } while (receiveResult != null);
 
-                if(connection != null && connection.isAlive())
+                if (connection != null && connection.isAlive())
                     return true;
-            }
-            catch(OtpErlangExit oee) {
+            } catch (OtpErlangExit oee) {
                 // an exit is what we're checking for so no need to log it
-            }
-            catch (OtpErlangException e1) {
+            } catch (OtpErlangException e1) {
                 e1.printStackTrace();
             }
 
-            Platform.runLater(() -> { connectedProperty.set(false); });
+            Platform.runLater(() -> {
+                connectedProperty.set(false);
+            });
 
-            while(true) {
+            while (true) {
                 try {
-                    if(!manuallyDisconnected){
+                    if (!manuallyDisconnected) {
                         connect();
                         break;
                     }
-                }
-                catch(Exception e) {
+                } catch (Exception e) {
                     int millis = 50;
                     mySleep(millis);
 
@@ -424,14 +425,13 @@ public class NodeAPI {
         OtpErlangObject result = nodeRPC().blockingRPC(atom("code"), atom("load_binary"),
                 list(ERLYBERLY_ATOM, ERLYBERLY_BEAM_PATH, otpErlangBinary));
 
-        if(result instanceof OtpErlangTuple) {
+        if (result instanceof OtpErlangTuple) {
             OtpErlangObject e0 = ((OtpErlangTuple) result).elementAt(0);
 
-            if(!MODULE_ATOM.equals(e0)) {
+            if (!MODULE_ATOM.equals(e0)) {
                 compileAndLoadRemoteErlyberly();
             }
-        }
-        else {
+        } else {
             compileAndLoadRemoteErlyberly();
         }
     }
@@ -440,16 +440,16 @@ public class NodeAPI {
         OtpErlangString tmpFileName = new OtpErlangString(ERLYBERLY_REMOTE_ERL_PATH);
         OtpErlangBinary erlBin = new OtpErlangBinary(loadErlFile());
         OtpErlangObject result = nodeRPC().blockingRPC(atom("file"), atom("write_file"),
-                                                       list(tmpFileName, erlBin));
+                list(tmpFileName, erlBin));
         if (!(atom("ok").equals(result))) {
             loadErlyberlyError(result);
         }
-        String remotePathNoErl = ERLYBERLY_REMOTE_ERL_PATH.replaceFirst(".erl$","");
+        String remotePathNoErl = ERLYBERLY_REMOTE_ERL_PATH.replaceFirst(".erl$", "");
         result = nodeRPC().blockingRPC(atom("compile"), atom("file"), list(remotePathNoErl, list(atom("binary"))));
-        if (!(result instanceof OtpErlangTuple && atom("ok").equals(((OtpErlangTuple)result).elementAt(0)))) {
+        if (!(result instanceof OtpErlangTuple && atom("ok").equals(((OtpErlangTuple) result).elementAt(0)))) {
             loadErlyberlyError(result);
         }
-        OtpErlangBinary beamBin = (OtpErlangBinary) ((OtpErlangTuple)result).elementAt(2);
+        OtpErlangBinary beamBin = (OtpErlangBinary) ((OtpErlangTuple) result).elementAt(2);
         result = nodeRPC().blockingRPC(atom("code"), atom("load_binary"), list(ERLYBERLY_ATOM, ERLYBERLY_ATOM, beamBin));
         if (!tuple(atom("module"), ERLYBERLY_ATOM).equals(result)) {
             loadErlyberlyError(result);
@@ -471,7 +471,7 @@ public class NodeAPI {
         Platform.runLater(() -> {
             OtpErlangTuple traceLog = (OtpErlangTuple) receive.elementAt(1);
             List<TraceLog> collatedTraces = traceManager.collateTraceSingle(traceLog);
-            if(traceLogCallback != null) {
+            if (traceLogCallback != null) {
                 for (TraceLog log : collatedTraces) {
                     traceLogCallback.callback(log);
                 }
@@ -499,8 +499,8 @@ public class NodeAPI {
             read = resourceAsStream.read(b, total, maxSize - total);
         } while (read != -1);
 
-        if(total >= maxSize) {
-            throw new RuntimeException(resourcePath.replaceAll("[^/]*/","") + " file is too big");
+        if (total >= maxSize) {
+            throw new RuntimeException(resourcePath.replaceAll("[^/]*/", "") + " file is too big");
         }
 
         return Arrays.copyOf(b, total);
@@ -508,7 +508,7 @@ public class NodeAPI {
 
     public synchronized void retrieveProcessInfo(List<ProcInfo> processes) {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
-        if(connection == null || !connected)
+        if (connection == null || !connected)
             return;
         OtpErlangObject rpcResult = null;
         try {
@@ -516,15 +516,16 @@ public class NodeAPI {
             OtpErlangList received = (OtpErlangList) rpcResult;
 
             for (OtpErlangObject recv : received) {
-                if(recv instanceof OtpErlangList) {
+                if (recv instanceof OtpErlangList) {
                     OtpErlangList pinfo = (OtpErlangList) recv;
                     Map<Object, Object> propsToMap = OtpUtil.propsToMap(pinfo);
                     processes.add(ProcInfo.toProcessInfo(propsToMap));
                 }
             }
-            Platform.runLater(() -> { appProcs.set(new AppProcs(processes.size(), LocalDateTime.now())); });
-        }
-        catch (Exception e) {
+            Platform.runLater(() -> {
+                appProcs.set(new AppProcs(processes.size(), LocalDateTime.now()));
+            });
+        } catch (Exception e) {
             throw new RuntimeException("unexpected result: " + rpcResult, e);
         }
     }
@@ -532,8 +533,7 @@ public class NodeAPI {
     private void mySleep(int millis) {
         try {
             Thread.sleep(millis);
-        }
-        catch (InterruptedException e1) {
+        } catch (InterruptedException e1) {
             e1.printStackTrace();
         }
     }
@@ -541,7 +541,7 @@ public class NodeAPI {
     public synchronized OtpErlangList requestFunctions() throws Exception {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject rpcResult = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("module_functions"), list());
-        if(rpcResult == null || !(rpcResult instanceof OtpErlangList)) {
+        if (rpcResult == null || !(rpcResult instanceof OtpErlangList)) {
             throw new RuntimeException("Result of module_functions call should be a list but got " + rpcResult);
         }
         return (OtpErlangList) rpcResult;
@@ -561,10 +561,10 @@ public class NodeAPI {
         OtpErlangObject rpcResult = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("stop_trace"),
                         list(
-                            atom(mf.getModuleName()),
-                            atom(mf.getFuncName()),
-                            mf.getArity(),
-                            mf.getArity()
+                                atom(mf.getModuleName()),
+                                atom(mf.getFuncName()),
+                                mf.getArity(),
+                                mf.getArity()
                         ));
         assert isSuccessTerm(rpcResult) : rpcResult;
         // FIXME return the result for errors
@@ -582,11 +582,11 @@ public class NodeAPI {
         String node = self.node();
         OtpErlangPid self2 = mbox.self();
         return list(
-            tuple(OtpUtil.atom(node), self2),
-            atom(mf.getModuleName()),
-            atom(mf.getFuncName()),
-            mf.getArity(),
-            maxQueueLen
+                tuple(OtpUtil.atom(node), self2),
+                atom(mf.getModuleName()),
+                atom(mf.getFuncName()),
+                mf.getArity(),
+                maxQueueLen
         );
     }
 
@@ -602,8 +602,8 @@ public class NodeAPI {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject prcResult = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("collect_trace_logs"), list());
-        if(!isTupleTagged(OK_ATOM, prcResult)) {
-            if(prcResult != null) {
+        if (!isTupleTagged(OK_ATOM, prcResult)) {
+            if (prcResult != null) {
                 System.out.println(prcResult);
             }
             return new ArrayList<TraceLog>();
@@ -626,7 +626,7 @@ public class NodeAPI {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject rpcResult = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("collect_seq_trace_logs"), list());
-        if(!isTupleTagged(OK_ATOM, rpcResult)) {
+        if (!isTupleTagged(OK_ATOM, rpcResult)) {
             return new ArrayList<SeqTraceLog>();
         }
 
@@ -639,8 +639,7 @@ public class NodeAPI {
                 seqLogs.add(SeqTraceLog.build(OtpUtil
                         .propsToMap((OtpErlangList) otpErlangObject)));
             }
-        }
-        catch (ClassCastException e) {
+        } catch (ClassCastException e) {
             System.out.println("did not understand result from collect_seq_trace_logs " + rpcResult);
             e.printStackTrace();
         }
@@ -656,9 +655,9 @@ public class NodeAPI {
 
         OtpSelfNode self2 = self;
 
-        if(self2 != null && !wasConnected && isConnected)
+        if (self2 != null && !wasConnected && isConnected)
             summaryText = self2.node() + " connected to " + this.remoteNodeName;
-        else if(wasConnected && !isConnected)
+        else if (wasConnected && !isConnected)
             summaryText = "erlyberly, connection lost.  reconnecting...";
 
         summary.set(summaryText);
@@ -666,21 +665,21 @@ public class NodeAPI {
 
     public synchronized void seqTrace(ModFunc mf) throws IOException, OtpErlangException {
         OtpErlangObject result = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("seq_trace"),
-            list(
-                tuple(OtpUtil.atom(self.node()), mbox.self()),
-                atom(mf.getModuleName()),
-                atom(mf.getFuncName()),
-                mf.getArity(),
-                new OtpErlangAtom(mf.isExported())
-            ));
+                list(
+                        tuple(OtpUtil.atom(self.node()), mbox.self()),
+                        atom(mf.getModuleName()),
+                        atom(mf.getFuncName()),
+                        mf.getArity(),
+                        new OtpErlangAtom(mf.isExported())
+                ));
         System.out.println(result);
     }
 
     public synchronized OtpErlangObject getProcessState(String pidString) throws IOException, OtpErlangException {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject result = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("get_process_state"), list(pidString));
-        if(isTupleTagged(OK_ATOM, result)) {
-            return ((OtpErlangTuple)result).elementAt(1);
+        if (isTupleTagged(OK_ATOM, result)) {
+            return ((OtpErlangTuple) result).elementAt(1);
         }
         // FIXME check result for errors
         return null;
@@ -697,7 +696,7 @@ public class NodeAPI {
         return connected;
     }
 
-    public boolean manuallyDisconnected(){
+    public boolean manuallyDisconnected() {
         return manuallyDisconnected;
     }
 
@@ -720,7 +719,9 @@ public class NodeAPI {
         OtpErlangObject rpcResult = nodeRPC(1000 * 60 * 2)
                 .blockingRPC(ERLYBERLY_ATOM, atom("ensure_xref_started"), list());
         assert isSuccessTerm(rpcResult) : "Unexpected erlyberly:ensure_xref_started/0 result " + rpcResult;
-        Platform.runLater(() -> { xrefStartedProperty.set(true); });
+        Platform.runLater(() -> {
+            xrefStartedProperty.set(true);
+        });
     }
 
     private OtpErlangTuple mfaTuple(String module, String function, Integer arity) {
@@ -751,13 +752,13 @@ public class NodeAPI {
         return returnCode(result, "Failed to get abstract code for " + module + ".");
     }
 
-    public String returnCode(OtpErlangObject result, String errorResponse){
-        if(isTupleTagged(OK_ATOM, result)) {
-            OtpErlangBinary bin = (OtpErlangBinary) ((OtpErlangTuple)result).elementAt(1);
+    public String returnCode(OtpErlangObject result, String errorResponse) {
+        if (isTupleTagged(OK_ATOM, result)) {
+            OtpErlangBinary bin = (OtpErlangBinary) ((OtpErlangTuple) result).elementAt(1);
             String ss = new String(bin.binaryValue());
             return ss;
         } else {
-            OtpErlangBinary bin = (OtpErlangBinary) ((OtpErlangTuple)result).elementAt(1);
+            OtpErlangBinary bin = (OtpErlangBinary) ((OtpErlangTuple) result).elementAt(1);
             String err = new String(bin.binaryValue());
             System.out.println(err);
             return errorResponse;
@@ -784,7 +785,7 @@ public class NodeAPI {
     public synchronized String decompileFun(OtpErlangFun fun) throws IOException, OtpErlangException {
         assert !Platform.isFxApplicationThread() : CANNOT_RUN_THIS_METHOD_FROM_THE_FX_THREAD;
         OtpErlangObject result = nodeRPC().blockingRPC(ERLYBERLY_ATOM, atom("saleyn_fun_src"), list(fun));
-        if(!(result instanceof OtpErlangString))
+        if (!(result instanceof OtpErlangString))
             throw new OtpErlangException(Objects.toString(result));
         OtpErlangString otpString = (OtpErlangString) result;
         return otpString.stringValue();
@@ -806,7 +807,7 @@ public class NodeAPI {
 
 
     public void loadModuleRecords(OtpErlangAtom moduleName) throws OtpErlangException, IOException {
-        if(recordManager.isModuleManaged(moduleName))
+        if (recordManager.isModuleManaged(moduleName))
             return;
         OtpErlangObject result = nodeRPC()
                 .blockingRPC(ERLYBERLY_ATOM, atom("load_module_records"), list(moduleName));
@@ -836,12 +837,11 @@ public class NodeAPI {
 
     public void toggleSuspended() throws OtpErlangException, IOException {
         assert Platform.isFxApplicationThread();
-        if(!isSuspended()) {
+        if (!isSuspended()) {
             ErlyBerly.runIO(() -> {
                 try {
                     stopAllTraces();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });

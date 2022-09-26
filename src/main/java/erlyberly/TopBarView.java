@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,7 +27,6 @@ import java.util.ResourceBundle;
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import erlyberly.node.AppProcs;
 import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldControl;
@@ -68,7 +67,8 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import ui.FAIcon;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 public class TopBarView implements Initializable {
     private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
@@ -109,24 +109,24 @@ public class TopBarView implements Initializable {
         topBox.getItems().add(crashReportsButton);
 
         // TODO: Should we hide these buttons, when disconnected ?
-        hideProcessesButton.setGraphic(FAIcon.create().icon(AwesomeIcon.RANDOM));
+        hideProcessesButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.RANDOM));
         hideProcessesButton.setContentDisplay(ContentDisplay.TOP);
         hideProcessesButton.setGraphicTextGap(0d);
         hideProcessesButton.setTooltip(new Tooltip("Show/Hide the Processes (ctrl+p)"));
 
         // TODO: Should we hide these buttons, when disconnected ?
-        hideFunctionsButton.setGraphic(FAIcon.create().icon(AwesomeIcon.CUBE));
+        hideFunctionsButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.CUBE));
         hideFunctionsButton.setContentDisplay(ContentDisplay.TOP);
         hideFunctionsButton.setGraphicTextGap(0d);
         hideFunctionsButton.setTooltip(new Tooltip("Show/Hide the Modules (ctrl+m)"));
 
-        refreshModulesButton.setGraphic(FAIcon.create().icon(AwesomeIcon.ROTATE_LEFT));
+        refreshModulesButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.ROTATE_LEFT));
         refreshModulesButton.setContentDisplay(ContentDisplay.TOP);
         refreshModulesButton.setGraphicTextGap(0d);
         refreshModulesButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
         refreshModulesButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
 
-        erlangMemoryButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PIE_CHART));
+        erlangMemoryButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.PIE_CHART));
         erlangMemoryButton.setContentDisplay(ContentDisplay.TOP);
         erlangMemoryButton.setGraphicTextGap(0d);
         erlangMemoryButton.setTooltip(new Tooltip("Refresh Modules and Functions to show new, hot-loaded code (ctrl+r)"));
@@ -141,23 +141,23 @@ public class TopBarView implements Initializable {
         // disable the button if we're not connected or there are no crash report menu items
         crashReportsButton.disableProperty().bind(
                 ErlyBerly.nodeAPI().connectedProperty().not()
-                .or(Bindings.size(crashReportsButton.getItems()).isEqualTo(2)));
+                        .or(Bindings.size(crashReportsButton.getItems()).isEqualTo(2)));
         crashReportsButton.setStyle("-fx-font-size: 10; -fx-padding: 5 5 5 5;");
         crashReportsButton.getItems().addAll(removeCrashReportsMenuItem(), new SeparatorMenuItem());
 
         ErlyBerly.nodeAPI().getCrashReports()
-            .addListener((ListChangeListener.Change<? extends OtpErlangObject> e) -> {
-                while(e.next()) {
-                    for (OtpErlangObject obj : e.getAddedSubList()) {
-                        CrashReport crashReport = new  CrashReport(obj);
-                        MenuItem menuItem;
-                        menuItem = new MenuItem();
-                        menuItem.setGraphic(new CrashReportGraphic(crashReport));
-                        menuItem.setOnAction((action) -> {
-                            unreadCrashReportsProperty.set(0);
-                            ErlyBerly.showPane("Crash Report", ErlyBerly.wrapInPane(crashReportView(crashReport)));
-                        });
-                        crashReportsButton.getItems().add(menuItem);
+                .addListener((ListChangeListener.Change<? extends OtpErlangObject> e) -> {
+                    while (e.next()) {
+                        for (OtpErlangObject obj : e.getAddedSubList()) {
+                            CrashReport crashReport = new CrashReport(obj);
+                            MenuItem menuItem;
+                            menuItem = new MenuItem();
+                            menuItem.setGraphic(new CrashReportGraphic(crashReport));
+                            menuItem.setOnAction((action) -> {
+                                unreadCrashReportsProperty.set(0);
+                                ErlyBerly.showPane("Crash Report", ErlyBerly.wrapInPane(crashReportView(crashReport)));
+                            });
+                            crashReportsButton.getItems().add(menuItem);
                         }
                     }
                 });
@@ -172,15 +172,14 @@ public class TopBarView implements Initializable {
             isXrefAnalysing.set(true);
             ErlyBerly.runIO(() -> {
                 try {
-                        ErlyBerly.nodeAPI().ensureXRefStarted();
-                }
-                catch (Exception e1) {
+                    ErlyBerly.nodeAPI().ensureXRefStarted();
+                } catch (Exception e1) {
                     e1.printStackTrace();
                 }
             });
         });
 
-        disconnectButton.setGraphic(FAIcon.create().icon(AwesomeIcon.EJECT));
+        disconnectButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.EJECT));
         disconnectButton.setContentDisplay(ContentDisplay.TOP);
         disconnectButton.setGraphicTextGap(0d);
         disconnectButton.setTooltip(new Tooltip("Disconnect"));
@@ -188,35 +187,44 @@ public class TopBarView implements Initializable {
         disconnectButton.setOnAction((e) -> {
             try {
                 disconnect();
-            }
-            catch (Exception e1) {
+            } catch (Exception e1) {
                 e1.printStackTrace();
             }
         });
 
-        prefButton.setGraphic(FAIcon.create().icon(AwesomeIcon.GEARS));
+        prefButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.GEARS));
         prefButton.setContentDisplay(ContentDisplay.TOP);
         prefButton.setGraphicTextGap(0d);
         prefButton.setTooltip(new Tooltip("Preferences"));
         prefButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
-        prefButton.setOnAction((e) -> { displayPreferencesPane(); });
+        prefButton.setOnAction((e) -> {
+            displayPreferencesPane();
+        });
 
         suspendButton.setContentDisplay(ContentDisplay.TOP);
         suspendButton.setGraphicTextGap(0d);
         suspendButton.setTooltip(new Tooltip("Toggle Trace Suspension"));
         suspendButton.disableProperty().bind(ErlyBerly.nodeAPI().connectedProperty().not());
-        suspendButton.setOnAction((e) -> { suspendTraces(); });
+        suspendButton.setOnAction((e) -> {
+            suspendTraces();
+        });
         // set the default text and icon
         onSuspendedStateChanged(false);
         // listen to when tracing is suspend or not, and update the button text and icon
-        ErlyBerly.nodeAPI().suspendedProperty().addListener((o,oldv,suspended) -> {
+        ErlyBerly.nodeAPI().suspendedProperty().addListener((o, oldv, suspended) -> {
             onSuspendedStateChanged(suspended);
         });
 
-        hideProcsProperty().addListener((Observable o) -> { toggleHideProcs(); });
-        hideFunctionsProperty().addListener((Observable o) -> { toggleHideFuncs(); });
+        hideProcsProperty().addListener((Observable o) -> {
+            toggleHideProcs();
+        });
+        hideFunctionsProperty().addListener((Observable o) -> {
+            toggleHideFuncs();
+        });
 
-        erlangMemoryButton.setOnAction((e) -> { showErlangMemory(); });
+        erlangMemoryButton.setOnAction((e) -> {
+            showErlangMemory();
+        });
 
         FloatyFieldControl processCountField = processCountStat();
 
@@ -230,11 +238,11 @@ public class TopBarView implements Initializable {
         boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
         boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
 
-        if(hideProcs){
+        if (hideProcs) {
             // click the hide button manually.
             hideProcessesButton.setSelected(true);
         }
-        if(hideMods){
+        if (hideMods) {
             // click the hide button manually.
             hideFunctionsButton.setSelected(true);
         }
@@ -243,21 +251,22 @@ public class TopBarView implements Initializable {
         toggleHideFuncs();
 
         ErlyBerly.nodeAPI()
-            .getCrashReports()
-            .addListener(this::traceLogsChanged);
+                .getCrashReports()
+                .addListener(this::traceLogsChanged);
         ErlyBerly.nodeAPI()
-            .xrefStartedProperty()
-            .addListener((e, oldv, newv) -> { if(newv) isXrefAnalysing.set(false); });
+                .xrefStartedProperty()
+                .addListener((e, oldv, newv) -> {
+                    if (newv) isXrefAnalysing.set(false);
+                });
     }
 
     private void onSuspendedStateChanged(Boolean suspended) {
-        if(suspended) {
+        if (suspended) {
             suspendButton.setText("Unsuspend");
             suspendButton.getStyleClass().add("button-suspended");
-        }
-        else {
+        } else {
             suspendButton.setText("Suspend");
-            suspendButton.setGraphic(FAIcon.create().icon(AwesomeIcon.PAUSE));
+            suspendButton.setGraphic(new FontAwesome().create(FontAwesome.Glyph.PAUSE));
             suspendButton.getStyleClass().remove("button-suspended");
         }
     }
@@ -277,7 +286,7 @@ public class TopBarView implements Initializable {
         menuItem = new MenuItem("Remove All Reports");
         menuItem.setOnAction((e) -> {
             ObservableList<MenuItem> items = crashReportsButton.getItems();
-            if(items.size() == 2)
+            if (items.size() == 2)
                 return;
             // the first two items are this menu item and a separator, delete
             // everything after that
@@ -288,7 +297,7 @@ public class TopBarView implements Initializable {
     }
 
     public void traceLogsChanged(ListChangeListener.Change<? extends OtpErlangObject> e) {
-        while(e.next()) {
+        while (e.next()) {
             int size = e.getAddedSubList().size();
             unreadCrashReportsProperty.set(unreadCrashReportsProperty.get() + size);
         }
@@ -302,9 +311,9 @@ public class TopBarView implements Initializable {
     }
 
     private Parent crashReportsGraphic() {
-        FAIcon icon;
+        Glyph icon;
 
-        icon = FAIcon.create().icon(AwesomeIcon.WARNING);
+        icon = new FontAwesome().create(FontAwesome.Glyph.WARNING);
         icon.setPadding(new Insets(0, 5, 0, 5));
 
         Label reportCountLabel;
@@ -314,7 +323,9 @@ public class TopBarView implements Initializable {
         reportCountLabel.setTextFill(Color.WHITE);
 
         reportCountLabel.setText(unreadCrashReportsProperty.getValue().toString());
-        unreadCrashReportsProperty.addListener((o, oldv, newv) -> { reportCountLabel.setText(newv.toString()); });
+        unreadCrashReportsProperty.addListener((o, oldv, newv) -> {
+            reportCountLabel.setText(newv.toString());
+        });
         reportCountLabel.visibleProperty().bind(unreadCrashReportsProperty.greaterThan(0));
 
         StackPane stackPane = new StackPane(icon, reportCountLabel);
@@ -323,9 +334,9 @@ public class TopBarView implements Initializable {
     }
 
     private Parent xrefAnalysisGraphic() {
-        FAIcon icon;
+        Glyph icon;
 
-        icon = FAIcon.create().icon(AwesomeIcon.TH_LARGE);
+        icon = new FontAwesome().create(FontAwesome.Glyph.TH_LARGE);
         icon.setPadding(new Insets(0, 5, 0, 5));
         icon.visibleProperty().bind(isXrefAnalysing.not());
         Label reportCountLabel;
@@ -372,14 +383,18 @@ public class TopBarView implements Initializable {
      */
     public void addAccelerators() {
         Platform.runLater(() -> {
-            accelerators().put(TOGGLE_HIDE_PROCESSES_SHORTCUT, () -> { invertSelection(hideProcessesButton); });
+            accelerators().put(TOGGLE_HIDE_PROCESSES_SHORTCUT, () -> {
+                invertSelection(hideProcessesButton);
+            });
         });
         Platform.runLater(() -> {
-            accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> { invertSelection(hideFunctionsButton); });
+            accelerators().put(TOGGLE_HIDE_MODULES_SHORTCUT, () -> {
+                invertSelection(hideFunctionsButton);
+            });
         });
         Platform.runLater(() -> {
             accelerators().put(REFRESH_MODULES_SHORTCUT, () -> {
-                if(refreshModulesAction != null)
+                if (refreshModulesAction != null)
                     refreshModulesAction.handle(null);
             });
         });
@@ -393,7 +408,9 @@ public class TopBarView implements Initializable {
         floatyFieldControl.getModel().textProperty().set("0");
         floatyFieldControl.getModel().disableProperty().set(true);
 
-        ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> { upateProcsStat(floatyFieldControl, nv); });
+        ErlyBerly.nodeAPI().appProcsProperty().addListener((o, ov, nv) -> {
+            upateProcsStat(floatyFieldControl, nv);
+        });
 
         return floatyFieldControl;
     }
@@ -427,7 +444,7 @@ public class TopBarView implements Initializable {
     private void toggleHideProcs() {
         String buttonText = "";
 
-        if(hideProcessesButton.isSelected())
+        if (hideProcessesButton.isSelected())
             buttonText = "Show Processes";
         else
             buttonText = "Hide Processes";
@@ -438,7 +455,7 @@ public class TopBarView implements Initializable {
     private void toggleHideFuncs() {
         String buttonText = "";
 
-        if(hideFunctionsButton.isSelected())
+        if (hideFunctionsButton.isSelected())
             buttonText = "Show Modules";
         else
             buttonText = "Hide Modules";
@@ -457,8 +474,7 @@ public class TopBarView implements Initializable {
             try {
                 ErlyBerly.nodeAPI().manuallyDisconnect();
                 ErlyBerly.nodeAPI().disconnect();
-            }
-            catch(Exception e) {
+            } catch (Exception e) {
                 System.out.println(e);
             }
         });
@@ -494,8 +510,7 @@ public class TopBarView implements Initializable {
                 Platform.runLater(() -> {
                     populatePieData(erlangMemory);
                 });
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

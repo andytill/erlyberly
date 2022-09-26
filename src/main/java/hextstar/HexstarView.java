@@ -56,17 +56,16 @@ public class HexstarView extends TableView<DataRow> {
             while ((bytesRead = inputStream.read(input)) > 0) {
                 getItems().add(new DataRow(addr, input, bytesRead));
                 addr += 16;
-                Arrays.fill(input, (byte)0);
+                Arrays.fill(input, (byte) 0);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void column(String colName, String property) {
         TableColumn<DataRow, String> col;
-        col = new TableColumn<DataRow,String>(colName);
+        col = new TableColumn<DataRow, String>(colName);
         col.setCellValueFactory(new PropertyValueFactory<DataRow, String>(property));
         getColumns().add(col);
     }

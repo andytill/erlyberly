@@ -751,9 +751,9 @@ get_source_code(What) ->
             Mod when is_atom(Mod) -> mod_src(Mod)
         end
     catch
-        _:E ->
+        _:E:S ->
             {error, list_to_binary(
-                lists:flatten(io_lib:format("E:~p stack:~p", [E,erlang:get_stacktrace()]))
+                lists:flatten(io_lib:format("E:~p stack:~p", [E,S]))
             )}
     end.
 
@@ -765,9 +765,9 @@ get_abstract_code(What) ->
             Mod when is_atom(Mod) -> mod_abst(Mod)
         end
     catch
-        _:_E ->
+        _:_E:S ->
             {error, list_to_binary(
-                lists:flatten(io_lib:format("~p", [erlang:get_stacktrace()]))
+                lists:flatten(io_lib:format("~p", [S]))
             )}
     end.
 

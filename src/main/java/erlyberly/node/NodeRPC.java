@@ -31,7 +31,7 @@ public class NodeRPC {
     public NodeRPC(OtpSelfNode self, OtpConn connection) {
         this.connection = connection;
         this.self = self;
-        this. timeout = 5000;
+        this.timeout = 5000;
     }
 
     public NodeRPC(OtpSelfNode self, OtpConn connection, int timeoutMillis) {
@@ -45,17 +45,16 @@ public class NodeRPC {
         try {
             sendRPC(mbox, mod, fun, args);
             return receiveResult(mbox);
-        }
-        finally {
+        } finally {
             mbox.close();
         }
     }
 
     private OtpErlangObject receiveResult(OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
         OtpErlangObject message = mbox.receive(timeout);
-        if(message == null)
+        if (message == null)
             return null;
-        if(!(message instanceof OtpErlangTuple))
+        if (!(message instanceof OtpErlangTuple))
             throw new RuntimeException("RPC response expected tuple but got " + message);
         OtpErlangTuple tupleMessage = (OtpErlangTuple) message;
         OtpErlangObject result = tupleMessage.elementAt(1);

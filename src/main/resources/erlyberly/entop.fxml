@@ -8,41 +8,47 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erlyberly.ProcView">
-<children>
-      <HBox fx:id="headerBox" alignment="CENTER_RIGHT" spacing="5.0">
-         <children>
-            <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#onRefresh" text="Refresh">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin>
-            </Button>
-            <Button fx:id="pollButton" mnemonicParsing="false" onAction="#onTogglePolling" text="Start Polling">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin>
-            </Button>
-         </children>
-         <VBox.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-         </VBox.margin>
-      </HBox><TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
-  <columns>
-            <TableColumn fx:id="pid" prefWidth="75.0" text="Pid" />
-    <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name" />
-    <TableColumn fx:id="reduc" prefWidth="110.0" text="Reductions" />
-            <TableColumn fx:id="mqueue" prefWidth="90.0" text="M. Queue" />
-            <TableColumn fx:id="heapsize" prefWidth="125.0" text="Heap Size B.">
-               <graphic>
-                  <Button fx:id="heapPieButton" mnemonicParsing="false" onAction="#onHeapPie" text="Pie" />
-               </graphic></TableColumn>
-            <TableColumn fx:id="stacksize" prefWidth="125.0" text="Stack Size B.">
-               <graphic>
-                  <Button fx:id="stackPieButton" mnemonicParsing="false" onAction="#onStackPie" text="Pie" />
-               </graphic></TableColumn>
-            <TableColumn fx:id="totalheapsize" prefWidth="150.0" text="Total Heap Size B.">
-               <graphic>
-                  <Button fx:id="totalHeapPieButton" mnemonicParsing="false" onAction="#onTotalHeapPie" text="Pie" />
-               </graphic></TableColumn>
-  </columns>
-</TableView>
-</children></VBox>
+    <children>
+        <HBox fx:id="headerBox" alignment="CENTER_RIGHT" spacing="5.0">
+            <children>
+                <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#onRefresh" text="Refresh">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Button>
+                <Button fx:id="pollButton" mnemonicParsing="false" onAction="#onTogglePolling" text="Start Polling">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Button>
+            </children>
+            <VBox.margin>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            </VBox.margin>
+        </HBox>
+        <TableView fx:id="processView" VBox.vgrow="SOMETIMES" xmlns:fx="http://javafx.com/fxml">
+            <columns>
+                <TableColumn fx:id="pid" prefWidth="75.0" text="Pid"/>
+                <TableColumn fx:id="proc" minWidth="150.0" prefWidth="150.0" text="Name"/>
+                <TableColumn fx:id="reduc" prefWidth="110.0" text="Reductions"/>
+                <TableColumn fx:id="mqueue" prefWidth="90.0" text="M. Queue"/>
+                <TableColumn fx:id="heapsize" prefWidth="125.0" text="Heap Size B.">
+                    <graphic>
+                        <Button fx:id="heapPieButton" mnemonicParsing="false" onAction="#onHeapPie" text="Pie"/>
+                    </graphic>
+                </TableColumn>
+                <TableColumn fx:id="stacksize" prefWidth="125.0" text="Stack Size B.">
+                    <graphic>
+                        <Button fx:id="stackPieButton" mnemonicParsing="false" onAction="#onStackPie" text="Pie"/>
+                    </graphic>
+                </TableColumn>
+                <TableColumn fx:id="totalheapsize" prefWidth="150.0" text="Total Heap Size B.">
+                    <graphic>
+                        <Button fx:id="totalHeapPieButton" mnemonicParsing="false" onAction="#onTotalHeapPie"
+                                text="Pie"/>
+                    </graphic>
+                </TableColumn>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

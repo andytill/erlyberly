@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -26,17 +26,17 @@ import com.ericsson.otp.erlang.OtpErlangString;
  */
 class Formatting {
 
-    private Formatting() {}
+    private Formatting() {
+    }
 
     public static void appendString(OtpErlangString aString, TermFormatter formatter, String quote, StringBuilder sb) {
         String stringValue = aString.stringValue();
         // sometimes a list of integers can be mis-typed by jinterface as a string
         // in this case we format it ourselves as a list of ints
         boolean isString = isString(stringValue);
-        if(isString) {
+        if (isString) {
             sb.append(quote).append(stringValue.replace("\n", "\\n")).append(quote);
-        }
-        else {
+        } else {
             appendListOfInts(stringValue, formatter, sb);
         }
     }
@@ -46,7 +46,7 @@ class Formatting {
         for (int i = 0; i < stringValue.length(); i++) {
             int c = stringValue.charAt(i);
             sb.append(c);
-            if(i < (stringValue.length() - 1)) {
+            if (i < (stringValue.length() - 1)) {
                 sb.append(",");
             }
         }
@@ -57,7 +57,7 @@ class Formatting {
         int length = stringValue.length();
         for (int i = 0; i < length; i++) {
             char c = stringValue.charAt(i);
-            if(c < 10 || c > 127) {
+            if (c < 10 || c > 127) {
                 return false;
             }
         }
@@ -73,35 +73,34 @@ class Formatting {
         boolean inString = false;
 
         for (int b : bin.binaryValue()) {
-            if(isDisplayableChar(b)) {
-                if(!inString) {
-                    if((sb.length() - length) > 0) {
+            if (isDisplayableChar(b)) {
+                if (!inString) {
+                    if ((sb.length() - length) > 0) {
                         sb.append(sep);
                     }
 
                     sb.append("\"");
                 }
                 inString = true;
-                sb.append((char)b);
-            }
-            else {
-                if(inString) {
+                sb.append((char) b);
+            } else {
+                if (inString) {
                     sb.append("\"");
                     inString = false;
                 }
 
-                if((sb.length() - length) > 0) {
+                if ((sb.length() - length) > 0) {
                     sb.append(sep);
                 }
 
-                if(b < 0) {
+                if (b < 0) {
                     b = 256 + b;
                 }
                 sb.append(Integer.toString(b));
             }
         }
 
-        if(inString) {
+        if (inString) {
             sb.append("\"");
         }
     }
@@ -109,13 +108,13 @@ class Formatting {
     public static void bitstringToString(OtpErlangBitstr bits, String sep,
                                          String bitsFormat, StringBuilder sb) {
         byte[] binValue = bits.binaryValue();
-        for (int i=0; i < bits.size(); i++) {
-            int b = binValue[i]>=0 ? binValue[i] : binValue[i]+256;
+        for (int i = 0; i < bits.size(); i++) {
+            int b = binValue[i] >= 0 ? binValue[i] : binValue[i] + 256;
             sb.append(String.format("%d%s", b, sep));
         }
         int b = binValue[bits.size()];
-        b = (b>=0 ? b : b+256) >> bits.pad_bits();
-        sb.append(String.format(bitsFormat, b, 8-bits.pad_bits()));
+        b = (b >= 0 ? b : b + 256) >> bits.pad_bits();
+        sb.append(String.format(bitsFormat, b, 8 - bits.pad_bits()));
     }
 
     private static boolean isDisplayableChar(int b) {

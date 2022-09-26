@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -62,12 +62,12 @@ public class TraceManager {
         OtpErlangTuple tup = (OtpErlangTuple) otpErlangObject;
         OtpErlangAtom traceType = (OtpErlangAtom) tup.elementAt(0);
 
-        if(CALL_ATOM.equals(traceType)) {
+        if (CALL_ATOM.equals(traceType)) {
             TraceLog trace = proplistToTraceLog(tup);
 
             Stack<TraceLog> stack = unfinishedCalls.get(trace.getPidString());
 
-            if(stack == null)
+            if (stack == null)
                 stack = new Stack<TraceLog>();
 
             stack.add(trace);
@@ -75,23 +75,22 @@ public class TraceManager {
             unfinishedCalls.put(trace.getPidString(), stack);
 
             traceList.add(trace);
-        }
-        else if(RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
+        } else if (RETURN_FROM_ATOM.equals(traceType) || EXCEPTION_FROM_ATOM.equals(traceType)) {
             Map<Object, Object> map = propsFromTrace(tup);
 
             Object object = map.get(TraceLog.ATOM_PID);
 
-            if(object != null) {
+            if (object != null) {
                 OtpErlangString pidString = (OtpErlangString) object;
 
                 Stack<TraceLog> stack = unfinishedCalls.get(pidString.stringValue());
-                if(stack == null)
+                if (stack == null)
                     return;
 
                 TraceLog traceLog = stack.pop();
                 traceLog.complete(map);
 
-                if(stack.isEmpty())
+                if (stack.isEmpty())
                     unfinishedCalls.remove(pidString.stringValue());
             }
 

@@ -18,13 +18,13 @@ public class DataRow {
         for (int i = 0; i < b.length; i++) {
             String stringByteValue = "";
             // display the byte as an unsigned number, like erlang binaries
-            if(i < bytesRead)
-                stringByteValue = Integer.toString((b[i]& 0xFF));
+            if (i < bytesRead)
+                stringByteValue = Integer.toString((b[i] & 0xFF));
             data[i] = new SimpleStringProperty(stringByteValue);
-            if(b[i] == 10)
+            if (b[i] == 10)
                 sb.append("\\n");
-            else if(b[i] >= 32 && b[i] < 127)
-                sb.append((char)b[i]);
+            else if (b[i] >= 32 && b[i] < 127)
+                sb.append((char) b[i]);
             else
                 sb.append(".");
         }

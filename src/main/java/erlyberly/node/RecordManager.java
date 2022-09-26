@@ -59,7 +59,7 @@ public class RecordManager {
 
     public boolean isModuleManaged(OtpErlangAtom moduleName) {
         for (Entry<RecordKey, List<String>> entry : records.entrySet()) {
-            if(moduleName.equals(entry.getKey().module))
+            if (moduleName.equals(entry.getKey().module))
                 return true;
         }
         return false;

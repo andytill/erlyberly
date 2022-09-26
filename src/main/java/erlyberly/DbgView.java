@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -30,7 +30,6 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -54,9 +53,9 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import ui.FAIcon;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 import ui.TabPaneDetacher;
-
 
 
 public class DbgView implements Initializable {
@@ -102,13 +101,13 @@ public class DbgView implements Initializable {
         modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
         modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
         modulesTree
-            .getSelectionModel()
-            .selectedItemProperty()
-            .addListener((o, old, newItem) -> {
-                modFuncContextMenu.selectedTreeItemProperty().set(newItem);
-                if(newItem != null)
-                    modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
-            });
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener((o, old, newItem) -> {
+                    modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+                    if (newItem != null)
+                        modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
+                });
 
         sortedTreeModules.setComparator(treeItemModFuncComparator());
 
@@ -127,8 +126,8 @@ public class DbgView implements Initializable {
         });
         tabPane = new TabPane();
         TabPaneDetacher.create()
-            .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
-            .makeTabsDetachable(tabPane);
+                .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
+                .makeTabsDetachable(tabPane);
         Tab traceViewTab;
         traceViewTab = new Tab("Traces");
         traceViewTab.setContent(new DbgTraceView(dbgController));
@@ -197,7 +196,7 @@ public class DbgView implements Initializable {
     }
 
     public void onFunctionSearchChange(Observable o, String oldValue, String search) {
-        if(isSpecialTraceFilter(search))
+        if (isSpecialTraceFilter(search))
             filterForTracedFunctions();
         else
             filterForFunctionTextMatch(search);
@@ -210,31 +209,39 @@ public class DbgView implements Initializable {
     private void filterForFunctionTextMatch(String search) {
         String[] split = search.split(":");
 
-        if(split.length == 0)
+        if (split.length == 0)
             return;
 
         final String moduleName = split[0];
         final String funcName = (split.length > 1) ? split[1] : "";
 
-        if(search.contains(":")) {
+        if (search.contains(":")) {
             for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
                 treeItem.setExpanded(true);
             }
         }
 
         for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
-            funcItemList.setPredicate((t) -> { return isMatchingModFunc(funcName, t); });
+            funcItemList.setPredicate((t) -> {
+                return isMatchingModFunc(funcName, t);
+            });
         }
 
-        filteredTreeModules.setPredicate((t) -> { return isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty(); });
+        filteredTreeModules.setPredicate((t) -> {
+            return isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty();
+        });
     }
 
     private void filterForTracedFunctions() {
         for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
-            funcItemList.setPredicate((t) -> { return dbgController.isTraced(t.getValue()); });
+            funcItemList.setPredicate((t) -> {
+                return dbgController.isTraced(t.getValue());
+            });
         }
 
-        filteredTreeModules.setPredicate((t) -> { return !t.getChildren().isEmpty(); });
+        filteredTreeModules.setPredicate((t) -> {
+            return !t.getChildren().isEmpty();
+        });
     }
 
     private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
@@ -242,11 +249,12 @@ public class DbgView implements Initializable {
             @Override
             public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
                 return o1.getValue().compareTo(o2.getValue());
-            }};
+            }
+        };
     }
 
     private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
-        if(searchText.isEmpty())
+        if (searchText.isEmpty())
             return true;
         return t.getValue().toString().contains(searchText);
     }
@@ -257,7 +265,7 @@ public class DbgView implements Initializable {
         // disable buttons when not connected
         /*seqTraceMenuItem.setDisable(!connected);*/
 
-        if(connected) {
+        if (connected) {
             refreshModules();
             dbgController.reapplyTraces();
         } else {
@@ -270,8 +278,7 @@ public class DbgView implements Initializable {
         try {
             modulesTree.setShowRoot(false);
             dbgController.requestModFuncs(this::buildObjectTreeRoot);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("failed to build module/function tree", e);
         }
     }
@@ -304,22 +311,21 @@ public class DbgView implements Initializable {
         //      disabled, alternatively we can check if the application is
         //      embedded, if it is then all modules should be loaded anyway
         filterTextProperty.addListener((o, oldString, newString) -> {
-            if(scheduledModuleLoadFuture != null) {
+            if (scheduledModuleLoadFuture != null) {
                 scheduledModuleLoadFuture.cancel(true);
             }
             String[] split = newString.trim().split(":");
-            if(newString == null || "".equals(newString) || split.length == 0)
+            if (newString == null || "".equals(newString) || split.length == 0)
                 return;
             String moduleName = split[0];
-            if(moduleName == null || "".equals(moduleName)) {
+            if (moduleName == null || "".equals(moduleName)) {
                 return;
             }
             long delayMillis = 1000;
             scheduledModuleLoadFuture = ErlyBerly.scheduledIO(delayMillis, () -> {
                 try {
                     ErlyBerly.nodeAPI().tryLoadModule(moduleName);
-                }
-                catch (Exception e1) {
+                } catch (Exception e1) {
                     e1.printStackTrace();
                 }
             });
@@ -336,7 +342,7 @@ public class DbgView implements Initializable {
 
         ModFunc module = ModFunc.toModule(moduleNameAtom);
         moduleItem = new TreeItem<ModFunc>(module);
-        moduleItem.setGraphic(treeIcon(AwesomeIcon.CUBE));
+        moduleItem.setGraphic(treeIcon(FontAwesome.Glyph.CUBE));
 
         ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
 
@@ -357,7 +363,7 @@ public class DbgView implements Initializable {
 
         ArrayList<TreeItem<ModFunc>> treeModulesCopy = new ArrayList<>(treeModules);
         for (TreeItem<ModFunc> treeItem : treeModulesCopy) {
-            if(treeItem.getValue().equals(module)) {
+            if (treeItem.getValue().equals(module)) {
                 treeModules.remove(treeItem);
             }
         }
@@ -366,7 +372,7 @@ public class DbgView implements Initializable {
 
     private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
         for (ModFunc modFunc : modFuncs) {
-            if(!modFunc.isSynthetic()) {
+            if (!modFunc.isSynthetic()) {
                 TreeItem<ModFunc> item = newFuncTreeItem(modFunc);
 
                 modFuncTreeItems.add(item);
@@ -379,8 +385,10 @@ public class DbgView implements Initializable {
     }
 
 
-    private FAIcon treeIcon(AwesomeIcon treeIcon) {
-        return FAIcon.create().icon(treeIcon).style(ICON_STYLE);
+    private Glyph treeIcon(FontAwesome.Glyph treeIcon) {
+        Glyph icon = new FontAwesome().create(treeIcon);
+        icon.setStyle(ICON_STYLE);
+        return icon;
     }
 
     private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) {
@@ -393,13 +401,12 @@ public class DbgView implements Initializable {
     }
 
     public void setFunctionsVisibility(Boolean hidden) {
-        if(!hidden) {
+        if (!hidden) {
             dbgSplitPane.getItems().add(0, modulesBox);
 
             Divider div = dbgSplitPane.getDividers().get(0);
             div.setPosition(functionsDivPosition);
-        }
-        else {
+        } else {
             Divider div = dbgSplitPane.getDividers().get(0);
 
             functionsDivPosition = div.getPosition();
@@ -420,8 +427,7 @@ public class DbgView implements Initializable {
             double percent = (configuredModulesWidth() / dbgSplitPane.getScene().getWidth());
             // the split pane divider position can only be set as a percentage of the split pane
             dbgSplitPane.setDividerPosition(0, percent);
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             e.printStackTrace();
         }
         // whenever the width of the pane changes, write it to configuration

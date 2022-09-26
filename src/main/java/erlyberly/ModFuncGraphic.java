@@ -1,30 +1,30 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package erlyberly;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 import ui.CellController;
-import ui.FAIcon;
 
 class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
@@ -44,7 +44,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
     private final SimpleStringProperty exportToolTipText = new SimpleStringProperty();
 
-    private final SimpleStringProperty tracedIconText = new SimpleStringProperty(AwesomeIcon.STAR_ALT.toString());
+    private final SimpleStringProperty tracedIconText = new SimpleStringProperty(FontAwesome.Glyph.STAR_ALT.toString());
 
     private final SimpleBooleanProperty tracable = new SimpleBooleanProperty();
 
@@ -63,36 +63,36 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         getStyleClass().add("mod-func-graphic");
 
         getChildren().addAll(
-            exportIconGraphic(),
-            traceIcon(),
-            functionLabel()
+                exportIconGraphic(),
+                traceIcon(),
+                functionLabel()
         );
     }
 
-    private FAIcon exportIconGraphic() {
+    private Glyph exportIconGraphic() {
         Tooltip tooltip;
 
         tooltip = new Tooltip();
         tooltip.textProperty().bind(exportToolTipText);
 
-        FAIcon treeIcon;
+        Glyph treeIcon;
 
-        treeIcon = treeIcon(AwesomeIcon.SQUARE);
+        treeIcon = treeIcon(FontAwesome.Glyph.SQUARE);
         treeIcon.textProperty().bind(exportIconText);
         treeIcon.setTooltip(tooltip);
         return treeIcon;
     }
 
-    private FAIcon traceIcon() {
-        FAIcon traceIcon;
+    private Glyph traceIcon() {
+        Glyph traceIcon;
 
-        traceIcon = FAIcon.create().style(ICON_STYLE);
+        traceIcon = new FontAwesome().create(ICON_STYLE);
         traceIcon.textProperty().bind(tracedIconText);
         traceIcon.visibleProperty().bind(tracable);
         traceIcon.setTooltip(new Tooltip("Toggle tracing, double click on this star or ctrl+t when selected"));
         traceIcon.getStyleClass().add("erlyberly-icon-button");
         traceIcon.setOnMouseClicked((e) -> {
-            if(e.getClickCount() == 2)
+            if (e.getClickCount() == 2)
                 traceFn.trace(modFunc);
         });
         return traceIcon;
@@ -107,17 +107,18 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         return label;
     }
 
-    private FAIcon treeIcon(AwesomeIcon treeIcon) {
-        return FAIcon.create().icon(treeIcon).style(ICON_STYLE);
+    private Glyph treeIcon(FontAwesome.Glyph treeIcon) {
+        Glyph icon = new FontAwesome().create(treeIcon);
+        icon.setStyle(ICON_STYLE);
+        return icon;
     }
 
     @Override
     public void updateItem(ModFunc item, boolean empty) {
         if (item == null || empty) {
             text.set(null);
-        }
-        else {
-            if(isShowModuleName())
+        } else {
+            if (isShowModuleName())
                 text.set(item.toFullString());
             else
                 text.set(item.toString());
@@ -133,20 +134,18 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
     }
 
     private void updateExportIcon(ModFunc item) {
-        AwesomeIcon icon;
+        FontAwesome.Glyph icon;
         String tooltipText;
 
-        if(item.isModule()) {
+        if (item.isModule()) {
             tooltipText = "Module";
-            icon = AwesomeIcon.CUBE;
-        }
-        else if(item.isExported()) {
+            icon = FontAwesome.Glyph.CUBE;
+        } else if (item.isExported()) {
             tooltipText = "Exported function";
-            icon = AwesomeIcon.UNLOCK_ALT;
-        }
-        else {
+            icon = FontAwesome.Glyph.UNLOCK_ALT;
+        } else {
             tooltipText = "Unexported function";
-            icon = AwesomeIcon.LOCK;
+            icon = FontAwesome.Glyph.LOCK;
         }
 
         exportToolTipText.set(tooltipText);
@@ -154,10 +153,10 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
     }
 
     public void onTracesChange() {
-        if(modFunc != null && isTracedFn.isTraced(modFunc))
-            tracedIconText.set(AwesomeIcon.CHECK_SQUARE_ALT.toString());
+        if (modFunc != null && isTracedFn.isTraced(modFunc))
+            tracedIconText.set(FontAwesome.Glyph.CHECK_SQUARE_ALT.toString());
         else
-            tracedIconText.set(AwesomeIcon.SQUARE_ALT.toString());
+            tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
     }
 
     public boolean isShowModuleName() {

@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -31,30 +31,30 @@ import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
 
 
-public class OtpUtilTest  {
-	
-	byte[] bytes;
-	
-	@Test
-	public void binaryToString1() {
-		bytes = "hello".getBytes();
-		
-		Assert.assertEquals("<<\"hello\">>", bin());
-	}
-	
-	@Test
-	public void binaryToString2() {
-		bytes = "\0hello".getBytes();
-		
-		Assert.assertEquals("<<0, \"hello\">>", bin());
-	}
-	
-	@Test
-	public void binaryToString3() {
-		bytes = "\0hello\0".getBytes();
-		
-		Assert.assertEquals("<<0, \"hello\", 0>>", bin());
-	}
+public class OtpUtilTest {
+
+    byte[] bytes;
+
+    @Test
+    public void binaryToString1() {
+        bytes = "hello".getBytes();
+
+        Assert.assertEquals("<<\"hello\">>", bin());
+    }
+
+    @Test
+    public void binaryToString2() {
+        bytes = "\0hello".getBytes();
+
+        Assert.assertEquals("<<0, \"hello\">>", bin());
+    }
+
+    @Test
+    public void binaryToString3() {
+        bytes = "\0hello\0".getBytes();
+
+        Assert.assertEquals("<<0, \"hello\", 0>>", bin());
+    }
 	/*
 	@Test
 	public void binaryToString4() {
@@ -131,12 +131,12 @@ public class OtpUtilTest  {
     @Test
     public void improperListErlang() throws OtpErlangException {
         OtpErlangList improper =
-            new OtpErlangList(
-                    new OtpErlangObject[] {
-                        new OtpErlangAtom("hello"),
-                        new OtpErlangBinary("x".getBytes()),
-                    },
-                    new OtpErlangAtom("world"));
+                new OtpErlangList(
+                        new OtpErlangObject[]{
+                                new OtpErlangAtom("hello"),
+                                new OtpErlangBinary("x".getBytes()),
+                        },
+                        new OtpErlangAtom("world"));
         Assert.assertEquals(
                 "[hello, <<\"x\">>|world]",
                 new ErlangFormatter().toString(improper));
@@ -145,12 +145,12 @@ public class OtpUtilTest  {
     @Test
     public void improperListLFE() throws OtpErlangException {
         OtpErlangList improper =
-            new OtpErlangList(
-                    new OtpErlangObject[] {
-                        new OtpErlangAtom("hello"),
-                        new OtpErlangBinary("x".getBytes()),
-                    },
-                    new OtpErlangAtom("world"));
+                new OtpErlangList(
+                        new OtpErlangObject[]{
+                                new OtpErlangAtom("hello"),
+                                new OtpErlangBinary("x".getBytes()),
+                        },
+                        new OtpErlangAtom("world"));
         Assert.assertEquals(
                 "('hello, #B(\"x\").'world)",
                 new LFEFormatter().toString(improper));
@@ -172,9 +172,9 @@ public class OtpUtilTest  {
                 new LFEFormatter().toString(bitstr));
     }
 
-	private String bin() {
-		OtpErlangBinary binary = new OtpErlangBinary(bytes);
-		
-		return new ErlangFormatter().toString(binary);
-	}
+    private String bin() {
+        OtpErlangBinary binary = new OtpErlangBinary(bytes);
+
+        return new ErlangFormatter().toString(binary);
+    }
 }

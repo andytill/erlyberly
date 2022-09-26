@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -54,7 +54,7 @@ public class ElixirFormatter implements TermFormatter {
 
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
-        if(obj instanceof OtpErlangBinary) {
+        if (obj instanceof OtpErlangBinary) {
             OtpErlangBinary bin = (OtpErlangBinary) obj;
             if (Formatting.isDisplayableString(bin)) {
                 sb.append("\"");
@@ -65,88 +65,77 @@ public class ElixirFormatter implements TermFormatter {
                 Formatting.binaryToString(bin, ", ", sb);
                 sb.append(">>");
             }
-        }
-        else if(obj instanceof OtpErlangBitstr) {
+        } else if (obj instanceof OtpErlangBitstr) {
             sb.append("<<");
             Formatting.bitstringToString((OtpErlangBitstr) obj, ", ", "%d::size(%d)", sb);
             sb.append(">>");
-        }
-        else if(obj instanceof OtpErlangPid) {
+        } else if (obj instanceof OtpErlangPid) {
             sb.append(pidToString((OtpErlangPid) obj));
-        }
-        else if(OtpUtil.isErlyberlyRecord(obj)) {
+        } else if (OtpUtil.isErlyberlyRecord(obj)) {
             OtpErlangTuple record = (OtpErlangTuple) obj;
             OtpErlangAtom recordName = (OtpErlangAtom) record.elementAt(1);
             OtpErlangList fields = (OtpErlangList) record.elementAt(2);
             sb.append("{").append(recordName).append(", ");
-            for(int i=0; i < fields.arity(); i++) {
-                if(i != 0) {
+            for (int i = 0; i < fields.arity(); i++) {
+                if (i != 0) {
                     sb.append(", ");
                 }
                 appendToString(fields.elementAt(i), sb);
             }
             sb.append("}");
-        }
-        else if(OtpUtil.isErlyberlyRecordField(obj)) {
-            OtpErlangObject fieldObj = ((OtpErlangTuple)obj).elementAt(2);
+        } else if (OtpUtil.isErlyberlyRecordField(obj)) {
+            OtpErlangObject fieldObj = ((OtpErlangTuple) obj).elementAt(2);
             appendToString(fieldObj, sb);
-        }
-        else if(obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
+        } else if (obj instanceof OtpErlangTuple || obj instanceof OtpErlangList) {
             String brackets = bracketsForTerm(obj);
             OtpErlangObject[] elements = OtpUtil.elementsForTerm(obj);
 
             sb.append(brackets.charAt(0));
 
-            for(int i=0; i < elements.length; i++) {
-                if(i != 0) {
+            for (int i = 0; i < elements.length; i++) {
+                if (i != 0) {
                     sb.append(", ");
                 }
                 appendToString(elements[i], sb);
             }
 
-            if(obj instanceof OtpErlangList && !((OtpErlangList)obj).isProper()) {
+            if (obj instanceof OtpErlangList && !((OtpErlangList) obj).isProper()) {
                 sb.append(cons());
-                appendToString(((OtpErlangList)obj).getLastTail(), sb);
+                appendToString(((OtpErlangList) obj).getLastTail(), sb);
             }
 
             sb.append(brackets.charAt(1));
-        }
-        else if(obj instanceof OtpErlangString) {
+        } else if (obj instanceof OtpErlangString) {
             Formatting.appendString((OtpErlangString) obj, this, "\'", sb);
-        }
-        else if(obj instanceof OtpErlangAtom){
+        } else if (obj instanceof OtpErlangAtom) {
             String str = obj.toString();
             if (str.startsWith("\'") && str.endsWith("\'")) {
                 String innerStr = str.substring(1, str.length() - 1);
-                if(innerStr.startsWith("Elixir.")) {
+                if (innerStr.startsWith("Elixir.")) {
                     // Treat modules differently
                     str = innerStr.substring(7);
-                }
-                else {
+                } else {
                     // Convert Erlang style escaped atoms to Elixir style
-                    str = ":\"" + innerStr +"\"";
+                    str = ":\"" + innerStr + "\"";
                 }
 
-            }
-            else {
+            } else {
                 str = ":" + str;
             }
             sb.append(str);
-        }
-        else if(obj instanceof OtpErlangMap) {
+        } else if (obj instanceof OtpErlangMap) {
             OtpErlangMap map = (OtpErlangMap) obj;
             sb.append(mapLeft(obj));
-            Iterator<Map.Entry<OtpErlangObject,OtpErlangObject>> elemIt = map.entrySet().iterator();
-            while(elemIt.hasNext()) {
-                Map.Entry<OtpErlangObject,OtpErlangObject> elem = elemIt.next();
+            Iterator<Map.Entry<OtpErlangObject, OtpErlangObject>> elemIt = map.entrySet().iterator();
+            while (elemIt.hasNext()) {
+                Map.Entry<OtpErlangObject, OtpErlangObject> elem = elemIt.next();
                 if (elem.getKey() instanceof OtpErlangAtom) {
                     if (isHiddenField(elem.getKey())) {
                         continue;
                     }
                     sb.append(elem.getKey().toString());
                     sb.append(": ");
-                }
-                else {
+                } else {
                     appendToString(elem.getKey(), sb);
                     sb.append(" => ");
                 }
@@ -156,19 +145,17 @@ public class ElixirFormatter implements TermFormatter {
                 }
             }
             sb.append("}");
-        }
-        else {
+        } else {
             sb.append(obj.toString());
         }
         return sb;
     }
 
     @Override
-    public  String mapKeyToString(OtpErlangObject obj) {
+    public String mapKeyToString(OtpErlangObject obj) {
         if (obj instanceof OtpErlangAtom) {
             return obj.toString() + ": ";
-        }
-        else {
+        } else {
             return appendToString(obj, new StringBuilder()).toString() + " => ";
         }
     }
@@ -180,9 +167,9 @@ public class ElixirFormatter implements TermFormatter {
     public String bracketsForTerm(OtpErlangObject obj) {
         assert obj != null;
 
-        if(obj instanceof OtpErlangTuple)
+        if (obj instanceof OtpErlangTuple)
             return "{}";
-        else if(obj instanceof OtpErlangList)
+        else if (obj instanceof OtpErlangList)
             return "[]";
         else
             throw new RuntimeException("No brackets for type " + obj.getClass());
@@ -197,9 +184,9 @@ public class ElixirFormatter implements TermFormatter {
     public String modFuncArgsToString(OtpErlangTuple mfa) {
         StringBuilder sb = new StringBuilder();
         sb.append(moduleNameToString((OtpErlangAtom) mfa.elementAt(0)))
-          .append(".")
-          .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
-          .append("(");
+                .append(".")
+                .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+                .append("(");
         OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
         ArrayList<String> stringArgs = new ArrayList<>();
         for (OtpErlangObject arg : args) {
@@ -217,7 +204,7 @@ public class ElixirFormatter implements TermFormatter {
 
     @Override
     public String moduleNameToString(String moduleName) {
-        if(moduleName.startsWith("Elixir."))
+        if (moduleName.startsWith("Elixir."))
             return moduleName.substring(7);
         else
             return ":" + moduleName;
@@ -232,9 +219,9 @@ public class ElixirFormatter implements TermFormatter {
         StringBuilder sb = new StringBuilder();
         OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
         sb.append(moduleNameToString((OtpErlangAtom) mfa.elementAt(0)))
-          .append(".")
-          .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
-          .append("/").append(argsList.arity());
+                .append(".")
+                .append(funToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
+                .append("/").append(argsList.arity());
         return sb.toString();
     }
 
@@ -245,7 +232,7 @@ public class ElixirFormatter implements TermFormatter {
 
     @Override
     public String exceptionToString(OtpErlangAtom errorClass, OtpErlangObject errorReason) {
-        return errorClass + ":" +  toString(errorReason);
+        return errorClass + ":" + toString(errorReason);
     }
 
     @Override
@@ -279,8 +266,7 @@ public class ElixirFormatter implements TermFormatter {
     }
 
     @Override
-    public String mapLeft(OtpErlangObject obj)
-    {
+    public String mapLeft(OtpErlangObject obj) {
         OtpErlangMap map = (OtpErlangMap) obj;
         OtpErlangAtom structNameKey = new OtpErlangAtom(STRUCT_KEY);
         if (map.get(structNameKey) != null) {

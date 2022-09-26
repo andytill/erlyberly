@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,7 +28,6 @@ import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpEpmd;
 import com.ericsson.otp.erlang.OtpErlangException;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import floatyfield.FloatyFieldControl;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -54,12 +53,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import ui.FAIcon;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 /**
  * Connection details control to connect to the remote node.
  */
-@SuppressWarnings({ "unchecked" })
+@SuppressWarnings({"unchecked"})
 public class ConnectionView extends SplitPane {
 
     private final SimpleBooleanProperty isConnecting = new SimpleBooleanProperty();
@@ -91,13 +91,15 @@ public class ConnectionView extends SplitPane {
 
         filterField = new FloatyFieldControl();
         filterField.getModel().promptTextProperty().set("Filter Known Nodes");
-        filterField.getModel().textProperty().addListener((o) -> { onFilterChanged(); });
+        filterField.getModel().textProperty().addListener((o) -> {
+            onFilterChanged();
+        });
         HBox.setHgrow(filterField, Priority.SOMETIMES);
         knownNodesTable = new TableView<>();
         knownNodesTable.getColumns().setAll(
-            newNodeRunningColumn("Is Running", "running", 75),
-            newColumn("Node Name", "nodeName", 200),
-            newColumn("Cookie", "cookie")
+                newNodeRunningColumn("Is Running", "running", 75),
+                newColumn("Node Name", "nodeName", 200),
+                newColumn("Cookie", "cookie")
         );
         VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
         rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
@@ -114,7 +116,7 @@ public class ConnectionView extends SplitPane {
         knownNodesTable.setItems(filteredRows);
         knownNodesTable.getSelectionModel().selectedItemProperty().addListener(
                 (o, oldv, newv) -> {
-                    if(newv == null)
+                    if (newv == null)
                         return;
                     nodeNameField.getModel().getField().setText(newv.getNodeName());
                     cookieField.getModel().getField().setText(newv.getCookie());
@@ -146,10 +148,10 @@ public class ConnectionView extends SplitPane {
         knownNodeBox.setSpacing(10d);
         knownNodeBox.setPadding(new Insets(10, 10, 10, 10));
         knownNodeBox.getChildren().addAll(
-            new HBox(
-                filterField,
-                searchIcon()),
-            knownNodesTable);
+                new HBox(
+                        filterField,
+                        searchIcon()),
+                knownNodesTable);
         getItems().addAll(knownNodeBox, newNodeBox);
 
         nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
@@ -161,7 +163,7 @@ public class ConnectionView extends SplitPane {
 
     private void onDelete(ActionEvent e) {
         KnownNode selectedItem = knownNodesTable.getSelectionModel().getSelectedItem();
-        if(selectedItem == null)
+        if (selectedItem == null)
             return;
         rows.remove(selectedItem);
         PrefBind.removeKnownNode(selectedItem);
@@ -173,10 +175,9 @@ public class ConnectionView extends SplitPane {
         return col;
     }
 
-    private FAIcon searchIcon() {
-        FAIcon icon = FAIcon.create()
-                .icon(AwesomeIcon.SEARCH)
-                .style("-fx-font-family: FontAwesome; -fx-font-size: 1.8em; -fx-text-fill: gray;");
+    private Glyph searchIcon() {
+        Glyph icon = new FontAwesome().create(FontAwesome.Glyph.SEARCH);
+        icon.setStyle("-fx-font-family: FontAwesome; -fx-font-size: 1.8em; -fx-text-fill: gray;");
         // make the icon align with the input text, not with the height of the entire field control
         icon.setAlignment(Pos.BOTTOM_RIGHT);
         icon.setMaxHeight(Double.MAX_VALUE);
@@ -195,8 +196,7 @@ public class ConnectionView extends SplitPane {
         HashSet<String> runningNodeNames = new HashSet<>();
         try {
             runningNodeNames.addAll(Arrays.asList(OtpEpmd.lookupNames()));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         // a lit of node names that are running according to epmd but do not appear in the list
@@ -208,7 +208,7 @@ public class ConnectionView extends SplitPane {
             KnownNode knownNode = new KnownNode(confStrings.get(0), confStrings.get(1));
             // if this configured node name is in the epmd list then mark it as "running"
             for (String string : runningNodeNames) {
-                if(string.contains(knownNode.getNodeName())) {
+                if (string.contains(knownNode.getNodeName())) {
                     knownNode.setRunning(true);
                     unknownRunningNodeNames.remove(string);
                     break;
@@ -218,7 +218,7 @@ public class ConnectionView extends SplitPane {
         }
         for (String runningNodeName : unknownRunningNodeNames) {
             // don't show erlyberly in the list, weird stuff happens if erlyberly connects to itself!
-            if(runningNodeName.contains("erlyberly"))
+            if (runningNodeName.contains("erlyberly"))
                 continue;
             // for some reason OtpEpmd gives node names in the following format:
             //     "name gerp at port 52153"
@@ -244,8 +244,10 @@ public class ConnectionView extends SplitPane {
     private TableColumn<KnownNode, Boolean> newNodeRunningColumn(String colText, String colPropertyName, double colWidth) {
         TableColumn<KnownNode, Boolean> column;
         column = new TableColumn<>(colText);
-        column.setCellValueFactory( node -> { return node.getValue().runningProperty(); });
-        column.setCellFactory( tc -> new CheckBoxTableCell<>());
+        column.setCellValueFactory(node -> {
+            return node.getValue().runningProperty();
+        });
+        column.setCellFactory(tc -> new CheckBoxTableCell<>());
         column.setPrefWidth(colWidth);
         return column;
     }
@@ -254,17 +256,17 @@ public class ConnectionView extends SplitPane {
         String cookie, nodeName;
         nodeName = nodeNameField.getModel().getText();
         cookie = removeApostrophesFromCookie(cookieField.getModel().getText());
-        if(nodeName == null || "".equals(nodeName))
+        if (nodeName == null || "".equals(nodeName))
             return;
         maybeStoreNodeInfoInConfig(nodeName, cookie);
         connectToRemoteNode(cookie, nodeName);
     }
 
     private void maybeStoreNodeInfoInConfig(String nodeName, String cookie) {
-       KnownNode knownNode = new KnownNode(nodeName, cookie);
-       if(!knownNodesTable.getItems().contains(knownNode)) {
-           PrefBind.storeKnownNode(knownNode);
-       }
+        KnownNode knownNode = new KnownNode(nodeName, cookie);
+        if (!knownNodesTable.getItems().contains(knownNode)) {
+            PrefBind.storeKnownNode(knownNode);
+        }
     }
 
     private void connectToRemoteNode(String cookie, String nodeName) {
@@ -273,14 +275,17 @@ public class ConnectionView extends SplitPane {
         ErlyBerly.runIO(() -> {
             try {
                 ErlyBerly
-                    .nodeAPI()
-                    .connectionInfo(nodeName, cookie)
-                    .manualConnect();
+                        .nodeAPI()
+                        .connectionInfo(nodeName, cookie)
+                        .manualConnect();
 
-                Platform.runLater(() -> { closeThisWindow(); });
-            }
-            catch (OtpErlangException | OtpAuthException | IOException e) {
-                Platform.runLater(() -> { connectionFailed(e.getMessage()); });
+                Platform.runLater(() -> {
+                    closeThisWindow();
+                });
+            } catch (OtpErlangException | OtpAuthException | IOException e) {
+                Platform.runLater(() -> {
+                    connectionFailed(e.getMessage());
+                });
             }
         });
     }
@@ -298,10 +303,10 @@ public class ConnectionView extends SplitPane {
         messageLabel.setText(message);
     }
 
-    private FAIcon bannedIcon() {
-        return FAIcon.create()
-                .icon(AwesomeIcon.BAN)
-                .style("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
+    private Glyph bannedIcon() {
+        Glyph icon = new FontAwesome().create(FontAwesome.Glyph.BAN);
+        icon.setStyle("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
+        return icon;
     }
 
     // TODO: make into a more generic stage handling function.
@@ -330,14 +335,17 @@ public class ConnectionView extends SplitPane {
         public void run() {
             try {
                 ErlyBerly
-                    .nodeAPI()
-                    .connectionInfo(remoteNodeName, cookie)
-                    .manualConnect();
+                        .nodeAPI()
+                        .connectionInfo(remoteNodeName, cookie)
+                        .manualConnect();
 
-                Platform.runLater(() -> { closeThisWindow(); });
-            }
-            catch (OtpErlangException | OtpAuthException | IOException e) {
-                Platform.runLater(() -> { connectionFailed(e.getMessage()); });
+                Platform.runLater(() -> {
+                    closeThisWindow();
+                });
+            } catch (OtpErlangException | OtpAuthException | IOException e) {
+                Platform.runLater(() -> {
+                    connectionFailed(e.getMessage());
+                });
             }
         }
     }
@@ -348,27 +356,34 @@ public class ConnectionView extends SplitPane {
     public static class KnownNode {
         private final String nodeName, cookie;
         private SimpleBooleanProperty running = new SimpleBooleanProperty(false);
+
         public KnownNode(String nodeName, String cookie) {
             assert nodeName != null;
             assert !"".equals(nodeName);
             this.nodeName = nodeName;
             this.cookie = cookie;
         }
+
         public String getNodeName() {
             return nodeName;
         }
+
         public String getCookie() {
             return cookie;
         }
+
         public boolean isRunning() {
             return running.get();
         }
+
         public SimpleBooleanProperty runningProperty() {
             return running;
         }
+
         public void setRunning(boolean running) {
             this.running.set(running);
         }
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -377,6 +392,7 @@ public class ConnectionView extends SplitPane {
             result = prime * result + ((nodeName == null) ? 0 : nodeName.hashCode());
             return result;
         }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
