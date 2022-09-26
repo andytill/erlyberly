@@ -20,10 +20,7 @@ package erlyberly;
 import com.ericsson.otp.erlang.*;
 import erlyberly.node.OtpUtil;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -262,7 +259,7 @@ public class TraceLog implements Comparable<TraceLog> {
         return this.pid;
     }
 
-    String getRegName() {
+    public String getRegName() {
         return this.registeredName;
     }
 
