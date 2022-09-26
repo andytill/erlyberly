@@ -34,6 +34,7 @@ public class OtpSelfNode extends OtpNode {
     }
 
     public OtpConn connect(final OtpPeer aPeer) throws OtpAuthException, IOException {
+        //System.setProperty("OtpConnection.trace", "4");
         return new OtpConn(this, aPeer);
     }
 }
