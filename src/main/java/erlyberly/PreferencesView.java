@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -74,15 +74,13 @@ public class PreferencesView implements Initializable {
     }
 
     private void storeFormattingPreferenceChange() {
-        if(erlangTermsButton.isSelected()) {
+        if (erlangTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "erlang");
             ErlyBerly.setTermFormatter(new ErlangFormatter());
-        }
-        else if(elixirTermsButton.isSelected()) {
+        } else if (elixirTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "elixir");
             ErlyBerly.setTermFormatter(new ElixirFormatter());
-        }
-        else if(lfeTermsButton.isSelected()) {
+        } else if (lfeTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "lfe");
             ErlyBerly.setTermFormatter(new LFEFormatter());
         }
@@ -91,16 +89,13 @@ public class PreferencesView implements Initializable {
 
     private void selectFormattingButton() {
         String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
-        if("erlang".equals(formattingPref)) {
+        if ("erlang".equals(formattingPref)) {
             erlangTermsButton.setSelected(true);
-        }
-        else if("elixir".equals(formattingPref)) {
+        } else if ("elixir".equals(formattingPref)) {
             elixirTermsButton.setSelected(true);
-        }
-        else if("lfe".equals(formattingPref)) {
+        } else if ("lfe".equals(formattingPref)) {
             lfeTermsButton.setSelected(true);
-        }
-        else
+        } else
             throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);
     }
 }

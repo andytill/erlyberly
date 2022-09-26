@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -71,10 +71,14 @@ public class ProcController {
         waiter = new Object();
 
         Platform.runLater(() -> {
-            ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> { startPollingThread(); } );
+            ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> {
+                startPollingThread();
+            });
         });
 
-        filter.addListener((o, ov, nv) -> { updateProcFilter(nv); });
+        filter.addListener((o, ov, nv) -> {
+            updateProcFilter(nv);
+        });
     }
 
     public void setListComparator(ObservableValue<? extends Comparator<? super ProcInfo>> tableComparator) {
@@ -83,16 +87,17 @@ public class ProcController {
 
     private void updateProcFilter(String filterText) {
         BasicSearch basicSearch = new BasicSearch(filterText);
-        filteredProcesses.setPredicate((proc) -> { return isMatchingProcess(basicSearch, proc); });
+        filteredProcesses.setPredicate((proc) -> {
+            return isMatchingProcess(basicSearch, proc);
+        });
     }
 
     private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
-        return
-                basicSearch.matches(proc.getPid(), proc.getProcessName());
+        return basicSearch.matches(proc.getPid(), proc.getProcessName());
     }
 
     private void startPollingThread() {
-        if(ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
+        if (ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
             procPollerThread.start();
         }
     }
@@ -108,18 +113,17 @@ public class ProcController {
     }
 
     public void togglePolling() {
-        if(timeout == -1) {
+        if (timeout == -1) {
             timeout = 1000;
 
             refreshOnce();
-        }
-        else {
+        } else {
             timeout = -1;
         }
         polling.set(timeout > 0);
     }
 
-    public void clearProcesses(){
+    public void clearProcesses() {
         processes.clear();
     }
 
@@ -157,11 +161,10 @@ public class ProcController {
         @Override
         public void run() {
 
-            while(true) {
+            while (true) {
 
                 boolean connected = ErlyBerly.nodeAPI().isConnected();
-                if(!connected)
-                    continue;
+                if (!connected) continue;
 
                 final ArrayList<ProcInfo> processList = new ArrayList<>();
 
@@ -170,21 +173,17 @@ public class ProcController {
                         ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
 
                         updateProcessList(processList);
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
 
                 try {
                     synchronized (waiter) {
-                        if(timeout > 0)
-                            waiter.wait(timeout);
-                        else
-                            waiter.wait();
+                        if (timeout > 0) waiter.wait(timeout);
+                        else waiter.wait();
                     }
-                }
-                catch (InterruptedException e1) {
+                } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
             }
@@ -195,26 +194,27 @@ public class ProcController {
                 @Override
                 public void run() {
                     ProcSort procSort = procSortProperty.get();
-                    if(procSort != null) {
+                    if (procSort != null) {
                         Comparator<ProcInfo> comparator = null;
 
-                        if("proc".equals(procSort.getSortField())) {
+                        if ("proc".equals(procSort.getSortField())) {
                             comparator = new Comparator<ProcInfo>() {
                                 @Override
                                 public int compare(ProcInfo o1, ProcInfo o2) {
                                     return o1.getProcessName().compareTo(o2.getProcessName());
-                                }};
-                        }
-                        else if("reduc".equals(procSort.getSortField())) {
+                                }
+                            };
+                        } else if ("reduc".equals(procSort.getSortField())) {
                             comparator = new Comparator<ProcInfo>() {
                                 @Override
                                 public int compare(ProcInfo o1, ProcInfo o2) {
                                     return Long.compare(o1.getReductions(), o2.getReductions());
-                                }};
+                                }
+                            };
                         }
 
-                        if(comparator != null) {
-                            if(procSort.getSortType() == SortType.DESCENDING) {
+                        if (comparator != null) {
+                            if (procSort.getSortType() == SortType.DESCENDING) {
                                 comparator = Collections.reverseOrder(comparator);
                             }
                             Collections.sort(processList, comparator);
@@ -222,7 +222,8 @@ public class ProcController {
                     }
                     processes.clear();
                     processes.addAll(processList);
-                }});
+                }
+            });
         }
     }
 
@@ -248,9 +249,10 @@ public class ProcController {
             try {
                 OtpErlangObject processState = ErlyBerly.nodeAPI().getProcessState(pidString);
 
-                Platform.runLater(() -> { callback.callback(processState); });
-            }
-            catch (OtpErlangException | IOException e) {
+                Platform.runLater(() -> {
+                    callback.callback(processState);
+                });
+            } catch (OtpErlangException | IOException e) {
                 e.printStackTrace();
             }
         }

@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -33,8 +33,7 @@ public class CallGraphView extends TreeView<ModFunc> {
      * they have lots of sub-calls, cluttering up the tree and it is assumed most usage
      * will be for application calls, not for the standard libs.
      */
-    private static final List<String> UNEXPANDED_MODULES = Arrays.asList(
-            "erlang", "gen_server", "io", "io_lib",  "lists", "rpc", "unicode");
+    private static final List<String> UNEXPANDED_MODULES = Arrays.asList("erlang", "gen_server", "io", "io_lib", "lists", "rpc", "unicode");
 
     private final ModFuncContextMenu modFuncContextMenu;
 
@@ -43,13 +42,10 @@ public class CallGraphView extends TreeView<ModFunc> {
 
         modFuncContextMenu = new ModFuncContextMenu(aDbgController);
 
-        getSelectionModel()
-            .selectedItemProperty()
-            .addListener((o, old, newItem) -> {
-                modFuncContextMenu.selectedTreeItemProperty().set(newItem);
-                if(newItem != null)
-                    modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
-            });
+        getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
+            modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+            if (newItem != null) modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
+        });
 
 
         ModFuncTreeCellFactory modFuncTreeCellFactory;
@@ -104,8 +100,7 @@ public class CallGraphView extends TreeView<ModFunc> {
             for (OtpErlangObject e : OtpUtil.iterableElements(calls)) {
                 populateCallGraph(modFuncItem, (OtpErlangTuple) e);
             }
-        }
-        catch (OtpErlangRangeException e) {
+        } catch (OtpErlangRangeException e) {
             e.printStackTrace();
         }
     }

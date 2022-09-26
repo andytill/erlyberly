@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -83,11 +83,10 @@ public class ModFuncContextMenu extends ContextMenu {
         selectedTreeItem = new SimpleObjectProperty<>();
 
         selectedItem.addListener((o, oldv, newv) -> {
-            if(newv == null) {
+            if (newv == null) {
                 isSelectionModule.set(false);
                 isSelectionFunction.set(false);
-            }
-            else {
+            } else {
                 boolean module = newv.isModule();
                 isSelectionModule.set(module);
                 isSelectionFunction.set(!module);
@@ -106,7 +105,9 @@ public class ModFuncContextMenu extends ContextMenu {
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
 
         traceAllMenuItem = new MenuItem("Trace All");
-        traceAllMenuItem.setOnAction((e) -> { toggleTracesToAllFunctions(); });
+        traceAllMenuItem.setOnAction((e) -> {
+            toggleTracesToAllFunctions();
+        });
         traceAllMenuItem.disableProperty().bind(rootProperty.isNull());
         traceAllMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+shift+t"));
 
@@ -133,16 +134,12 @@ public class ModFuncContextMenu extends ContextMenu {
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
         callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(isSelectionFunction.not()));
-        getItems().addAll(
-            functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem,
-            new SeparatorMenuItem(), callGraphMenuItem,
-            new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
+        getItems().addAll(functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem, new SeparatorMenuItem(), callGraphMenuItem, new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
     }
 
     private void onSeqTrace(ActionEvent ae) {
         ModFunc func = selectedItem.get();
-        if(func == null)
-            return;
+        if (func == null) return;
 
         dbgController.seqTrace(func);
 
@@ -151,24 +148,16 @@ public class ModFuncContextMenu extends ContextMenu {
 
     private void onViewCallGraph(ActionEvent ae) {
         ModFunc func = selectedItem.get();
-        if(func == null)
-            return;
-        if(func.isModule())
-            return;
+        if (func == null) return;
+        if (func.isModule()) return;
 
-        List<String> defaultSkippedModules = Arrays.asList(
-            "app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer"
-        );
+        List<String> defaultSkippedModules = Arrays.asList("app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer");
         List<String> skippedModules = getConfiguredSkippedModuleNames(defaultSkippedModules);
         List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
         ErlyBerly.runIO(() -> {
             try {
-                OtpErlangObject rpcResult = ErlyBerly.nodeAPI().callGraph(
-                    new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})),
-                    OtpUtil.atom(func.getModuleName()),
-                    OtpUtil.atom(func.getFuncName()),
-                    new OtpErlangLong(func.getArity()));
-                if(!OtpUtil.isTupleTagged(NodeAPI.OK_ATOM, rpcResult)) {
+                OtpErlangObject rpcResult = ErlyBerly.nodeAPI().callGraph(new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})), OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
+                if (!OtpUtil.isTupleTagged(NodeAPI.OK_ATOM, rpcResult)) {
                     throw new RuntimeException(rpcResult.toString());
                 }
                 OtpErlangTuple rpcResultTuple = (OtpErlangTuple) rpcResult;
@@ -178,8 +167,7 @@ public class ModFuncContextMenu extends ContextMenu {
                     callGraphView.callGraph((OtpErlangTuple) callGraph);
                     ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
                 });
-            }
-            catch (OtpErlangException | IOException e) {
+            } catch (OtpErlangException | IOException e) {
                 e.printStackTrace();
             }
         });
@@ -193,20 +181,16 @@ public class ModFuncContextMenu extends ContextMenu {
     private void onFunctionTrace(ActionEvent e) {
         ModFunc mf = selectedItem.get();
 
-        if(selectedItem == null)
-            return;
+        if (selectedItem == null) return;
         dbgController.toggleTraceModFunc(mf);
     }
 
     private void onModuleTrace(ActionEvent e) {
         TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
 
-        if(selectedItem == null)
-            return;
-        if(selectedItem.getValue() == null)
-            return;
-        if(!selectedItem.getValue().isModule())
-            selectedItem = selectedItem.getParent();
+        if (selectedItem == null) return;
+        if (selectedItem.getValue() == null) return;
+        if (!selectedItem.getValue().isModule()) selectedItem = selectedItem.getParent();
 
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();
         recurseModFuncItems(selectedItem, funcs);
@@ -217,12 +201,9 @@ public class ModFuncContextMenu extends ContextMenu {
     private void onExportedFunctionTrace(ActionEvent e) {
         TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
 
-        if(selectedItem == null)
-            return;
-        if(selectedItem.getValue() == null)
-            return;
-        if(!selectedItem.getValue().isModule())
-            selectedItem = selectedItem.getParent();
+        if (selectedItem == null) return;
+        if (selectedItem.getValue() == null) return;
+        if (!selectedItem.getValue().isModule()) selectedItem = selectedItem.getParent();
 
         // get all the functions we may trace
         HashSet<ModFunc> funcs = new HashSet<ModFunc>();
@@ -231,7 +212,7 @@ public class ModFuncContextMenu extends ContextMenu {
         // filter the exported ones
         HashSet<ModFunc> exported = new HashSet<ModFunc>();
         for (ModFunc modFunc : funcs) {
-            if(modFunc.isExported()) {
+            if (modFunc.isExported()) {
                 exported.add(modFunc);
             }
         }
@@ -241,9 +222,8 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {
-        if(item == null)
-            return;
-        if(item.getValue() == null || (!item.getValue().isModule() && !item.getValue().isModuleInfo()))
+        if (item == null) return;
+        if (item.getValue() == null || (!item.getValue().isModule() && !item.getValue().isModuleInfo()))
             funcs.add(item.getValue());
 
         for (TreeItem<ModFunc> childItem : item.getChildren()) {
@@ -251,43 +231,42 @@ public class ModFuncContextMenu extends ContextMenu {
         }
     }
 
-    private void toggleTraceMod(Collection<ModFunc> functions){
-       for (ModFunc func : functions) {
-           dbgController.toggleTraceModFunc(func);
-       }
+    private void toggleTraceMod(Collection<ModFunc> functions) {
+        for (ModFunc func : functions) {
+            dbgController.toggleTraceModFunc(func);
+        }
     }
 
-   private void onViewCode(ActionEvent ae) {
-       MenuItem mi = (MenuItem) ae.getSource();
-       String menuItemClicked = mi.getText();
-       ModFunc mf = selectedItem.get();
-       if(mf == null)
-           return;
-       String moduleName = mf.getModuleName();
-       ErlyBerly.runIO(() -> {
-           try{
+    private void onViewCode(ActionEvent ae) {
+        MenuItem mi = (MenuItem) ae.getSource();
+        String menuItemClicked = mi.getText();
+        ModFunc mf = selectedItem.get();
+        if (mf == null) return;
+        String moduleName = mf.getModuleName();
+        ErlyBerly.runIO(() -> {
+            try {
                 final String title;
                 String modSrc;
-                if(mf.isModule()) {
+                if (mf.isModule()) {
                     modSrc = fetchModuleCode(menuItemClicked, moduleName);
                     title = moduleName + " Source code";
-                }
-                else {
+                } else {
                     String functionName = mf.getFuncName();
                     Integer arity = mf.getArity();
                     modSrc = fetchFunctionCode(menuItemClicked, moduleName, functionName, arity);
                     title = moduleName;
                 }
-                Platform.runLater(() -> { showModuleSourceCode(title, modSrc); });
-            }
-            catch (Exception e) {
+                Platform.runLater(() -> {
+                    showModuleSourceCode(title, modSrc);
+                });
+            } catch (Exception e) {
                 throw new RuntimeException("failed to load the source code.", e);
             }
         });
     }
 
     private String fetchModuleCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
-        switch (menuItemClicked){
+        switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
                 return dbgController.moduleFunctionSourceCode(moduleName);
             case VIEW_ABST_CODE:
@@ -298,7 +277,7 @@ public class ModFuncContextMenu extends ContextMenu {
     }
 
     private String fetchFunctionCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
-        switch (menuItemClicked){
+        switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
                 return dbgController.moduleFunctionSourceCode(moduleName, function, arity);
             case VIEW_ABST_CODE:
@@ -310,20 +289,18 @@ public class ModFuncContextMenu extends ContextMenu {
 
     private void showModuleSourceCode(String title, String moduleSourceCode) {
         Boolean showSourceInSystemEditor = PrefBind.getOrDefaultBoolean("showSourceInSystemEditor", false);
-        if(showSourceInSystemEditor) {
+        if (showSourceInSystemEditor) {
             try {
                 File tmpSourceFile = File.createTempFile(title, ".erl");
                 FileOutputStream out = new FileOutputStream(tmpSourceFile);
                 out.write(moduleSourceCode.getBytes());
                 out.close();
                 Desktop.getDesktop().edit(tmpSourceFile);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
             }
-        }
-        else {
+        } else {
             ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
         }
     }
@@ -343,7 +320,7 @@ public class ModFuncContextMenu extends ContextMenu {
         ArrayList<ModFunc> funs = new ArrayList<>();
         for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
             for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
-                if(!modFunc.getValue().isModuleInfo()) {
+                if (!modFunc.getValue().isModuleInfo()) {
                     funs.add(modFunc.getValue());
                 }
             }

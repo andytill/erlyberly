@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -50,12 +50,12 @@ public class PrefBind {
             @Override
             public void run() {
                 synchronized (AWAIT_STORE_LOCK) {
-                    if(!awaitingStore)
-                        return;
+                    if (!awaitingStore) return;
                     awaitingStore = false;
                 }
                 store();
-            }}, WRITE_TO_DISK_DELAY, WRITE_TO_DISK_DELAY);
+            }
+        }, WRITE_TO_DISK_DELAY, WRITE_TO_DISK_DELAY);
     }
 
     private static Map<String, Object> props;
@@ -65,14 +65,15 @@ public class PrefBind {
     private static final Object AWAIT_STORE_LOCK = new Object();
     private static boolean awaitingStore;
 
-    private PrefBind() {}
+    private PrefBind() {
+    }
 
     public static void bind(final String propName, StringProperty stringProp) {
-        if(props == null) {
+        if (props == null) {
             return;
         }
         String storedValue = (String) props.get(propName);
-        if(storedValue != null) {
+        if (storedValue != null) {
             stringProp.set(storedValue);
         }
         stringProp.addListener((ObservableValue<? extends String> o, String oldValue, String newValue) -> {
@@ -80,12 +81,12 @@ public class PrefBind {
         });
     }
 
-    public static void bindBoolean(final String propName, BooleanProperty boolProp){
-        if(props == null) {
+    public static void bindBoolean(final String propName, BooleanProperty boolProp) {
+        if (props == null) {
             return;
         }
         Boolean storedValue = (Boolean) props.get(propName);
-        if(storedValue != null) {
+        if (storedValue != null) {
             boolProp.set(storedValue);
         }
         boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
@@ -97,8 +98,7 @@ public class PrefBind {
         try {
             //props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
             new TomlWriter().write(props, new FileOutputStream(erlyberlyConfig));
-        }
-        catch (IOException | NoClassDefFoundError e) {
+        } catch (IOException | NoClassDefFoundError e) {
             e.printStackTrace();
         }
     }
@@ -110,7 +110,7 @@ public class PrefBind {
 
         File dotConfigDir = new File(homeDir, ".config");
 
-        if(dotConfigDir.exists()) {
+        if (dotConfigDir.exists()) {
             homeDir = dotConfigDir;
         }
 
@@ -171,7 +171,7 @@ public class PrefBind {
      * proccesses queue before tracing is suspended on the node.
      */
     public static int getMaxTraceQueueLengthConfig() {
-        Number maxTraceQueueLength = (Number)getOrDefault("maxTraceQueueLength", 1000);
+        Number maxTraceQueueLength = (Number) getOrDefault("maxTraceQueueLength", 1000);
         return maxTraceQueueLength.intValue();
     }
 }

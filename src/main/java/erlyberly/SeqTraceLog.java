@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -48,20 +48,17 @@ public class SeqTraceLog {
         Object to = props.get(OtpUtil.atom("to"));
         Object message = props.get(OtpUtil.atom("message"));
         Object timestamp = props.get(OtpUtil.atom("timestamp"));
-        return new SeqTraceLog(msgType, serial,  from, to, message, timestamp);
+        return new SeqTraceLog(msgType, serial, from, to, message, timestamp);
     }
 
     private String stringValue(Object obj) {
-        if(obj instanceof OtpErlangString)
-            return ((OtpErlangString) obj).stringValue();
+        if (obj instanceof OtpErlangString) return ((OtpErlangString) obj).stringValue();
         return obj.toString();
     }
 
     @Override
     public String toString() {
-        return "SeqTraceLog [msg_type=" + msgType + ", serial=" + serial
-                + ", from=" + from + ", to=" + to + ", message=" + message
-                + "]";
+        return "SeqTraceLog [msg_type=" + msgType + ", serial=" + serial + ", from=" + from + ", to=" + to + ", message=" + message + "]";
     }
 
     public OtpErlangObject getMessage() {

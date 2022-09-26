@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -86,8 +86,7 @@ public class ErlyBerly extends Application {
         Future<?> future = IO_EXECUTOR.submit(runnable);
         try {
             future.get();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -113,7 +112,7 @@ public class ErlyBerly extends Application {
         FxmlLoadable dbgFxml;
         dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
         dbgFxml.load();
-        DbgView dbgView = (DbgView)dbgFxml.controller;
+        DbgView dbgView = (DbgView) dbgFxml.controller;
         tabPane = dbgView.getTabPane();
 
         splitPane = new SplitPane();
@@ -135,7 +134,7 @@ public class ErlyBerly extends Application {
             public void handle(KeyEvent t) {
                 if (KeyCode.W.equals(t.getCode()) && t.isShortcutDown()) {
                     Tab selectedItem = tabPane.getSelectionModel().getSelectedItem();
-                    if(selectedItem != null && selectedItem.isClosable()) {
+                    if (selectedItem != null && selectedItem.isClosable()) {
                         tabPane.getTabs().remove(selectedItem);
                         t.consume();
                     }
@@ -171,8 +170,7 @@ public class ErlyBerly extends Application {
             ErlyBerly.runIOAndWait(() -> {
                 try {
                     nodeAPI().manuallyDisconnect();
-                }
-                catch(Exception e) {
+                } catch (Exception e) {
                     System.out.println(e);
                 }
             });
@@ -189,12 +187,9 @@ public class ErlyBerly extends Application {
 
     private static TermFormatter formatterFromConfig() {
         String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
-        if("erlang".equals(formattingPref))
-            return new ErlangFormatter();
-        else if("elixir".equals(formattingPref))
-            return new ElixirFormatter();
-        else if("lfe".equals(formattingPref))
-            return new LFEFormatter();
+        if ("erlang".equals(formattingPref)) return new ErlangFormatter();
+        else if ("elixir".equals(formattingPref)) return new ElixirFormatter();
+        else if ("lfe".equals(formattingPref)) return new LFEFormatter();
         else
             throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);
     }
@@ -213,10 +208,9 @@ public class ErlyBerly extends Application {
         dbgView = (DbgView) dbgFxml.controller;
 
         topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
-            if(!nb) {
+            if (!nb) {
                 showProcsPane();
-            }
-            else {
+            } else {
                 hideProcsPane();
             }
         });
@@ -226,27 +220,29 @@ public class ErlyBerly extends Application {
         });
 
         boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
-        if(hideProcs){
+        if (hideProcs) {
             hideProcsPane();
         }
         boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
-        if(hideMods){
+        if (hideMods) {
             dbgView.setFunctionsVisibility(true);
         }
 
         topView.setOnRefreshModules(dbgView::onRefreshModules);
 
-        Platform.runLater(() -> { topView.addAccelerators(); });
+        Platform.runLater(() -> {
+            topView.addAccelerators();
+        });
     }
 
-    private void showProcsPane(){
+    private void showProcsPane() {
         splitPane.getItems().add(0, entopPane);
 
         Divider div = splitPane.getDividers().get(0);
         div.setPosition(entopDivPosition);
     }
 
-    private void hideProcsPane(){
+    private void hideProcsPane() {
         Divider div = splitPane.getDividers().get(0);
 
         entopDivPosition = div.getPosition();
@@ -267,10 +263,10 @@ public class ErlyBerly extends Application {
 
         // close the app when escape is pressed on the connection window
         scene.setOnKeyPressed((e) -> {
-            if(e.getCode() == KeyCode.ESCAPE) {
-               Stage aStage = (Stage) scene.getWindow();
-               aStage.close();
-               primaryStage.close();
+            if (e.getCode() == KeyCode.ESCAPE) {
+                Stage aStage = (Stage) scene.getWindow();
+                aStage.close();
+                primaryStage.close();
             }
         });
         applyCssToWIndow(scene);
@@ -288,10 +284,12 @@ public class ErlyBerly extends Application {
         connectStage.setTitle("Connect to Remote Node");
         // if the user closes the window without connecting then close the app
         connectStage.setOnCloseRequest((e) -> {
-            if(!NODE_API.connectedProperty().get()) {
+            if (!NODE_API.connectedProperty().get()) {
                 Platform.exit();
             }
-            Platform.runLater(() -> { primaryStage.setResizable(true); });
+            Platform.runLater(() -> {
+                primaryStage.setResizable(true);
+            });
         });
         connectStage.show();
     }
@@ -318,7 +316,7 @@ public class ErlyBerly extends Application {
 
 
     public static void showPreferencesPane() {
-        if(prefstab == null) {
+        if (prefstab == null) {
             FxmlLoadable fxmlLoadable = new FxmlLoadable("/erlyberly/preferences.fxml");
             Parent parent = fxmlLoadable.load();
             Pane tabPane = ErlyBerly.wrapInPane(parent);
@@ -326,10 +324,9 @@ public class ErlyBerly extends Application {
             prefstab.setContent(tabPane);
         }
 
-        if(tabPane.getTabs().contains(prefstab)) {
+        if (tabPane.getTabs().contains(prefstab)) {
             tabPane.getSelectionModel().select(prefstab);
-        }
-        else {
+        } else {
             addAndSelectTab(prefstab);
         }
     }
@@ -338,8 +335,7 @@ public class ErlyBerly extends Application {
      * All I know is pane.
      */
     public static Pane wrapInPane(Node node) {
-        if(node instanceof Pane)
-            return (Pane) node;
+        if (node instanceof Pane) return (Pane) node;
         VBox.setVgrow(node, Priority.ALWAYS);
         VBox vBox = new VBox(node);
         return vBox;
@@ -363,8 +359,7 @@ public class ErlyBerly extends Application {
             // the split pane divider position can only be set as a percentage of the split pane
             splitpane.setDividerPosition(0, percent);
             splitpane.setDividerPosition(1, 1D - percent);
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             e.printStackTrace();
         }
         // whenever the width of the pane changes, write it to configuration
@@ -384,8 +379,7 @@ public class ErlyBerly extends Application {
             Process epmd = Runtime.getRuntime().exec("epmd -daemon");
             int exitV = epmd.waitFor();
             if (exitV != 0) {
-                System.err.println(
-                        "Epmd process finished with exit value: " + exitV);
+                System.err.println("Epmd process finished with exit value: " + exitV);
             }
         } catch (Exception e) {
             System.err.println("Failed to start epmd: " + e);

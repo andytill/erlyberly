@@ -62,11 +62,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
         getStyleClass().add("mod-func-graphic");
 
-        getChildren().addAll(
-                exportIconGraphic(),
-                traceIcon(),
-                functionLabel()
-        );
+        getChildren().addAll(exportIconGraphic(), traceIcon(), functionLabel());
     }
 
     private Glyph exportIconGraphic() {
@@ -92,8 +88,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         traceIcon.setTooltip(new Tooltip("Toggle tracing, double click on this star or ctrl+t when selected"));
         traceIcon.getStyleClass().add("erlyberly-icon-button");
         traceIcon.setOnMouseClicked((e) -> {
-            if (e.getClickCount() == 2)
-                traceFn.trace(modFunc);
+            if (e.getClickCount() == 2) traceFn.trace(modFunc);
         });
         return traceIcon;
     }
@@ -118,10 +113,8 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         if (item == null || empty) {
             text.set(null);
         } else {
-            if (isShowModuleName())
-                text.set(item.toFullString());
-            else
-                text.set(item.toString());
+            if (isShowModuleName()) text.set(item.toFullString());
+            else text.set(item.toString());
 
             updateExportIcon(item);
 
@@ -155,8 +148,7 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
     public void onTracesChange() {
         if (modFunc != null && isTracedFn.isTraced(modFunc))
             tracedIconText.set(FontAwesome.Glyph.CHECK_SQUARE_ALT.toString());
-        else
-            tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
+        else tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
     }
 
     public boolean isShowModuleName() {

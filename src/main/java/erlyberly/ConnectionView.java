@@ -84,11 +84,7 @@ public class ConnectionView extends SplitPane {
         });
         HBox.setHgrow(filterField, Priority.SOMETIMES);
         knownNodesTable = new TableView<>();
-        knownNodesTable.getColumns().setAll(
-                newNodeRunningColumn("Is Running", "running", 75),
-                newColumn("Node Name", "nodeName", 200),
-                newColumn("Cookie", "cookie")
-        );
+        knownNodesTable.getColumns().setAll(newNodeRunningColumn("Is Running", "running", 75), newColumn("Node Name", "nodeName", 200), newColumn("Cookie", "cookie"));
         VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
         rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
         filteredRows = new FilteredList<KnownNode>(rows);
@@ -102,13 +98,11 @@ public class ConnectionView extends SplitPane {
         knownNodeMenu.getItems().add(deleteItem);
 
         knownNodesTable.setItems(filteredRows);
-        knownNodesTable.getSelectionModel().selectedItemProperty().addListener(
-                (o, oldv, newv) -> {
-                    if (newv == null)
-                        return;
-                    nodeNameField.getModel().getField().setText(newv.getNodeName());
-                    cookieField.getModel().getField().setText(newv.getCookie());
-                });
+        knownNodesTable.getSelectionModel().selectedItemProperty().addListener((o, oldv, newv) -> {
+            if (newv == null) return;
+            nodeNameField.getModel().getField().setText(newv.getNodeName());
+            cookieField.getModel().getField().setText(newv.getCookie());
+        });
         knownNodesTable.setContextMenu(knownNodeMenu);
 
         // button width across the whole scene
@@ -126,20 +120,13 @@ public class ConnectionView extends SplitPane {
         newNodeBox = new VBox();
         newNodeBox.setSpacing(10d);
         newNodeBox.setPadding(new Insets(10, 10, 10, 10));
-        newNodeBox.getChildren().addAll(
-                nodeNameField, new Separator(Orientation.HORIZONTAL),
-                cookieField, new Separator(Orientation.HORIZONTAL),
-                connectButton, messageLabel);
+        newNodeBox.getChildren().addAll(nodeNameField, new Separator(Orientation.HORIZONTAL), cookieField, new Separator(Orientation.HORIZONTAL), connectButton, messageLabel);
 
         VBox knownNodeBox;
         knownNodeBox = new VBox();
         knownNodeBox.setSpacing(10d);
         knownNodeBox.setPadding(new Insets(10, 10, 10, 10));
-        knownNodeBox.getChildren().addAll(
-                new HBox(
-                        filterField,
-                        searchIcon()),
-                knownNodesTable);
+        knownNodeBox.getChildren().addAll(new HBox(filterField, searchIcon()), knownNodesTable);
         getItems().addAll(knownNodeBox, newNodeBox);
 
         nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
@@ -151,8 +138,7 @@ public class ConnectionView extends SplitPane {
 
     private void onDelete(ActionEvent e) {
         KnownNode selectedItem = knownNodesTable.getSelectionModel().getSelectedItem();
-        if (selectedItem == null)
-            return;
+        if (selectedItem == null) return;
         rows.remove(selectedItem);
         PrefBind.removeKnownNode(selectedItem);
     }
@@ -206,8 +192,7 @@ public class ConnectionView extends SplitPane {
         }
         for (String runningNodeName : unknownRunningNodeNames) {
             // don't show erlyberly in the list, weird stuff happens if erlyberly connects to itself!
-            if (runningNodeName.contains("erlyberly"))
-                continue;
+            if (runningNodeName.contains("erlyberly")) continue;
             // for some reason OtpEpmd gives node names in the following format:
             //     "name gerp at port 52153"
             // so we have to do some string cutting to get the proper name
@@ -244,8 +229,7 @@ public class ConnectionView extends SplitPane {
         String cookie, nodeName;
         nodeName = nodeNameField.getModel().getText();
         cookie = removeApostrophesFromCookie(cookieField.getModel().getText());
-        if (nodeName == null || "".equals(nodeName))
-            return;
+        if (nodeName == null || "".equals(nodeName)) return;
         maybeStoreNodeInfoInConfig(nodeName, cookie);
         connectToRemoteNode(cookie, nodeName);
     }
@@ -262,10 +246,7 @@ public class ConnectionView extends SplitPane {
         new ConnectorThead(nodeName, cookie).start();
         ErlyBerly.runIO(() -> {
             try {
-                ErlyBerly
-                        .nodeAPI()
-                        .connectionInfo(nodeName, cookie)
-                        .manualConnect();
+                ErlyBerly.nodeAPI().connectionInfo(nodeName, cookie).manualConnect();
 
                 Platform.runLater(() -> {
                     closeThisWindow();
@@ -322,10 +303,7 @@ public class ConnectionView extends SplitPane {
         @Override
         public void run() {
             try {
-                ErlyBerly
-                        .nodeAPI()
-                        .connectionInfo(remoteNodeName, cookie)
-                        .manualConnect();
+                ErlyBerly.nodeAPI().connectionInfo(remoteNodeName, cookie).manualConnect();
 
                 Platform.runLater(() -> {
                     closeThisWindow();
@@ -383,18 +361,13 @@ public class ConnectionView extends SplitPane {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
             KnownNode other = (KnownNode) obj;
             if (cookie == null) {
-                if (other.cookie != null)
-                    return false;
-            } else if (!cookie.equals(other.cookie))
-                return false;
+                if (other.cookie != null) return false;
+            } else if (!cookie.equals(other.cookie)) return false;
             if (nodeName == null) {
                 return other.nodeName == null;
             } else return nodeName.equals(other.nodeName);

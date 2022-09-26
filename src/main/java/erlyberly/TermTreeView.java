@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -61,7 +61,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     public void onHexView(ActionEvent e) {
         TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
-        if(item != null && item.getValue().getObject() instanceof OtpErlangBinary) {
+        if (item != null && item.getValue().getObject() instanceof OtpErlangBinary) {
             OtpErlangBinary binary = (OtpErlangBinary) item.getValue().getObject();
             HexstarView hexstarView;
             hexstarView = new HexstarView();
@@ -72,8 +72,8 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     public void onDecompileFun(ActionEvent e) {
         TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
-        if(item != null && item.getValue().getObject() instanceof OtpErlangFun) {
-            OtpErlangFun fun = (OtpErlangFun)item.getValue().getObject();
+        if (item != null && item.getValue().getObject() instanceof OtpErlangFun) {
+            OtpErlangFun fun = (OtpErlangFun) item.getValue().getObject();
             try {
                 String funSource = ErlyBerly.nodeAPI().decompileFun(fun);
                 ErlyBerly.showPane(fun + " Source Code", ErlyBerly.wrapInPane(new CodeView(funSource)));
@@ -87,12 +87,9 @@ public class TermTreeView extends TreeView<TermTreeItem> {
 
     public void onViewDict(ActionEvent e) {
         TreeItem<TermTreeItem> item = getSelectionModel().getSelectedItem();
-        if(item == null)
-            return;
-        if(item.getValue() == null || !DICT_ATOM.equals(item.getValue().getObject()))
-            return;
-        if(item.getParent() == null || !(item.getParent().getValue().getObject() instanceof OtpErlangTuple))
-            return;
+        if (item == null) return;
+        if (item.getValue() == null || !DICT_ATOM.equals(item.getValue().getObject())) return;
+        if (item.getParent() == null || !(item.getParent().getValue().getObject() instanceof OtpErlangTuple)) return;
 
         OtpErlangObject dict = item.getParent().getValue().getObject();
 
@@ -101,8 +98,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
             TermTreeView parentControl = new TermTreeView();
             parentControl.populateFromTerm(props);
             ErlyBerly.showPane("dict_to_list", ErlyBerly.wrapInPane(parentControl));
-        }
-        catch (Exception e1) {
+        } catch (Exception e1) {
             e1.printStackTrace();
         }
     }
@@ -131,20 +127,18 @@ public class TermTreeView extends TreeView<TermTreeItem> {
     private void addToTreeItem(TreeItem<TermTreeItem> parent, OtpErlangObject obj) {
         TermFormatter f = ErlyBerly.getTermFormatter();
 
-        if(obj instanceof OtpErlangBinary) {
+        if (obj instanceof OtpErlangBinary) {
             String termString = f.toString(obj);
             TreeItem<TermTreeItem> item = new TreeItem<>(new TermTreeItem(obj, termString));
             parent.getChildren().add(item);
-        }
-        else if(obj instanceof OtpErlangTuple) {
+        } else if (obj instanceof OtpErlangTuple) {
             OtpErlangObject[] elements = ((OtpErlangTuple) obj).elements();
 
-            if(elements.length == 0) {
+            if (elements.length == 0) {
                 parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.emptyTupleString())));
-            }
-            else {
+            } else {
                 TreeItem<TermTreeItem> tupleItem;
-                if(OtpUtil.isErlyberlyRecord(obj)) {
+                if (OtpUtil.isErlyberlyRecord(obj)) {
                     // this is the "old" way show tuples with record metadata, where the metadata is in the
                     // term itself, rather than stored separately in the RecordManager
                     String recordNameText = "#" + OtpUtil.tupleElement(1, obj) + " ";
@@ -158,16 +152,14 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                         addToTreeItem(tupleItem, e);
                     }
                     parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.tupleRightParen())));
-                }
-                else if(isRecordField(obj)) {
+                } else if (isRecordField(obj)) {
                     tupleItem = new TreeItem<>(new TermTreeItem(obj, " "));
                     String recordField = "";
                     OtpErlangObject recordFieldNameObj = OtpUtil.tupleElement(1, obj);
                     // do not toString an OtpErlangString because that will add the quotes around it
-                    if(recordFieldNameObj instanceof OtpErlangString) {
-                        recordField = ((OtpErlangString)recordFieldNameObj).stringValue();
-                    }
-                    else {
+                    if (recordFieldNameObj instanceof OtpErlangString) {
+                        recordField = ((OtpErlangString) recordFieldNameObj).stringValue();
+                    } else {
                         recordField = recordFieldNameObj.toString();
                     }
                     tupleItem.setGraphic(recordLabel(recordField + " = "));
@@ -176,15 +168,12 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     parent.getChildren().add(tupleItem);
 
                     OtpErlangObject value = OtpUtil.tupleElement(2, obj);
-                    if(OtpUtil.isLittleTerm(value))
-                        tupleItem.setValue(new TermTreeItem(value, f.toString(obj)));
-                    else
-                        addToTreeItem(tupleItem, value);
-                }
-                else {
+                    if (OtpUtil.isLittleTerm(value)) tupleItem.setValue(new TermTreeItem(value, f.toString(obj)));
+                    else addToTreeItem(tupleItem, value);
+                } else {
                     List<String> recordNames = null;
                     OtpErlangTuple objTuple = (OtpErlangTuple) obj;
-                    if((recordNames = findRecordDef(objTuple)) != null) {
+                    if ((recordNames = findRecordDef(objTuple)) != null) {
                         String recordNameText = "#" + OtpUtil.tupleElement(0, obj) + " ";
                         tupleItem = new TreeItem<>(new TermTreeItem(obj, f.tupleLeftParen()));
                         tupleItem.setGraphic(recordLabel(recordNameText));
@@ -192,18 +181,16 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                         tupleItem.setExpanded(true);
                         elements = objTuple.elements();
                         for (int i = 1; i < elements.length; i++) {
-                            addToTreeItem(tupleItem, OtpUtil.tuple(ERLYBERLY_RECORD_FIELD_ATOM, recordNames.get(i-1), elements[i]));
+                            addToTreeItem(tupleItem, OtpUtil.tuple(ERLYBERLY_RECORD_FIELD_ATOM, recordNames.get(i - 1), elements[i]));
                         }
                         parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.tupleRightParen())));
-                    }
-                    else {
+                    } else {
                         tupleItem = new TreeItem<>();
                         tupleItem.setExpanded(true);
-                        if(OtpUtil.isLittleTerm(obj)) {
+                        if (OtpUtil.isLittleTerm(obj)) {
                             tupleItem.setValue(new TermTreeItem(obj, f.toString(obj)));
                             parent.getChildren().add(tupleItem);
-                        }
-                        else {
+                        } else {
                             tupleItem.setValue(new TermTreeItem(obj, f.tupleLeftParen()));
                             for (OtpErlangObject e : elements) {
                                 addToTreeItem(tupleItem, e);
@@ -214,53 +201,47 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                     }
                 }
             }
-        }
-        else if(obj instanceof OtpErlangList) {
+        } else if (obj instanceof OtpErlangList) {
             OtpErlangObject[] elements = ((OtpErlangList) obj).elements();
 
-            if(elements.length == 0) {
+            if (elements.length == 0) {
                 parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.emptyListString())));
-            }
-            else {
+            } else {
                 TreeItem<TermTreeItem> listItem;
 
                 listItem = new TreeItem<>(new TermTreeItem(obj, f.listLeftParen()));
                 listItem.setExpanded(true);
 
 
-                if(OtpUtil.isLittleTerm(obj)) {
+                if (OtpUtil.isLittleTerm(obj)) {
                     listItem.setValue(new TermTreeItem(obj, f.toString(obj)));
                     parent.getChildren().add(listItem);
-                }
-                else {
+                } else {
                     listItem.setValue(new TermTreeItem(obj, f.listLeftParen()));
                     for (OtpErlangObject e : elements) {
                         addToTreeItem(listItem, e);
                     }
-                    if (!((OtpErlangList)obj).isProper()) {
+                    if (!((OtpErlangList) obj).isProper()) {
                         listItem.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.cons())));
-                        addToTreeItem(listItem, ((OtpErlangList)obj).getLastTail());
+                        addToTreeItem(listItem, ((OtpErlangList) obj).getLastTail());
                     }
                     parent.getChildren().add(listItem);
                     parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.listRightParen())));
                 }
             }
-        }
-        else if (obj instanceof OtpErlangMap){
+        } else if (obj instanceof OtpErlangMap) {
             TreeItem<TermTreeItem> mapNode = new TreeItem<>(new TermTreeItem(obj, f.mapLeft(obj)));
             parent.getChildren().add(mapNode);
-            for (Map.Entry<OtpErlangObject,OtpErlangObject> e : ((OtpErlangMap) obj).entrySet()) {
-                if (f.isHiddenField(e.getKey()))
-                    continue;
+            for (Map.Entry<OtpErlangObject, OtpErlangObject> e : ((OtpErlangMap) obj).entrySet()) {
+                if (f.isHiddenField(e.getKey())) continue;
                 String keyStr = f.mapKeyToString(e.getKey());
                 String valStr = f.toString(e.getValue());
                 // Inline short values that are not maps
-                if (!(e.getValue() instanceof OtpErlangMap) && (valStr.length() < 50 )) {
+                if (!(e.getValue() instanceof OtpErlangMap) && (valStr.length() < 50)) {
                     TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), valStr));
                     key.setGraphic(recordLabel(keyStr));
                     mapNode.getChildren().add(key);
-                }
-                else {
+                } else {
                     TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), ""));
                     key.setGraphic(recordLabel(keyStr));
                     addToTreeItem(key, e.getValue());
@@ -268,8 +249,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 }
             }
             parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.mapRight())));
-        }
-        else {
+        } else {
             parent.getChildren().add(new TreeItem<>(new TermTreeItem(obj, f.toString(obj))));
         }
     }
@@ -279,8 +259,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
      * of record field names if it is.
      */
     private List<String> findRecordDef(OtpErlangTuple obj) {
-        if(obj.arity() == 0 || !(obj.elementAt(0) instanceof OtpErlangAtom))
-            return null;
+        if (obj.arity() == 0 || !(obj.elementAt(0) instanceof OtpErlangAtom)) return null;
         OtpErlangAtom recordName = (OtpErlangAtom) obj.elementAt(0);
         return ErlyBerly.nodeAPI().getRecordManager().get(new RecordManager.RecordKey(moduleName, recordName));
     }

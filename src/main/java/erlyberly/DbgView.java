@@ -89,14 +89,10 @@ public class DbgView implements Initializable {
         modFuncContextMenu = new ModFuncContextMenu(dbgController);
         modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
         modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
-        modulesTree
-                .getSelectionModel()
-                .selectedItemProperty()
-                .addListener((o, old, newItem) -> {
-                    modFuncContextMenu.selectedTreeItemProperty().set(newItem);
-                    if (newItem != null)
-                        modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
-                });
+        modulesTree.getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
+            modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+            if (newItem != null) modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
+        });
 
         sortedTreeModules.setComparator(treeItemModFuncComparator());
 
@@ -114,9 +110,7 @@ public class DbgView implements Initializable {
             createModuleTreeItem(tuple);
         });
         tabPane = new TabPane();
-        TabPaneDetacher.create()
-                .stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css")
-                .makeTabsDetachable(tabPane);
+        TabPaneDetacher.create().stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css").makeTabsDetachable(tabPane);
         Tab traceViewTab;
         traceViewTab = new Tab("Traces");
         traceViewTab.setContent(new DbgTraceView(dbgController));
@@ -185,10 +179,8 @@ public class DbgView implements Initializable {
     }
 
     public void onFunctionSearchChange(Observable o, String oldValue, String search) {
-        if (isSpecialTraceFilter(search))
-            filterForTracedFunctions();
-        else
-            filterForFunctionTextMatch(search);
+        if (isSpecialTraceFilter(search)) filterForTracedFunctions();
+        else filterForFunctionTextMatch(search);
     }
 
     private boolean isSpecialTraceFilter(String search) {
@@ -198,8 +190,7 @@ public class DbgView implements Initializable {
     private void filterForFunctionTextMatch(String search) {
         String[] split = search.split(":");
 
-        if (split.length == 0)
-            return;
+        if (split.length == 0) return;
 
         final String moduleName = split[0];
         final String funcName = (split.length > 1) ? split[1] : "";
@@ -243,8 +234,7 @@ public class DbgView implements Initializable {
     }
 
     private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
-        if (searchText.isEmpty())
-            return true;
+        if (searchText.isEmpty()) return true;
         return t.getValue().toString().contains(searchText);
     }
 
@@ -304,8 +294,7 @@ public class DbgView implements Initializable {
                 scheduledModuleLoadFuture.cancel(true);
             }
             String[] split = newString.trim().split(":");
-            if (newString == null || "".equals(newString) || split.length == 0)
-                return;
+            if (newString == null || "".equals(newString) || split.length == 0) return;
             String moduleName = split[0];
             if (moduleName == null || "".equals(moduleName)) {
                 return;

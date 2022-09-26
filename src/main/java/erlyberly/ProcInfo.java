@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -75,8 +75,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public LongProperty totalHeapSizeProperty() {
-        if (totalHeapSize == null)
-            totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
+        if (totalHeapSize == null) totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
         return totalHeapSize;
     }
 
@@ -89,8 +88,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public LongProperty stackSizeProperty() {
-        if (stackSize == null)
-            stackSize = new SimpleLongProperty(this, "stackSize");
+        if (stackSize == null) stackSize = new SimpleLongProperty(this, "stackSize");
         return stackSize;
     }
 
@@ -103,8 +101,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public LongProperty heapSizeProperty() {
-        if (heapSize == null)
-            heapSize = new SimpleLongProperty(this, "msgQueueLen");
+        if (heapSize == null) heapSize = new SimpleLongProperty(this, "msgQueueLen");
         return heapSize;
     }
 
@@ -117,8 +114,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public LongProperty msgQueueLenProperty() {
-        if (msgQueueLen == null)
-            msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
+        if (msgQueueLen == null) msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
         return msgQueueLen;
     }
 
@@ -131,8 +127,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public StringProperty pidProperty() {
-        if (pid == null)
-            pid = new SimpleStringProperty(this, "pid");
+        if (pid == null) pid = new SimpleStringProperty(this, "pid");
         return pid;
     }
 
@@ -145,8 +140,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public StringProperty processNameProperty() {
-        if (processName == null)
-            processName = new SimpleStringProperty(this, "processName");
+        if (processName == null) processName = new SimpleStringProperty(this, "processName");
         return processName;
     }
 
@@ -159,8 +153,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
     }
 
     public LongProperty reductionsProperty() {
-        if (reductions == null)
-            reductions = new SimpleLongProperty(this, "reductions");
+        if (reductions == null) reductions = new SimpleLongProperty(this, "reductions");
         return reductions;
     }
 
@@ -168,7 +161,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
         Object processName = propList.get(REGISTERED_NAME_ATOM);
         Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
 
-        if(EMPTY_LIST.equals(processName)) {
+        if (EMPTY_LIST.equals(processName)) {
             processName = "";
         }
 
@@ -210,8 +203,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
     public String getShortName() {
         String processName2 = getProcessName();
-        if(processName2 != null && !"".equals(getProcessName()))
-            return getProcessName();
+        if (processName2 != null && !"".equals(getProcessName())) return getProcessName();
         return getPid();
     }
 }

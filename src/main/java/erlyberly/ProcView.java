@@ -96,12 +96,9 @@ public class ProcView implements Initializable {
         // #23 when the context menu is showing, temporarily suspend polling, polling
         // loses selection making the right click context menu no longer enabled since
         // no process is selected
-        processView
-                .getContextMenu()
-                .showingProperty()
-                .addListener((o, oldv, newv) -> {
-                    procController.setTemporarilySuspendPolling(newv);
-                });
+        processView.getContextMenu().showingProperty().addListener((o, oldv, newv) -> {
+            procController.setTemporarilySuspendPolling(newv);
+        });
 
         final BooleanBinding notConnected = ErlyBerly.nodeAPI().connectedProperty().not();
 
@@ -200,8 +197,7 @@ public class ProcView implements Initializable {
     private void onShowProcessStateClicked(ActionEvent e) {
         ProcInfo proc = processView.getSelectionModel().getSelectedItem();
 
-        if (proc == null)
-            return;
+        if (proc == null) return;
 
         procController.processState(proc, (eobj) -> {
             showProcessStateInWindow(proc, eobj);
@@ -268,14 +264,11 @@ public class ProcView implements Initializable {
         for (ProcInfo proc : procs) {
             double value = extractor.call(proc);
 
-            if (value >= threshold)
-                data.add(new Data(procDescription(proc), extractor.call(proc)));
-            else
-                other += value;
+            if (value >= threshold) data.add(new Data(procDescription(proc), extractor.call(proc)));
+            else other += value;
         }
 
-        if (other > 0)
-            data.add(new Data("All processes less than 0.5% of total", other));
+        if (other > 0) data.add(new Data("All processes less than 0.5% of total", other));
 
         return data;
     }
@@ -315,10 +308,8 @@ public class ProcView implements Initializable {
     }
 
     private void onPollingChange(Observable o) {
-        if (procController.pollingProperty().get())
-            pollButton.setText("Stop Polling");
-        else
-            pollButton.setText("Start Polling");
+        if (procController.pollingProperty().get()) pollButton.setText("Stop Polling");
+        else pollButton.setText("Start Polling");
     }
 
     @FXML

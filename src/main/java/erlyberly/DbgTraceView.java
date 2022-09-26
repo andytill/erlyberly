@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -84,46 +84,44 @@ public class DbgTraceView extends VBox {
         getChildren().addAll(p, tracesBox);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void putTableColumns() {
-        TableColumn<TraceLog,Long> seqColumn;
-        seqColumn = new TableColumn<TraceLog,Long>("Seq.");
+        TableColumn<TraceLog, Long> seqColumn;
+        seqColumn = new TableColumn<TraceLog, Long>("Seq.");
         seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
         configureColumnWidth("seqColumnWidth", seqColumn);
 
-        TableColumn<TraceLog,String> pidColumn;
-        pidColumn = new TableColumn<TraceLog,String>("Pid");
+        TableColumn<TraceLog, String> pidColumn;
+        pidColumn = new TableColumn<TraceLog, String>("Pid");
         pidColumn.setCellValueFactory(new PropertyValueFactory("pidString"));
         configureColumnWidth("pidColumnWidth", pidColumn);
 
-        TableColumn<TraceLog,String> regNameColumn;
-        regNameColumn = new TableColumn<TraceLog,String>("Reg. Name");
+        TableColumn<TraceLog, String> regNameColumn;
+        regNameColumn = new TableColumn<TraceLog, String>("Reg. Name");
         regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
         configureColumnWidth("regNameColumnWidth", regNameColumn);
 
-        TableColumn<TraceLog,String> durationNameColumn;
-        durationNameColumn = new TableColumn<TraceLog,String>("Duration (microseconds)");
+        TableColumn<TraceLog, String> durationNameColumn;
+        durationNameColumn = new TableColumn<TraceLog, String>("Duration (microseconds)");
         durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
         configureColumnWidth("durationNameColumnWidth", durationNameColumn);
 
-        TableColumn<TraceLog,String> functionNameColumn;
-        functionNameColumn = new TableColumn<TraceLog,String>("Function");
+        TableColumn<TraceLog, String> functionNameColumn;
+        functionNameColumn = new TableColumn<TraceLog, String>("Function");
         functionNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
         configureColumnWidth("functionNameColumnWidth", functionNameColumn);
 
-        TableColumn<TraceLog,String> argsColumn;
-        argsColumn = new TableColumn<TraceLog,String>("Args");
+        TableColumn<TraceLog, String> argsColumn;
+        argsColumn = new TableColumn<TraceLog, String>("Args");
         argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
         configureColumnWidth("argsColumnWidth", argsColumn);
 
-        TableColumn<TraceLog,String> resultColumn;
-        resultColumn = new TableColumn<TraceLog,String>("Result");
+        TableColumn<TraceLog, String> resultColumn;
+        resultColumn = new TableColumn<TraceLog, String>("Result");
         resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
         configureColumnWidth("resultColumnWidth", resultColumn);
 
-        tracesBox.getColumns().setAll(
-            seqColumn, pidColumn, regNameColumn, durationNameColumn, functionNameColumn, argsColumn, resultColumn
-        );
+        tracesBox.getColumns().setAll(seqColumn, pidColumn, regNameColumn, durationNameColumn, functionNameColumn, argsColumn, resultColumn);
 
         // based on http://stackoverflow.com/questions/27015961/tableview-row-style
         PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
@@ -142,25 +140,23 @@ public class DbgTraceView extends VBox {
                 if (tl != null) {
 
                     row.pseudoClassStateChanged(notCompletedClass, row.getItem().isComplete());
-                    if("breaker-row".equals(tl.getCssClass())) {
+                    if ("breaker-row".equals(tl.getCssClass())) {
                         row.pseudoClassStateChanged(breakerRowClass, true);
 
                         row.pseudoClassStateChanged(exceptionClass, false);
                         row.pseudoClassStateChanged(notCompletedClass, false);
-                    }
-                    else {
+                    } else {
                         tl.isCompleteProperty().addListener(completeListener);
                         row.pseudoClassStateChanged(breakerRowClass, false);
                         row.pseudoClassStateChanged(exceptionClass, tl.isExceptionThrower());
                     }
-                }
-                else {
+                } else {
                     row.pseudoClassStateChanged(exceptionClass, false);
                     row.pseudoClassStateChanged(notCompletedClass, false);
                     row.pseudoClassStateChanged(breakerRowClass, false);
                 }
             });
-            return row ;
+            return row;
         });
     }
 
@@ -174,18 +170,17 @@ public class DbgTraceView extends VBox {
     private void putTraceContextMenu() {
         TraceContextMenu traceContextMenu = new TraceContextMenu(dbgController);
         traceContextMenu.setItems(dbgController.getTraceLogs());
-        traceContextMenu
-                .setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
+        traceContextMenu.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
 
         tracesBox.setContextMenu(traceContextMenu);
         tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
     private void onTraceClicked(MouseEvent me) {
-        if(me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
+        if (me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
             TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
 
-            if(selectedItem != null && selectedItem != null) {
+            if (selectedItem != null && selectedItem != null) {
                 showTraceTermView(selectedItem);
             }
         }
@@ -212,29 +207,24 @@ public class DbgTraceView extends VBox {
 
         OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
 
-        if(result != null) {
+        if (result != null) {
             resultTermsTreeView.populateFromTerm(moduleName, traceLog.getResultFromMap());
-        }
-        else {
+        } else {
             WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
-                if(newV)
-                    resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
+                if (newV) resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
             });
 
             traceLog.isCompleteProperty().addListener(listener);
         }
 
         argTermsTreeView = newTermTreeView();
-        argTermsTreeView.populateFromListContents(moduleName, (OtpErlangList)args);
+        argTermsTreeView.populateFromListContents(moduleName, (OtpErlangList) args);
 
         SplitPane splitPane, splitPaneH;
 
         splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(
-            labelledTreeView("Function arguments", argTermsTreeView),
-            labelledTreeView("Result", resultTermsTreeView)
-        );
+        splitPane.getItems().addAll(labelledTreeView("Function arguments", argTermsTreeView), labelledTreeView("Result", resultTermsTreeView));
 
         StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
@@ -260,12 +250,7 @@ public class DbgTraceView extends VBox {
     private void onTraceFilterChange(String searchText) {
         BasicSearch search = new BasicSearch(searchText);
         filteredTraces.setPredicate((t) -> {
-            boolean matches =
-                    search.matches(t.getArgs())
-                    || search.matches(t.getResult())
-                    || search.matches(t.getPidString())
-                    || search.matches(t.getRegName())
-                    || search.matches(t.getFunction());
+            boolean matches = search.matches(t.getArgs()) || search.matches(t.getResult()) || search.matches(t.getPidString()) || search.matches(t.getRegName()) || search.matches(t.getFunction());
             return matches;
         });
     }
@@ -282,7 +267,9 @@ public class DbgTraceView extends VBox {
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 
-        ffView.textProperty().addListener((o, ov, nv) -> { onTraceFilterChange(nv); });
+        ffView.textProperty().addListener((o, ov, nv) -> {
+            onTraceFilterChange(nv);
+        });
 
         Region fxmlNode = (Region) loader.fxmlNode;
         fxmlNode.setPadding(new Insets(5, 5, 0, 5));
