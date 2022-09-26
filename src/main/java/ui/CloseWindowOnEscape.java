@@ -24,26 +24,27 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-public class CloseWindowOnEscape implements EventHandler<KeyEvent> {
+public final class CloseWindowOnEscape implements EventHandler<KeyEvent> {
 
     private final Stage stage;
 
-    public CloseWindowOnEscape(Stage aTermsStage) {
-        stage = aTermsStage;
+    private CloseWindowOnEscape(final Stage aTermsStage) {
+        super();
+        this.stage = aTermsStage;
     }
 
     @Override
-    public void handle(KeyEvent evt) {
-        if (evt.getCode().equals(KeyCode.ESCAPE)) {
-            EventHandler<WindowEvent> onCloseRequest = stage.getOnCloseRequest();
-            if (onCloseRequest != null) {
+    public void handle(final KeyEvent evt) {
+        if (KeyCode.ESCAPE == evt.getCode()) {
+            final EventHandler<WindowEvent> onCloseRequest = this.stage.getOnCloseRequest();
+            if (null != onCloseRequest) {
                 onCloseRequest.handle(null);
             }
-            stage.close();
+            this.stage.close();
         }
     }
 
-    public static void apply(Scene scene, Stage stage) {
+    static void apply(final Scene scene, final Stage stage) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, new CloseWindowOnEscape(stage));
     }
 }

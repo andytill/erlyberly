@@ -62,14 +62,14 @@ import java.util.*;
  * TabPaneDude.create().makeTabsDetachable(myTapPane);
  * }
  * </pre> Tabs can then be detached simply by dragging a tab title to the desired window position.
- *
- /**
+ * <p>
+ * /**
  *
  * @author Jens Deters (www.jensd.de)
  * @version 1.0.0
  * @since 14-10-2014
  */
-public class TabPaneDetacher {
+public final class TabPaneDetacher {
 
     private TabPane tabPane;
     private Tab currentTab;
@@ -79,10 +79,11 @@ public class TabPaneDetacher {
     private final BooleanProperty alwaysOnTop;
 
     private TabPaneDetacher() {
-        originalTabs = new ArrayList<>();
-        stylesheets = new String[]{};
-        tapTransferMap = new HashMap<>();
-        alwaysOnTop = new SimpleBooleanProperty();
+        super();
+        this.originalTabs = new ArrayList<>();
+        this.stylesheets = new String[]{};
+        this.tapTransferMap = new HashMap<>();
+        this.alwaysOnTop = new SimpleBooleanProperty();
     }
 
     /**
@@ -94,23 +95,22 @@ public class TabPaneDetacher {
         return new TabPaneDetacher();
     }
 
-    public BooleanProperty alwaysOnTopProperty() {
-        return alwaysOnTop;
+    private BooleanProperty alwaysOnTopProperty() {
+        return this.alwaysOnTop;
     }
 
-    public Boolean isAlwaysOnTop() {
-        return alwaysOnTop.get();
+    private Boolean isAlwaysOnTop() {
+        return this.alwaysOnTop.get();
     }
 
     /**
-     *
      * Sets whether detached Tabs should be always on top.
      *
      * @param alwaysOnTop The state to be set.
      * @return The current TabPaneDetacher instance.
      */
-    public TabPaneDetacher alwaysOnTop(boolean alwaysOnTop) {
-        alwaysOnTopProperty().set(alwaysOnTop);
+    public TabPaneDetacher alwaysOnTop(final boolean alwaysOnTop) {
+        this.alwaysOnTopProperty().set(alwaysOnTop);
         return this;
     }
 
@@ -120,7 +120,7 @@ public class TabPaneDetacher {
      * @param stylesheets The stylesheets to be set.
      * @return The current TabPaneDetacher instance.
      */
-    public TabPaneDetacher stylesheets(String... stylesheets) {
+    public TabPaneDetacher stylesheets(final String... stylesheets) {
         this.stylesheets = stylesheets;
         return this;
     }
@@ -129,19 +129,16 @@ public class TabPaneDetacher {
      * Make all added {@link Tab}s of the given {@link TabPane} detachable.
      *
      * @param tabPane The {@link TabPane} to take over.
-     * @return The current TabPaneDetacher instance.
      */
-    public TabPaneDetacher makeTabsDetachable(TabPane tabPane) {
+    public void makeTabsDetachable(final TabPane tabPane) {
         this.tabPane = tabPane;
-        originalTabs.addAll(tabPane.getTabs());
+        this.originalTabs.addAll(tabPane.getTabs());
         for (int i = 0; i < tabPane.getTabs().size(); i++) {
-            tapTransferMap.put(i, tabPane.getTabs().get(i));
+            this.tapTransferMap.put(i, tabPane.getTabs().get(i));
         }
-        tabPane.getTabs().stream().forEach(t -> {
-            t.setClosable(false);
-        });
+        tabPane.getTabs().forEach(t -> t.setClosable(false));
         tabPane.getTabs().addListener((Observable o) -> {
-            for (Tab tabX : tabPane.getTabs()) {
+            for (final Tab tabX : tabPane.getTabs()) {
                 if (!(tabX.getContent() instanceof Pane)) {
                     throw new RuntimeException("Tab added where the content node was not a subclass of Pane, this means it cannot be dragged by TabPaneDetacher.");
                 }
@@ -150,17 +147,17 @@ public class TabPaneDetacher {
         tabPane.setOnDragDetected(
                 (MouseEvent event) -> {
                     if (event.getSource() instanceof TabPane) {
-                        Pane rootPane = (Pane) tabPane.getScene().getRoot();
+                        final Pane rootPane = (Pane) tabPane.getScene().getRoot();
                         rootPane.setOnDragOver((DragEvent event1) -> {
                             event1.acceptTransferModes(TransferMode.ANY);
                             event1.consume();
                         });
-                        currentTab = tabPane.getSelectionModel().getSelectedItem();
-                        SnapshotParameters snapshotParams = new SnapshotParameters();
+                        this.currentTab = tabPane.getSelectionModel().getSelectedItem();
+                        final SnapshotParameters snapshotParams = new SnapshotParameters();
                         snapshotParams.setTransform(Transform.scale(0.4, 0.4));
-                        WritableImage snapshot = currentTab.getContent().snapshot(snapshotParams, null);
-                        Dragboard db = tabPane.startDragAndDrop(TransferMode.MOVE);
-                        ClipboardContent clipboardContent = new ClipboardContent();
+                        final WritableImage snapshot = this.currentTab.getContent().snapshot(snapshotParams, null);
+                        final Dragboard db = tabPane.startDragAndDrop(TransferMode.MOVE);
+                        final ClipboardContent clipboardContent = new ClipboardContent();
                         clipboardContent.put(DataFormat.PLAIN_TEXT, "detach");
                         db.setDragView(snapshot, 40, 40);
                         db.setContent(clipboardContent);
@@ -170,12 +167,11 @@ public class TabPaneDetacher {
         );
         tabPane.setOnDragDone(
                 (DragEvent event) -> {
-                    openTabInStage(currentTab);
+                    this.openTabInStage(this.currentTab);
                     tabPane.setCursor(Cursor.DEFAULT);
                     event.consume();
                 }
         );
-        return this;
     }
 
     /**
@@ -184,42 +180,40 @@ public class TabPaneDetacher {
      *
      * @param tab The {@link Tab} to get the content from.
      */
-    public void openTabInStage(final Tab tab) {
-        if (tab == null) {
+    private void openTabInStage(final Tab tab) {
+        if (null == tab) {
             return;
         }
-        int originalTab = originalTabs.indexOf(tab);
-        tapTransferMap.remove(originalTab);
-        Pane content = (Pane) tab.getContent();
-        if (content == null) {
+        final int originalTab = this.originalTabs.indexOf(tab);
+        this.tapTransferMap.remove(originalTab);
+        final Pane content = (Pane) tab.getContent();
+        if (null == content) {
             throw new IllegalArgumentException("Can not detach Tab '" + tab.getText() + "': content is empty (null).");
         }
         tab.setContent(null);
         final Scene scene = new Scene(content, content.getPrefWidth(), content.getPrefHeight());
-        scene.getStylesheets().addAll(stylesheets);
-        Stage stage = new Stage();
+        scene.getStylesheets().addAll(this.stylesheets);
+        final Stage stage = new Stage();
         stage.setScene(scene);
         stage.setTitle(tab.getText());
-        stage.setAlwaysOnTop(isAlwaysOnTop());
+        stage.setAlwaysOnTop(this.isAlwaysOnTop().booleanValue());
         stage.setOnCloseRequest((WindowEvent t) -> {
             stage.close();
             tab.setContent(content);
-            int originalTabIndex = originalTabs.indexOf(tab);
-            tapTransferMap.put(originalTabIndex, tab);
+            final int originalTabIndex = this.originalTabs.indexOf(tab);
+            this.tapTransferMap.put(originalTabIndex, tab);
             int index = 0;
-            SortedSet<Integer> keys = new TreeSet<>(tapTransferMap.keySet());
-            for (Integer key : keys) {
-                Tab value = tapTransferMap.get(key);
-                if (!tabPane.getTabs().contains(value)) {
-                    tabPane.getTabs().add(index, value);
+            final SortedSet<Integer> keys = new TreeSet<>(this.tapTransferMap.keySet());
+            for (final Integer key : keys) {
+                final Tab value = this.tapTransferMap.get(key);
+                if (!this.tabPane.getTabs().contains(value)) {
+                    this.tabPane.getTabs().add(index, value);
                 }
                 index++;
             }
-            tabPane.getSelectionModel().select(tab);
+            this.tabPane.getSelectionModel().select(tab);
         });
-        stage.setOnShown((WindowEvent t) -> {
-            tab.getTabPane().getTabs().remove(tab);
-        });
+        stage.setOnShown((WindowEvent t) -> tab.getTabPane().getTabs().remove(tab));
         CloseWindowOnEscape.apply(scene, stage);
         stage.show();
     }

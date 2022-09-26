@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" hgap="5.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+<GridPane hgap="5.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
           vgap="5.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="erlyberly.PreferencesView">
     <columnConstraints>
@@ -16,28 +16,26 @@
         <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
         <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
     </rowConstraints>
-    <children>
-        <Label text="Target Node" GridPane.columnIndex="1"/>
-        <TextField fx:id="nodeNameField"/>
-        <Label text="Cookie" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-        <TextField fx:id="cookieField" GridPane.rowIndex="1"/>
-        <CheckBox fx:id="autoConnectField" text="Auto Connect on Next Startup"
-                  GridPane.columnSpan="2" GridPane.rowIndex="2"/>
-        <CheckBox fx:id="hideProcesses" text="Hide Processes on Startup"
-                  GridPane.columnSpan="2" GridPane.rowIndex="3"/>
-        <CheckBox fx:id="hideModules" text="Hide Modules on Startup"
-                  GridPane.columnSpan="2" GridPane.rowIndex="4"/>
-        <CheckBox fx:id="showSourceInSystemEditorBox" text="Show Source in the System Text Editor"
-                  GridPane.columnSpan="2" GridPane.rowIndex="5"/>
-        <Separator GridPane.columnSpan="2" GridPane.rowIndex="6"/>
-        <RadioButton fx:id="erlangTermsButton" text="Display Erlang Terms"
-                     GridPane.columnSpan="2" GridPane.rowIndex="7"/>
-        <RadioButton fx:id="elixirTermsButton" text="Display Elixir Terms"
-                     GridPane.columnSpan="2" GridPane.rowIndex="8"/>
-        <RadioButton fx:id="lfeTermsButton" text="Display LFE Terms"
-                     GridPane.columnSpan="2" GridPane.rowIndex="9"/>
-    </children>
     <padding>
         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
     </padding>
+    <Label text="Target Node" GridPane.columnIndex="1"/>
+    <TextField fx:id="nodeNameField"/>
+    <Label text="Cookie" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <TextField fx:id="cookieField" GridPane.rowIndex="1"/>
+    <CheckBox fx:id="autoConnectField" text="Auto Connect on Next Startup"
+              GridPane.columnSpan="2" GridPane.rowIndex="2"/>
+    <CheckBox fx:id="hideProcesses" text="Hide Processes on Startup"
+              GridPane.columnSpan="2" GridPane.rowIndex="3"/>
+    <CheckBox fx:id="hideModules" text="Hide Modules on Startup"
+              GridPane.columnSpan="2" GridPane.rowIndex="4"/>
+    <CheckBox fx:id="showSourceInSystemEditorBox" text="Show Source in the System Text Editor"
+              GridPane.columnSpan="2" GridPane.rowIndex="5"/>
+    <Separator GridPane.columnSpan="2" GridPane.rowIndex="6"/>
+    <RadioButton fx:id="erlangTermsButton" text="Display Erlang Terms"
+                 GridPane.columnSpan="2" GridPane.rowIndex="7"/>
+    <RadioButton fx:id="elixirTermsButton" text="Display Elixir Terms"
+                 GridPane.columnSpan="2" GridPane.rowIndex="8"/>
+    <RadioButton fx:id="lfeTermsButton" text="Display LFE Terms"
+                 GridPane.columnSpan="2" GridPane.rowIndex="9"/>
 </GridPane>

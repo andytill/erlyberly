@@ -12,60 +12,61 @@ import java.util.Arrays;
 
 /**
  * Created by Bart on 9/26/2015.
- * Originally from https://github.com/Velocity-/Hexstar
+ * Originally from <a href="https://github.com/Velocity-/Hexstar">...</a>
  */
 public class HexstarView extends TableView<DataRow> {
 
     public HexstarView() {
+        super();
         //setContextMenu(new ContextMenu(new MenuItem("Copy"), new MenuItem("Cut"), new MenuItem("Delete")));
-        getSelectionModel().setCellSelectionEnabled(true);
-        getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        this.getSelectionModel().setCellSelectionEnabled(true);
+        this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        column("Address", "address");
-        column("0", "b0");
-        column("1", "b1");
-        column("2", "b2");
-        column("3", "b3");
-        column("4", "b4");
-        column("5", "b5");
-        column("6", "b6");
-        column("7", "b7");
-        column("8", "b8");
-        column("9", "b9");
-        column("A", "bA");
-        column("B", "bB");
-        column("C", "bC");
-        column("D", "bD");
-        column("E", "bE");
-        column("F", "bF");
-        column("Text", "text");
+        this.column("Address", "address");
+        this.column("0", "b0");
+        this.column("1", "b1");
+        this.column("2", "b2");
+        this.column("3", "b3");
+        this.column("4", "b4");
+        this.column("5", "b5");
+        this.column("6", "b6");
+        this.column("7", "b7");
+        this.column("8", "b8");
+        this.column("9", "b9");
+        this.column("A", "bA");
+        this.column("B", "bB");
+        this.column("C", "bC");
+        this.column("D", "bD");
+        this.column("E", "bE");
+        this.column("F", "bF");
+        this.column("Text", "text");
 
-        getColumns().forEach(c -> {
+        this.getColumns().forEach(c -> {
             c.getStyleClass().add("hex-column");
             c.setSortable(false);
         });
-        getColumns().get(0).getStyleClass().add("hex-address-column");
+        this.getColumns().get(0).getStyleClass().add("hex-address-column");
     }
 
-    public void setBinary(OtpErlangBinary binary) {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(binary.binaryValue());
-        byte[] input = new byte[16];
-        int addr = 0, bytesRead = 0;
+    public void setBinary(final OtpErlangBinary binary) {
+        final ByteArrayInputStream inputStream = new ByteArrayInputStream(binary.binaryValue());
+        final byte[] input = new byte[16];
+        int addr = 0, bytesRead;
         try {
-            while ((bytesRead = inputStream.read(input)) > 0) {
-                getItems().add(new DataRow(addr, input, bytesRead));
+            while (0 < (bytesRead = inputStream.read(input))) {
+                this.getItems().add(new DataRow(addr, input, bytesRead));
                 addr += 16;
                 Arrays.fill(input, (byte) 0);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void column(String colName, String property) {
-        TableColumn<DataRow, String> col;
-        col = new TableColumn<DataRow, String>(colName);
-        col.setCellValueFactory(new PropertyValueFactory<DataRow, String>(property));
-        getColumns().add(col);
+    private void column(final String colName, final String property) {
+        final TableColumn<DataRow, String> col;
+        col = new TableColumn<>(colName);
+        col.setCellValueFactory(new PropertyValueFactory<>(property));
+        this.getColumns().add(col);
     }
 }

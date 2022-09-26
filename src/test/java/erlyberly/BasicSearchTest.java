@@ -17,78 +17,77 @@
  */
 package erlyberly;
 
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class BasicSearchTest {
 
     @Test
     public void test01() {
-        assertMatching("wert", "qwerty");
+        BasicSearchTest.assertMatching("wert", "qwerty");
     }
 
     @Test
     public void test02() {
-        assertMatching("derp|wert", "qwerty");
+        BasicSearchTest.assertMatching("derp|wert", "qwerty");
     }
 
     @Test
     public void test03() {
-        assertMatching("wert|derp", "qwerty");
+        BasicSearchTest.assertMatching("wert|derp", "qwerty");
     }
 
     @Test
     public void test04() {
-        assertMatching("wert||derp", "qwerty");
+        BasicSearchTest.assertMatching("wert||derp", "qwerty");
     }
 
     @Test
     public void test05() {
-        assertNotMatching("wert|derp", "turp");
+        BasicSearchTest.assertNotMatching("wert|derp", "turp");
     }
 
     @Test
     public void test06() {
-        assertNotMatching("wert||derp", "turp");
+        BasicSearchTest.assertNotMatching("wert||derp", "turp");
     }
 
     @Test
     public void test07() {
-        assertMatching("", "trolololol");
+        BasicSearchTest.assertMatching("", "trolololol");
     }
 
     @Test
     public void test08() {
         // even match null when there is no search!
-        assertMatching("", null);
+        BasicSearchTest.assertMatching("", null);
     }
 
     @Test
     public void test10() {
-        assertNotMatching("!the", "all the things");
+        BasicSearchTest.assertNotMatching("!the", "all the things");
     }
 
     @Test
     public void test11() {
-        assertNotMatching("the|!the", "all the things");
+        BasicSearchTest.assertNotMatching("the|!the", "all the things");
     }
 
     @Test
     public void test13() {
-        assertMatching("!the", "banjo");
+        BasicSearchTest.assertMatching("!the", "banjo");
     }
 
-    private void assertMatching(String searchText, String sourceText) {
-        BasicSearch basicSearch = new BasicSearch(searchText);
+    private static void assertMatching(final String searchText, final String sourceText) {
+        final BasicSearch basicSearch = new BasicSearch(searchText);
 
-        assertTrue(basicSearch.matches(sourceText));
+        MatcherAssert.assertThat(basicSearch.matches(sourceText), CoreMatchers.is(true));
     }
 
-    private void assertNotMatching(String searchText, String sourceText) {
-        BasicSearch basicSearch = new BasicSearch(searchText);
+    private static void assertNotMatching(final String searchText, final String sourceText) {
+        final BasicSearch basicSearch = new BasicSearch(searchText);
 
-        assertFalse(basicSearch.matches(sourceText));
+        MatcherAssert.assertThat(basicSearch.matches(sourceText), CoreMatchers.is(false));
     }
 }

@@ -17,6 +17,7 @@
  */
 package ui;
 
+@FunctionalInterface
 public interface CellController<T> {
 
     void updateItem(T item, boolean empty);
@@ -35,6 +36,6 @@ public interface CellController<T> {
     default void cancelEdit() {
     }
 
-    default void commitEdit(T newValue) {
+    default void commitEdit(final T newValue) {
     }
 }

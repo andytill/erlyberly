@@ -26,8 +26,9 @@ public class FXTreeCell<T> extends TreeCell<T> {
 
     private final Parent aControl;
 
-    public FXTreeCell(CellController<T> aController, Parent aControl) {
-        controller = aController;
+    public FXTreeCell(final CellController<T> aController, final Parent aControl) {
+        super();
+        this.controller = aController;
         this.aControl = aControl;
 
     }
@@ -36,17 +37,17 @@ public class FXTreeCell<T> extends TreeCell<T> {
     public void cancelEdit() {
         super.cancelEdit();
 
-        if (controller != null) {
-            controller.cancelEdit();
+        if (null != this.controller) {
+            this.controller.cancelEdit();
         }
     }
 
     @Override
-    public void commitEdit(T newValue) {
+    public void commitEdit(final T newValue) {
         super.commitEdit(newValue);
 
-        if (controller != null) {
-            controller.commitEdit(newValue);
+        if (null != this.controller) {
+            this.controller.commitEdit(newValue);
         }
     }
 
@@ -54,25 +55,25 @@ public class FXTreeCell<T> extends TreeCell<T> {
     public void startEdit() {
         super.startEdit();
 
-        if (controller != null) {
-            controller.startEdit();
+        if (null != this.controller) {
+            this.controller.startEdit();
         }
     }
 
     @Override
-    protected void updateItem(T item, boolean empty) {
+    protected void updateItem(final T item, final boolean empty) {
         super.updateItem(item, empty);
 
-        if (item == null || empty) {
-            setGraphic(null);
-            setText(null);
+        if (null == item || empty) {
+            this.setGraphic(null);
+            this.setText(null);
         } else {
-            setGraphic(aControl);
-            setText(null);
+            this.setGraphic(this.aControl);
+            this.setText(null);
         }
 
-        if (controller != null) {
-            controller.updateItem(item, empty);
+        if (null != this.controller) {
+            this.controller.updateItem(item, empty);
         }
     }
 }

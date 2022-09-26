@@ -20,33 +20,36 @@ package erlyberly.node;
 import com.ericsson.otp.erlang.*;
 import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
-import org.junit.Assert;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
 
 
 public class OtpUtilTest {
 
-    byte[] bytes;
+    private byte[] bytes;
 
     @Test
     public void binaryToString1() {
-        bytes = "hello".getBytes();
+        this.bytes = "hello".getBytes(StandardCharsets.UTF_8);
 
-        Assert.assertEquals("<<\"hello\">>", bin());
+        MatcherAssert.assertThat(this.bin(), CoreMatchers.is("<<\"hello\">>"));
     }
 
     @Test
     public void binaryToString2() {
-        bytes = "\0hello".getBytes();
+        this.bytes = "\0hello".getBytes(StandardCharsets.UTF_8);
 
-        Assert.assertEquals("<<0, \"hello\">>", bin());
+        MatcherAssert.assertThat(this.bin(), CoreMatchers.is("<<0, \"hello\">>"));
     }
 
     @Test
     public void binaryToString3() {
-        bytes = "\0hello\0".getBytes();
+        this.bytes = "\0hello\0".getBytes(StandardCharsets.UTF_8);
 
-        Assert.assertEquals("<<0, \"hello\", 0>>", bin());
+        MatcherAssert.assertThat(this.bin(), CoreMatchers.is("<<0, \"hello\", 0>>"));
     }
 	/*
 	@Test
@@ -123,30 +126,30 @@ public class OtpUtilTest {
 
     @Test
     public void improperListErlang() throws OtpErlangException {
-        OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes()),}, new OtpErlangAtom("world"));
-        Assert.assertEquals("[hello, <<\"x\">>|world]", new ErlangFormatter().toString(improper));
+        final OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes(StandardCharsets.UTF_8)),}, new OtpErlangAtom("world"));
+        MatcherAssert.assertThat(new ErlangFormatter().toString(improper), CoreMatchers.is("[hello, <<\"x\">>|world]"));
     }
 
     @Test
     public void improperListLFE() throws OtpErlangException {
-        OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes()),}, new OtpErlangAtom("world"));
-        Assert.assertEquals("('hello, #B(\"x\").'world)", new LFEFormatter().toString(improper));
+        final OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes(StandardCharsets.UTF_8)),}, new OtpErlangAtom("world"));
+        MatcherAssert.assertThat(new LFEFormatter().toString(improper), CoreMatchers.is("('hello, #B(\"x\").'world)"));
     }
 
     @Test
-    public void bitstringErlang() throws OtpErlangException {
-        OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
-        Assert.assertEquals("<<42, 156, 3:3>>", new ErlangFormatter().toString(bitstr));
+    public void bitstringErlang() {
+        final OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
+        MatcherAssert.assertThat(new ErlangFormatter().toString(bitstr), CoreMatchers.is("<<42, 156, 3:3>>"));
     }
 
     @Test
-    public void bitstringLFE() throws OtpErlangException {
-        OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
-        Assert.assertEquals("#B(42 156 (3 (size 3)))", new LFEFormatter().toString(bitstr));
+    public void bitstringLFE() {
+        final OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
+        MatcherAssert.assertThat(new LFEFormatter().toString(bitstr), CoreMatchers.is("#B(42 156 (3 (size 3)))"));
     }
 
     private String bin() {
-        OtpErlangBinary binary = new OtpErlangBinary(bytes);
+        final OtpErlangBinary binary = new OtpErlangBinary(this.bytes);
 
         return new ErlangFormatter().toString(binary);
     }
