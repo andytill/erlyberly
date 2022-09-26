@@ -19,12 +19,9 @@ package erlyberly;
 
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
-import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 
 public class CrashReportView extends TabPane {
 
@@ -34,53 +31,44 @@ public class CrashReportView extends TabPane {
     private final TableView<Object[]> crashInfoTable = new TableView<>();
 
     public CrashReportView() {
-        VBox.setVgrow(termTreeView, Priority.ALWAYS);
+        super();
+        VBox.setVgrow(this.termTreeView, Priority.ALWAYS);
 
-        Label label;
+        final Label label;
         label = new Label("Stack Trace");
         label.setStyle("-fx-padding: 5; -fx-font-size: 14;");
 
-        Tab stackTraceTab, argsTermsTab, termsTab;
+        final Tab stackTraceTab;
+        final Tab argsTermsTab;
+        final Tab termsTab;
         termsTab = new Tab("Crash Report Terms");
-        termsTab.setContent(termTreeView);
+        termsTab.setContent(this.termTreeView);
         argsTermsTab = new Tab("Call Args");
-        argsTermsTab.setContent(argsTreeView);
+        argsTermsTab.setContent(this.argsTreeView);
         stackTraceTab = new Tab("Stack Trace");
-        stackTraceTab.setContent(new VBox(crashInfoTable, label, stackTraceView));
+        stackTraceTab.setContent(new VBox(this.crashInfoTable, label, this.stackTraceView));
 
-        getTabs().addAll(stackTraceTab, argsTermsTab, termsTab);
+        this.getTabs().addAll(stackTraceTab, argsTermsTab, termsTab);
     }
 
-    public void setCrashReport(CrashReport crashReport) {
-        stackTraceView.populateFromCrashReport(crashReport);
-        termTreeView.populateFromTerm(crashReport.getProps());
+    public void setCrashReport(final CrashReport crashReport) {
+        this.stackTraceView.populateFromCrashReport(crashReport);
+        this.termTreeView.populateFromTerm(crashReport.getProps());
 
-        Object[][] crashProps = {{"Pid", crashReport.getPid()}, {"Reg. Name", crashReport.getRegisteredName()}, {"Error", ErlyBerly.getTermFormatter().exceptionToString(crashReport.getErrorClass(), crashReport.getErrorReason())}, {"Initial Call", ErlyBerly.getTermFormatter().modFuncArgsToString((OtpErlangTuple) crashReport.getProcessInitialCall())}};
+        final Object[][] crashProps = {{"Pid", crashReport.getPid()}, {"Reg. Name", crashReport.getRegisteredName()}, {"Error", ErlyBerly.getTermFormatter().exceptionToString(crashReport.getErrorClass(), crashReport.getErrorReason())}, {"Initial Call", ErlyBerly.getTermFormatter().modFuncArgsToString((OtpErlangTuple) crashReport.getProcessInitialCall())}};
 
-        TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
-        TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");
+        final TableColumn<Object[], Object> keyColumn = new TableColumn<>("Key");
+        final TableColumn<Object[], Object> valueColumn = new TableColumn<>("Value");
 
-        keyColumn.setCellValueFactory(new Callback<CellDataFeatures<Object[], Object>, ObservableValue<Object>>() {
-            @Override
-            public ObservableValue<Object> call(CellDataFeatures<Object[], Object> p) {
-                return new SimpleObjectProperty<>((p.getValue()[0]));
-            }
-        });
+        keyColumn.setCellValueFactory(p -> new SimpleObjectProperty<>((p.getValue()[0])));
 
-        valueColumn.setCellValueFactory(new Callback<CellDataFeatures<Object[], Object>, ObservableValue<Object>>() {
-            @Override
-            public ObservableValue<Object> call(CellDataFeatures<Object[], Object> p) {
-                return new SimpleObjectProperty<>((p.getValue()[1]));
-            }
-        });
+        valueColumn.setCellValueFactory(p -> new SimpleObjectProperty<>((p.getValue()[1])));
 
-        crashInfoTable.getColumns().add(keyColumn);
-        crashInfoTable.getColumns().add(valueColumn);
+        this.crashInfoTable.getColumns().add(keyColumn);
+        this.crashInfoTable.getColumns().add(valueColumn);
 
-        crashInfoTable.getItems().addAll(crashProps);
+        this.crashInfoTable.getItems().addAll(crashProps);
 
-        crashReport.getCallArgs().ifPresent((callArgs) -> {
-            argsTreeView.populateFromListContents(callArgs);
-        });
+        crashReport.getCallArgs().ifPresent(this.argsTreeView::populateFromListContents);
     }
 }

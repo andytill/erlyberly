@@ -21,17 +21,16 @@ import javafx.scene.control.TextArea;
 
 public class CodeView extends TextArea {
 
-    {
-        getStyleClass().add("erlyberly-code");
-        setEditable(false);
-    }
-
     public CodeView() {
         super();
+        this.getStyleClass().add("erlyberly-code");
+        this.setEditable(false);
     }
 
-    public CodeView(String text) {
+    CodeView(final String text) {
         super(text);
+        this.getStyleClass().add("erlyberly-code");
+        this.setEditable(false);
     }
 
 }

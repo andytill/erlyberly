@@ -268,9 +268,9 @@ public class ModFuncContextMenu extends ContextMenu {
     private String fetchModuleCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
         switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
-                return dbgController.moduleFunctionSourceCode(moduleName);
+                return DbgController.moduleFunctionSourceCode(moduleName);
             case VIEW_ABST_CODE:
-                return dbgController.moduleFunctionAbstCode(moduleName);
+                return DbgController.moduleFunctionAbstCode(moduleName);
             default:
                 return "";
         }
@@ -279,9 +279,9 @@ public class ModFuncContextMenu extends ContextMenu {
     private String fetchFunctionCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
         switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
-                return dbgController.moduleFunctionSourceCode(moduleName, function, arity);
+                return DbgController.moduleFunctionSourceCode(moduleName, function, arity);
             case VIEW_ABST_CODE:
-                return dbgController.moduleFunctionAbstCode(moduleName, function, arity);
+                return DbgController.moduleFunctionAbstCode(moduleName, function, arity);
             default:
                 return "";
         }

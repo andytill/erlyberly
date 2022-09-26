@@ -154,7 +154,9 @@ public enum OtpUtil {
     public static void sendRPC(final OtpConn conn, final OtpMbox m, final OtpErlangAtom mod, final OtpErlangAtom fun, final OtpErlangList args) throws IOException {
         final OtpErlangTuple rpcMessage = tuple(m.self(), tuple(CALL_ATOM, mod, fun, args, USER_ATOM));
 
-        conn.send(m.self(), "rex", rpcMessage);
+        if (conn != null) {
+            conn.send(m.self(), "rex", rpcMessage);
+        }
     }
 
     public static OtpErlangObject tupleElement(final int i, final OtpErlangObject obj) {

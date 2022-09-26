@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class CallGraphView extends TreeView<ModFunc> {
+class CallGraphView extends TreeView<ModFunc> {
 
     /**
      * A list of module names that will not be expanded in the call graph tree, since
@@ -37,70 +37,71 @@ public class CallGraphView extends TreeView<ModFunc> {
 
     private final ModFuncContextMenu modFuncContextMenu;
 
-    public CallGraphView(DbgController aDbgController) {
-        assert aDbgController != null;
+    CallGraphView(final DbgController aDbgController) {
+        super();
+        assert null != aDbgController;
 
-        modFuncContextMenu = new ModFuncContextMenu(aDbgController);
+        this.modFuncContextMenu = new ModFuncContextMenu(aDbgController);
 
-        getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
-            modFuncContextMenu.selectedTreeItemProperty().set(newItem);
-            if (newItem != null) modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
+        this.getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
+            this.modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+            if (null != newItem) this.modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
         });
 
 
-        ModFuncTreeCellFactory modFuncTreeCellFactory;
+        final ModFuncTreeCellFactory modFuncTreeCellFactory;
 
         modFuncTreeCellFactory = new ModFuncTreeCellFactory(aDbgController);
         modFuncTreeCellFactory.setShowModuleName(true);
 
-        setRoot(new TreeItem<>());
-        setShowRoot(false);
-        setContextMenu(modFuncContextMenu);
-        setCellFactory(modFuncTreeCellFactory);
+        this.setRoot(new TreeItem<>());
+        this.setShowRoot(false);
+        this.setContextMenu(this.modFuncContextMenu);
+        this.setCellFactory(modFuncTreeCellFactory);
     }
 
-    public void callGraph(OtpErlangTuple callStack) {
-        assert callStack != null;
-        populateCallGraph(getRoot(), callStack);
+    void callGraph(final OtpErlangTuple callStack) {
+        assert null != callStack;
+        this.populateCallGraph(this.getRoot(), callStack);
     }
 
     /**
      * Parses erlang terms in the format, into a JavaFX tree.
-     * <code>
+     * {@code
      * {{M::atom(), F::atom(), A::integer()}, [{M,F,A}]}
-     * </code>
+     * }
      */
-    private void populateCallGraph(TreeItem<ModFunc> parentModFuncItem, OtpErlangTuple callGraph) {
+    private void populateCallGraph(final TreeItem<ModFunc> parentModFuncItem, final OtpErlangTuple callGraph) {
 
-        assert callGraph != null;
+        assert null != callGraph;
         System.out.println(callGraph);
-        OtpErlangTuple mfaTuple = (OtpErlangTuple) OtpUtil.tupleElement(0, callGraph);
-        OtpErlangList calls = (OtpErlangList) OtpUtil.tupleElement(1, callGraph);
+        final OtpErlangTuple mfaTuple = (OtpErlangTuple) OtpUtil.tupleElement(0, callGraph);
+        final OtpErlangList calls = (OtpErlangList) OtpUtil.tupleElement(1, callGraph);
 
-        OtpErlangAtom module = (OtpErlangAtom) OtpUtil.tupleElement(0, mfaTuple);
-        OtpErlangAtom function = (OtpErlangAtom) OtpUtil.tupleElement(1, mfaTuple);
-        OtpErlangLong arity = (OtpErlangLong) OtpUtil.tupleElement(2, mfaTuple);
+        final OtpErlangAtom module = (OtpErlangAtom) OtpUtil.tupleElement(0, mfaTuple);
+        final OtpErlangAtom function = (OtpErlangAtom) OtpUtil.tupleElement(1, mfaTuple);
+        final OtpErlangLong arity = (OtpErlangLong) OtpUtil.tupleElement(2, mfaTuple);
 
         try {
             // just put something in, this isn't used
-            boolean exported = false;
-            boolean synthetic = false;
+            final boolean exported = false;
+            final boolean synthetic = false;
 
-            ModFunc modFunc = new ModFunc(module.atomValue(), function.atomValue(), arity.intValue(), exported, synthetic);
+            final ModFunc modFunc = new ModFunc(module.atomValue(), function.atomValue(), arity.intValue(), exported, synthetic);
 
-            TreeItem<ModFunc> modFuncItem;
+            final TreeItem<ModFunc> modFuncItem;
 
             modFuncItem = new TreeItem<>(modFunc);
-            String atomString = module.atomValue();
-            boolean value = !UNEXPANDED_MODULES.contains(atomString);
+            final String atomString = module.atomValue();
+            final boolean value = !UNEXPANDED_MODULES.contains(atomString);
             modFuncItem.setExpanded(value);
 
             parentModFuncItem.getChildren().add(modFuncItem);
 
-            for (OtpErlangObject e : OtpUtil.iterableElements(calls)) {
-                populateCallGraph(modFuncItem, (OtpErlangTuple) e);
+            for (final OtpErlangObject e : OtpUtil.iterableElements(calls)) {
+                this.populateCallGraph(modFuncItem, (OtpErlangTuple) e);
             }
-        } catch (OtpErlangRangeException e) {
+        } catch (final OtpErlangRangeException e) {
             e.printStackTrace();
         }
     }

@@ -23,50 +23,46 @@ import java.util.List;
 
 public class BasicSearch {
 
+    @FunctionalInterface
     interface SearchMatcher {
         IsMatch isMatch(String source);
     }
 
     enum IsMatch {MATCH, NO_MATCH, FILTERED}
 
-    private final List<SearchMatcher> matchers = new ArrayList<BasicSearch.SearchMatcher>();
+    private final List<SearchMatcher> matchers = new ArrayList<>();
 
-    public BasicSearch(String searchText) {
-        List<String> searches = new ArrayList<String>(Arrays.asList(searchText.split("\\|")));
+    BasicSearch(final String searchText) {
+        super();
+        final List<String> searches = new ArrayList<>(Arrays.asList(searchText.split("\\|")));
 
         // remove the empties
         while (searches.remove("")) ;
 
-        for (String string : searches) {
-            SearchMatcher sm;
+        for (final String string : searches) {
+            final SearchMatcher sm;
 
-            if (string.charAt(0) == '!') {
-                if (string.length() == 1) continue;
-                String string2 = string.substring(1);
+            if ('!' == string.charAt(0)) {
+                if (1 == string.length()) continue;
+                final String string2 = string.substring(1);
 
                 // this is a NOT filter, if we match then filter out, otherwise let it though
-                sm = (s) -> {
-                    return s.contains(string2) ? IsMatch.FILTERED : IsMatch.MATCH;
-                };
+                sm = (s) -> s.contains(string2) ? IsMatch.FILTERED : IsMatch.MATCH;
             } else {
-                sm = (s) -> {
-                    return s.contains(string) ? IsMatch.MATCH : IsMatch.NO_MATCH;
-                };
+                sm = (s) -> s.contains(string) ? IsMatch.MATCH : IsMatch.NO_MATCH;
             }
-            matchers.add(sm);
+            this.matchers.add(sm);
         }
     }
 
-    public boolean matches(String... sourceStrings) {
-        if (matchers.isEmpty()) return true;
+    boolean matches(final String... sourceStrings) {
+        if (this.matchers.isEmpty()) return true;
 
         boolean match = false;
 
-        for (String string : sourceStrings) {
+        for (final String string : sourceStrings) {
 
-            if (sourceStrings == null) continue;
-
-            for (SearchMatcher matcher : matchers) {
+            for (final SearchMatcher matcher : this.matchers) {
                 switch (matcher.isMatch(string)) {
                     case FILTERED:
                         // if this is filtered out, return false immediately

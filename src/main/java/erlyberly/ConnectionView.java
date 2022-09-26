@@ -47,15 +47,9 @@ import java.util.*;
 /**
  * Connection details control to connect to the remote node.
  */
-@SuppressWarnings({"unchecked"})
 public class ConnectionView extends SplitPane {
 
     private final SimpleBooleanProperty isConnecting = new SimpleBooleanProperty();
-
-    /**
-     * Is there enough user input to connect to a node?
-     */
-    private final SimpleBooleanProperty isNodeConnectable = new SimpleBooleanProperty();
 
     private final FloatyFieldControl nodeNameField;
     private final FloatyFieldControl cookieField;
@@ -66,91 +60,92 @@ public class ConnectionView extends SplitPane {
 
     private final FilteredList<KnownNode> filteredRows;
 
-    private final Button connectButton;
-
     private final ObservableList<KnownNode> rows;
 
-    public ConnectionView() {
-        nodeNameField = new FloatyFieldControl();
-        isNodeConnectable.bind(nodeNameField.getModel().textProperty().isNotEmpty());
-        nodeNameField.getModel().promptTextProperty().set("Node Name");
-        cookieField = new FloatyFieldControl();
-        cookieField.getModel().promptTextProperty().set("Cookie");
+    ConnectionView() {
+        super();
+        this.nodeNameField = new FloatyFieldControl();
+        /**
+         * Is there enough user input to connect to a node?
+         */
+        final SimpleBooleanProperty isNodeConnectable = new SimpleBooleanProperty();
+        isNodeConnectable.bind(this.nodeNameField.getModel().textProperty().isNotEmpty());
+        this.nodeNameField.getModel().promptTextProperty().set("Node Name");
+        this.cookieField = new FloatyFieldControl();
+        this.cookieField.getModel().promptTextProperty().set("Cookie");
 
-        filterField = new FloatyFieldControl();
-        filterField.getModel().promptTextProperty().set("Filter Known Nodes");
-        filterField.getModel().textProperty().addListener((o) -> {
-            onFilterChanged();
-        });
-        HBox.setHgrow(filterField, Priority.SOMETIMES);
-        knownNodesTable = new TableView<>();
-        knownNodesTable.getColumns().setAll(newNodeRunningColumn("Is Running", "running", 75), newColumn("Node Name", "nodeName", 200), newColumn("Cookie", "cookie"));
-        VBox.setVgrow(knownNodesTable, Priority.SOMETIMES);
-        rows = FXCollections.observableArrayList(knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
-        filteredRows = new FilteredList<KnownNode>(rows);
+        this.filterField = new FloatyFieldControl();
+        this.filterField.getModel().promptTextProperty().set("Filter Known Nodes");
+        this.filterField.getModel().textProperty().addListener((o) -> this.onFilterChanged());
+        HBox.setHgrow(this.filterField, Priority.SOMETIMES);
+        this.knownNodesTable = new TableView<>();
+        this.knownNodesTable.getColumns().setAll(ConnectionView.newNodeRunningColumn("Is Running", "running", 75), ConnectionView.newColumn("Node Name", "nodeName", 200), ConnectionView.newColumn("Cookie", "cookie"));
+        VBox.setVgrow(this.knownNodesTable, Priority.SOMETIMES);
+        this.rows = FXCollections.observableArrayList(ConnectionView.knownNodesConfigToRowObjects(PrefBind.getKnownNodes()));
+        this.filteredRows = new FilteredList<>(this.rows);
 
-        MenuItem deleteItem;
+        final MenuItem deleteItem;
         deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(this::onDelete);
         deleteItem.setAccelerator(KeyCombination.keyCombination("delete"));
-        ContextMenu knownNodeMenu;
+        final ContextMenu knownNodeMenu;
         knownNodeMenu = new ContextMenu();
         knownNodeMenu.getItems().add(deleteItem);
 
-        knownNodesTable.setItems(filteredRows);
-        knownNodesTable.getSelectionModel().selectedItemProperty().addListener((o, oldv, newv) -> {
-            if (newv == null) return;
-            nodeNameField.getModel().getField().setText(newv.getNodeName());
-            cookieField.getModel().getField().setText(newv.getCookie());
+        this.knownNodesTable.setItems(this.filteredRows);
+        this.knownNodesTable.getSelectionModel().selectedItemProperty().addListener((o, oldv, newv) -> {
+            if (null == newv) return;
+            this.nodeNameField.getModel().getField().setText(newv.getNodeName());
+            this.cookieField.getModel().getField().setText(newv.getCookie());
         });
-        knownNodesTable.setContextMenu(knownNodeMenu);
+        this.knownNodesTable.setContextMenu(knownNodeMenu);
 
         // button width across the whole scene
         final double connectButtonHeight = 42d;
-        connectButton = new Button("Connect to Remote Node");
+        final Button connectButton = new Button("Connect to Remote Node");
         connectButton.setPrefWidth(1000d);
         connectButton.setPrefHeight(connectButtonHeight);
         connectButton.setMinHeight(connectButtonHeight);
         connectButton.setOnAction(this::onConnectButtonPressed);
         connectButton.setDefaultButton(true);
 
-        messageLabel = new Label();
+        this.messageLabel = new Label();
 
-        VBox newNodeBox;
+        final VBox newNodeBox;
         newNodeBox = new VBox();
         newNodeBox.setSpacing(10d);
         newNodeBox.setPadding(new Insets(10, 10, 10, 10));
-        newNodeBox.getChildren().addAll(nodeNameField, new Separator(Orientation.HORIZONTAL), cookieField, new Separator(Orientation.HORIZONTAL), connectButton, messageLabel);
+        newNodeBox.getChildren().addAll(this.nodeNameField, new Separator(Orientation.HORIZONTAL), this.cookieField, new Separator(Orientation.HORIZONTAL), connectButton, this.messageLabel);
 
-        VBox knownNodeBox;
+        final VBox knownNodeBox;
         knownNodeBox = new VBox();
         knownNodeBox.setSpacing(10d);
         knownNodeBox.setPadding(new Insets(10, 10, 10, 10));
-        knownNodeBox.getChildren().addAll(new HBox(filterField, searchIcon()), knownNodesTable);
-        getItems().addAll(knownNodeBox, newNodeBox);
+        knownNodeBox.getChildren().addAll(new HBox(this.filterField, ConnectionView.searchIcon()), this.knownNodesTable);
+        this.getItems().addAll(knownNodeBox, newNodeBox);
 
-        nodeNameField.getModel().getField().disableProperty().bind(isConnecting);
-        cookieField.getModel().getField().disableProperty().bind(isConnecting);
-        filterField.getModel().getField().disableProperty().bind(isConnecting);
-        knownNodesTable.disableProperty().bind(isConnecting);
-        connectButton.disableProperty().bind(isConnecting.or(isNodeConnectable.not()));
+        this.nodeNameField.getModel().getField().disableProperty().bind(this.isConnecting);
+        this.cookieField.getModel().getField().disableProperty().bind(this.isConnecting);
+        this.filterField.getModel().getField().disableProperty().bind(this.isConnecting);
+        this.knownNodesTable.disableProperty().bind(this.isConnecting);
+        connectButton.disableProperty().bind(this.isConnecting.or(isNodeConnectable.not()));
     }
 
-    private void onDelete(ActionEvent e) {
-        KnownNode selectedItem = knownNodesTable.getSelectionModel().getSelectedItem();
-        if (selectedItem == null) return;
-        rows.remove(selectedItem);
+    private void onDelete(final ActionEvent e) {
+        final KnownNode selectedItem = this.knownNodesTable.getSelectionModel().getSelectedItem();
+        if (null == selectedItem) return;
+        this.rows.remove(selectedItem);
         PrefBind.removeKnownNode(selectedItem);
     }
 
-    private TableColumn<KnownNode, ?> newColumn(String colText, String colPropertyName, double colWidth) {
-        TableColumn<KnownNode, String> col = newColumn(colText, colPropertyName);
+    private static TableColumn<KnownNode, ?> newColumn(final String colText, final String colPropertyName, final double colWidth) {
+        final TableColumn<KnownNode, String> col = ConnectionView.newColumn(colText, colPropertyName);
         col.setPrefWidth(colWidth);
         return col;
     }
 
-    private Glyph searchIcon() {
-        Glyph icon = new FontAwesome().create(FontAwesome.Glyph.SEARCH);
+    private static Glyph searchIcon() {
+        final Glyph icon = new FontAwesome().create(FontAwesome.Glyph.SEARCH);
         icon.setStyle("-fx-font-family: FontAwesome; -fx-font-size: 1.8em; -fx-text-fill: gray;");
         // make the icon align with the input text, not with the height of the entire field control
         icon.setAlignment(Pos.BOTTOM_RIGHT);
@@ -159,29 +154,31 @@ public class ConnectionView extends SplitPane {
     }
 
     private void onFilterChanged() {
-        final String filterString = filterField.getModel().getText();
-        filteredRows.setPredicate((node) -> {
-            return "".equals(filterString) || node.getNodeName().contains(filterString);
+        final String filterString = this.filterField.getModel().getText();
+        this.filteredRows.setPredicate((node) -> {
+            if (null != filterString && filterString.isEmpty()) return true;
+            assert null != filterString;
+            return node.getNodeName().contains(filterString);
         });
     }
 
-    private List<KnownNode> knownNodesConfigToRowObjects(List<List<String>> knownNodeStrings) {
+    private static List<KnownNode> knownNodesConfigToRowObjects(final List<List<String>> knownNodeStrings) {
         // get node names from epmd to give the user some options as to what to connect to
-        HashSet<String> runningNodeNames = new HashSet<>();
+        final HashSet<String> runningNodeNames = new HashSet<>();
         try {
             runningNodeNames.addAll(Arrays.asList(OtpEpmd.lookupNames()));
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         }
         // a lit of node names that are running according to epmd but do not appear in the list
         // of node names we have accessed before
-        ArrayList<String> unknownRunningNodeNames = new ArrayList<>(runningNodeNames);
+        final List<String> unknownRunningNodeNames = new ArrayList<>(runningNodeNames);
 
-        ArrayList<KnownNode> knownNodeRows = new ArrayList<>();
-        for (List<String> confStrings : knownNodeStrings) {
-            KnownNode knownNode = new KnownNode(confStrings.get(0), confStrings.get(1));
+        final List<KnownNode> knownNodeRows = new ArrayList<>();
+        for (final List<String> confStrings : knownNodeStrings) {
+            final KnownNode knownNode = new KnownNode(confStrings.get(0), confStrings.get(1));
             // if this configured node name is in the epmd list then mark it as "running"
-            for (String string : runningNodeNames) {
+            for (final String string : runningNodeNames) {
                 if (string.contains(knownNode.getNodeName())) {
                     knownNode.setRunning(true);
                     unknownRunningNodeNames.remove(string);
@@ -190,97 +187,90 @@ public class ConnectionView extends SplitPane {
             }
             knownNodeRows.add(knownNode);
         }
-        for (String runningNodeName : unknownRunningNodeNames) {
+        for (final String runningNodeName : unknownRunningNodeNames) {
             // don't show erlyberly in the list, weird stuff happens if erlyberly connects to itself!
             if (runningNodeName.contains("erlyberly")) continue;
             // for some reason OtpEpmd gives node names in the following format:
             //     "name gerp at port 52153"
             // so we have to do some string cutting to get the proper name
-            String[] xxx = runningNodeName.split(" ");
-            KnownNode knownNode = new KnownNode(xxx[1], "");
+            final String[] xxx = runningNodeName.split(" ");
+            final KnownNode knownNode = new KnownNode(xxx[1], "");
             knownNode.setRunning(true);
             knownNodeRows.add(knownNode);
         }
-        Collections.sort(knownNodeRows, (a, b) -> {
-            return a.getNodeName().compareTo(b.getNodeName());
-        });
+        knownNodeRows.sort(Comparator.comparing(KnownNode::getNodeName));
         return knownNodeRows;
     }
 
-    private TableColumn<KnownNode, String> newColumn(String colText, String colPropertyName) {
-        TableColumn<KnownNode, String> column;
+    private static TableColumn<KnownNode, String> newColumn(final String colText, final String colPropertyName) {
+        final TableColumn<KnownNode, String> column;
         column = new TableColumn<>(colText);
-        column.setCellValueFactory(new PropertyValueFactory<KnownNode, String>(colPropertyName));
+        column.setCellValueFactory(new PropertyValueFactory<>(colPropertyName));
         return column;
     }
 
-    private TableColumn<KnownNode, Boolean> newNodeRunningColumn(String colText, String colPropertyName, double colWidth) {
-        TableColumn<KnownNode, Boolean> column;
+    private static TableColumn<KnownNode, Boolean> newNodeRunningColumn(final String colText, final String colPropertyName, final double colWidth) {
+        final TableColumn<KnownNode, Boolean> column;
         column = new TableColumn<>(colText);
-        column.setCellValueFactory(node -> {
-            return node.getValue().runningProperty();
-        });
+        column.setCellValueFactory(node -> node.getValue().runningProperty());
         column.setCellFactory(tc -> new CheckBoxTableCell<>());
         column.setPrefWidth(colWidth);
         return column;
     }
 
-    private void onConnectButtonPressed(ActionEvent e) {
-        String cookie, nodeName;
-        nodeName = nodeNameField.getModel().getText();
-        cookie = removeApostrophesFromCookie(cookieField.getModel().getText());
-        if (nodeName == null || "".equals(nodeName)) return;
-        maybeStoreNodeInfoInConfig(nodeName, cookie);
-        connectToRemoteNode(cookie, nodeName);
+    private void onConnectButtonPressed(final ActionEvent e) {
+        final String cookie;
+        final String nodeName;
+        nodeName = this.nodeNameField.getModel().getText();
+        cookie = ConnectionView.removeApostrophesFromCookie(this.cookieField.getModel().getText());
+        if (null == nodeName || nodeName.isEmpty()) return;
+        this.maybeStoreNodeInfoInConfig(nodeName, cookie);
+        this.connectToRemoteNode(cookie, nodeName);
     }
 
-    private void maybeStoreNodeInfoInConfig(String nodeName, String cookie) {
-        KnownNode knownNode = new KnownNode(nodeName, cookie);
-        if (!knownNodesTable.getItems().contains(knownNode)) {
+    private void maybeStoreNodeInfoInConfig(final String nodeName, final String cookie) {
+        final KnownNode knownNode = new KnownNode(nodeName, cookie);
+        if (!this.knownNodesTable.getItems().contains(knownNode)) {
             PrefBind.storeKnownNode(knownNode);
         }
     }
 
-    private void connectToRemoteNode(String cookie, String nodeName) {
-        isConnecting.set(true);
+    private void connectToRemoteNode(final String cookie, final String nodeName) {
+        this.isConnecting.set(true);
         new ConnectorThead(nodeName, cookie).start();
         ErlyBerly.runIO(() -> {
             try {
                 ErlyBerly.nodeAPI().connectionInfo(nodeName, cookie).manualConnect();
 
-                Platform.runLater(() -> {
-                    closeThisWindow();
-                });
-            } catch (OtpErlangException | OtpAuthException | IOException e) {
-                Platform.runLater(() -> {
-                    connectionFailed(e.getMessage());
-                });
+                Platform.runLater(this::closeThisWindow);
+            } catch (final OtpErlangException | OtpAuthException | IOException e) {
+                Platform.runLater(() -> this.connectionFailed(e.getMessage()));
             }
         });
     }
 
-    private String removeApostrophesFromCookie(String cookie) {
+    private static String removeApostrophesFromCookie(final String cookie) {
         return cookie.replaceAll("'", "");
     }
 
-    private void connectionFailed(String message) {
+    private void connectionFailed(final String message) {
         assert Platform.isFxApplicationThread();
 
-        isConnecting.set(false);
+        this.isConnecting.set(false);
 
-        messageLabel.setGraphic(bannedIcon());
-        messageLabel.setText(message);
+        this.messageLabel.setGraphic(ConnectionView.bannedIcon());
+        this.messageLabel.setText(message);
     }
 
-    private Glyph bannedIcon() {
-        Glyph icon = new FontAwesome().create(FontAwesome.Glyph.BAN);
+    private static Glyph bannedIcon() {
+        final Glyph icon = new FontAwesome().create(FontAwesome.Glyph.BAN);
         icon.setStyle("-fx-font-family: FontAwesome; -fx-font-size: 2em; -fx-text-fill: red;");
         return icon;
     }
 
     // TODO: make into a more generic stage handling function.
     private void closeThisWindow() {
-        Stage stage;
+        final Stage stage;
         stage = (Stage) this.getScene().getWindow();
         stage.close();
     }
@@ -292,26 +282,23 @@ public class ConnectionView extends SplitPane {
         private final String remoteNodeName;
         private final String cookie;
 
-        public ConnectorThead(String aRemoteNodeName, String aCookie) {
-            remoteNodeName = aRemoteNodeName;
-            cookie = aCookie;
+        ConnectorThead(final String aRemoteNodeName, final String aCookie) {
+            super();
+            this.remoteNodeName = aRemoteNodeName;
+            this.cookie = aCookie;
 
-            setDaemon(true);
-            setName("Erlyberly Connector Thread");
+            this.setDaemon(true);
+            this.setName("Erlyberly Connector Thread");
         }
 
         @Override
         public void run() {
             try {
-                ErlyBerly.nodeAPI().connectionInfo(remoteNodeName, cookie).manualConnect();
+                ErlyBerly.nodeAPI().connectionInfo(this.remoteNodeName, this.cookie).manualConnect();
 
-                Platform.runLater(() -> {
-                    closeThisWindow();
-                });
-            } catch (OtpErlangException | OtpAuthException | IOException e) {
-                Platform.runLater(() -> {
-                    connectionFailed(e.getMessage());
-                });
+                Platform.runLater(ConnectionView.this::closeThisWindow);
+            } catch (final OtpErlangException | OtpAuthException | IOException e) {
+                Platform.runLater(() -> ConnectionView.this.connectionFailed(e.getMessage()));
             }
         }
     }
@@ -323,30 +310,31 @@ public class ConnectionView extends SplitPane {
         private final String nodeName, cookie;
         private final SimpleBooleanProperty running = new SimpleBooleanProperty(false);
 
-        public KnownNode(String nodeName, String cookie) {
-            assert nodeName != null;
-            assert !"".equals(nodeName);
+        public KnownNode(final String nodeName, final String cookie) {
+            super();
+            assert null != nodeName;
+            assert !nodeName.isEmpty();
             this.nodeName = nodeName;
             this.cookie = cookie;
         }
 
         public String getNodeName() {
-            return nodeName;
+            return this.nodeName;
         }
 
         public String getCookie() {
-            return cookie;
+            return this.cookie;
         }
 
         public boolean isRunning() {
-            return running.get();
+            return this.running.get();
         }
 
         public SimpleBooleanProperty runningProperty() {
-            return running;
+            return this.running;
         }
 
-        public void setRunning(boolean running) {
+        public void setRunning(final boolean running) {
             this.running.set(running);
         }
 
@@ -354,23 +342,23 @@ public class ConnectionView extends SplitPane {
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((cookie == null) ? 0 : cookie.hashCode());
-            result = prime * result + ((nodeName == null) ? 0 : nodeName.hashCode());
+            result = prime * result + ((null == this.cookie) ? 0 : this.cookie.hashCode());
+            result = prime * result + ((null == this.nodeName) ? 0 : this.nodeName.hashCode());
             return result;
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final Object obj) {
             if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
-            KnownNode other = (KnownNode) obj;
-            if (cookie == null) {
-                if (other.cookie != null) return false;
-            } else if (!cookie.equals(other.cookie)) return false;
-            if (nodeName == null) {
-                return other.nodeName == null;
-            } else return nodeName.equals(other.nodeName);
+            if (null == obj) return false;
+            if (this.getClass() != obj.getClass()) return false;
+            final KnownNode other = (KnownNode) obj;
+            if (null == this.cookie) {
+                if (null != other.cookie) return false;
+            } else if (!this.cookie.equals(other.cookie)) return false;
+            if (null == this.nodeName) {
+                return null == other.nodeName;
+            } else return this.nodeName.equals(other.nodeName);
         }
     }
 }

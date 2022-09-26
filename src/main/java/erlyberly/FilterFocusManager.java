@@ -26,7 +26,8 @@ import javafx.scene.input.KeyCombination;
 
 import java.util.ArrayList;
 
-public class FilterFocusManager {
+public enum FilterFocusManager {
+    ;
 
     private static final KeyCodeCombination REFRESH_MODULES_SHORTCUT = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
 
@@ -34,25 +35,18 @@ public class FilterFocusManager {
 
     private static int lastFocusedIndex = -1;
 
-    private FilterFocusManager() {
-    }
-
-    public static void init(Scene scene) {
+    public static void init(final Scene scene) {
         FILTERS.add(null);
         FILTERS.add(null);
         FILTERS.add(null);
 
-        Platform.runLater(() -> {
-            scene.getAccelerators().put(REFRESH_MODULES_SHORTCUT, () -> {
-                nextFilter();
-            });
-        });
+        Platform.runLater(() -> scene.getAccelerators().put(REFRESH_MODULES_SHORTCUT, FilterFocusManager::nextFilter));
     }
 
     private static void nextFilter() {
         if (FILTERS.isEmpty()) return;
 
-        Control control = findNextFilter();
+        final Control control = findNextFilter();
 
         requestFocus(control);
     }
@@ -60,16 +54,16 @@ public class FilterFocusManager {
     private static Control findNextFilter() {
         // if we know about a filter control that was focused last but does not currently
         // have focus then return to it. The filter must be visible and attached to the scene.
-        if (lastFocusedIndex != -1) {
-            Control lastFocused = FILTERS.get(lastFocusedIndex);
-            if (!lastFocused.isFocused() && lastFocused.isVisible() && lastFocused.getScene() != null) {
+        if (-1 != lastFocusedIndex) {
+            final Control lastFocused = FILTERS.get(lastFocusedIndex);
+            if (!lastFocused.isFocused() && lastFocused.isVisible() && null != lastFocused.getScene()) {
                 return lastFocused;
             }
         }
 
         int focused = findCurrentFilter();
 
-        if (focused == -1) {
+        if (-1 == focused) {
             focused = 0;
         }
         // iterate the filters until we find one that is part of the scene or we run out of filters
@@ -80,7 +74,7 @@ public class FilterFocusManager {
             if (focused >= FILTERS.size()) {
                 focused = 0;
             }
-            boolean isFocusable = FILTERS.get(focused).getScene() != null;
+            final boolean isFocusable = null != FILTERS.get(focused).getScene();
             if (isFocusable) break;
         }
         return FILTERS.get(focused);
@@ -89,8 +83,8 @@ public class FilterFocusManager {
     private static int findCurrentFilter() {
         int focused = -1;
         for (int i = 0; i < FILTERS.size(); i++) {
-            Control control = FILTERS.get(i);
-            if (control != null && control.isFocused()) {
+            final Control control = FILTERS.get(i);
+            if (null != control && control.isFocused()) {
                 focused = i;
                 break;
             }
@@ -98,21 +92,17 @@ public class FilterFocusManager {
         return focused;
     }
 
-    private static void requestFocus(Control control) {
-        if (control != null) Platform.runLater(() -> {
-            control.requestFocus();
-        });
+    private static void requestFocus(final Control control) {
+        if (null != control) Platform.runLater(control::requestFocus);
     }
 
-    public static void addFilter(Control control, int order) {
-        assert control != null;
-        assert order >= 0;
+    public static void addFilter(final Control control, final int order) {
+        assert null != control;
+        assert 0 <= order;
         assert Platform.isFxApplicationThread();
 
         FILTERS.set(order, control);
 
-        control.focusedProperty().addListener((o, oldFocus, newFocus) -> {
-            lastFocusedIndex = order;
-        });
+        control.focusedProperty().addListener((o, oldFocus, newFocus) -> lastFocusedIndex = order);
     }
 }

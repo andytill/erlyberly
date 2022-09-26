@@ -50,42 +50,43 @@ public class CrashReport {
 
     private final LocalDateTime date = LocalDateTime.now();
 
-    public CrashReport(OtpErlangObject obj) {
+    public CrashReport(final OtpErlangObject obj) {
+        super();
         this.terms = obj;
-        crashProps = OtpUtil.propsToMap((OtpErlangList) obj);
-        errorInfo = (OtpErlangTuple) crashProps.get(ATOM_ERROR_INFO);
+        this.crashProps = OtpUtil.propsToMap((OtpErlangList) obj);
+        this.errorInfo = (OtpErlangTuple) this.crashProps.get(ATOM_ERROR_INFO);
 
         // pull out the register name of the crashing process
-        Object aRegName = crashProps.get(ATOM_REGISTERED_NAME);
+        final Object aRegName = this.crashProps.get(ATOM_REGISTERED_NAME);
         if (OtpUtil.list().equals(aRegName)) {
-            registeredName = "";
+            this.registeredName = "";
         } else {
-            registeredName = aRegName.toString();
+            this.registeredName = aRegName.toString();
         }
     }
 
-    <T> List<T> mapStackTraces(StackTraceFn<T> fn) {
-        OtpErlangList stackTrace = (OtpErlangList) errorInfo.elementAt(2);
-        ArrayList<T> result = new ArrayList<T>();
+    <T> List<T> mapStackTraces(final StackTraceFn<T> fn) {
+        final OtpErlangList stackTrace = (OtpErlangList) this.errorInfo.elementAt(2);
+        final List<T> result = new ArrayList<>();
 
-        for (OtpErlangObject obj : stackTrace) {
-            OtpErlangTuple tuple = (OtpErlangTuple) obj;
-            OtpErlangAtom module = (OtpErlangAtom) tuple.elementAt(0);
-            OtpErlangAtom function = (OtpErlangAtom) tuple.elementAt(1);
-            OtpErlangObject argsOrArity = tuple.elementAt(2);
-            OtpErlangLong arity;
+        for (final OtpErlangObject obj : stackTrace) {
+            final OtpErlangTuple tuple = (OtpErlangTuple) obj;
+            final OtpErlangAtom module = (OtpErlangAtom) tuple.elementAt(0);
+            final OtpErlangAtom function = (OtpErlangAtom) tuple.elementAt(1);
+            final OtpErlangObject argsOrArity = tuple.elementAt(2);
+            final OtpErlangLong arity;
             if (argsOrArity instanceof OtpErlangLong) {
                 arity = (OtpErlangLong) argsOrArity;
             } else {
-                OtpErlangList list = (OtpErlangList) argsOrArity;
+                final OtpErlangList list = (OtpErlangList) argsOrArity;
                 arity = new OtpErlangLong(list.arity());
             }
-            Map<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
-            OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
-            OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
+            final Map<Object, Object> fileLineProps = OtpUtil.propsToMap((OtpErlangList) tuple.elementAt(3));
+            final OtpErlangString file = (OtpErlangString) fileLineProps.get(ATOM_FILE);
+            final OtpErlangLong line = (OtpErlangLong) fileLineProps.get(ATOM_LINE);
 
             String fileString = "";
-            if (file != null) {
+            if (null != file) {
                 fileString = file.stringValue();
             }
             result.add(fn.invoke(module, function, arity, fileString, line));
@@ -93,41 +94,42 @@ public class CrashReport {
         return result;
     }
 
+    @FunctionalInterface
     public interface StackTraceFn<T> {
         T invoke(OtpErlangAtom module, OtpErlangAtom function, OtpErlangLong arity, String file, OtpErlangLong line);
     }
 
     public OtpErlangPid getPid() {
-        return (OtpErlangPid) crashProps.get(ATOM_PID);
+        return (OtpErlangPid) this.crashProps.get(ATOM_PID);
     }
 
     public String getRegisteredName() {
-        return registeredName;
+        return this.registeredName;
     }
 
     public Object getProcessInitialCall() {
-        return crashProps.get(ATOM_INITIAL_CALL);
+        return this.crashProps.get(ATOM_INITIAL_CALL);
     }
 
     public OtpErlangObject getProps() {
-        return terms;
+        return this.terms;
     }
 
     public OtpErlangAtom getErrorClass() {
-        return (OtpErlangAtom) errorInfo.elementAt(0);
+        return (OtpErlangAtom) this.errorInfo.elementAt(0);
     }
 
     public OtpErlangObject getErrorReason() {
-        return errorInfo.elementAt(1);
+        return this.errorInfo.elementAt(1);
     }
 
     public LocalDateTime getDateTime() {
-        return date;
+        return this.date;
     }
 
     public Optional<OtpErlangList> getCallArgs() {
-        OtpErlangTuple staceTrace1 = (OtpErlangTuple) ((OtpErlangList) errorInfo.elementAt(2)).getHead();
-        OtpErlangObject argsOrArity = staceTrace1.elementAt(2);
+        final OtpErlangTuple staceTrace1 = (OtpErlangTuple) ((OtpErlangList) this.errorInfo.elementAt(2)).getHead();
+        final OtpErlangObject argsOrArity = staceTrace1.elementAt(2);
         if (argsOrArity instanceof OtpErlangList) return Optional.of((OtpErlangList) argsOrArity);
         else return Optional.empty();
     }

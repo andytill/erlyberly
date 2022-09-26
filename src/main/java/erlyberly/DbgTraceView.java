@@ -46,98 +46,97 @@ public class DbgTraceView extends VBox {
 
     private final DbgController dbgController;
 
-    private final SortedList<TraceLog> sortedTtraces;
-
     private final FilteredList<TraceLog> filteredTraces;
 
     private final TableView<TraceLog> tracesBox;
 
-    public DbgTraceView(DbgController aDbgController) {
-        dbgController = aDbgController;
-        sortedTtraces = new SortedList<TraceLog>(dbgController.getTraceLogs());
-        filteredTraces = new FilteredList<TraceLog>(sortedTtraces);
+    public DbgTraceView(final DbgController aDbgController) {
+        super();
+        this.dbgController = aDbgController;
+        final SortedList<TraceLog> sortedTtraces = new SortedList<>(this.dbgController.getTraceLogs());
+        this.filteredTraces = new FilteredList<>(sortedTtraces);
 
-        setSpacing(5d);
-        setStyle("-fx-background-insets: 5;");
-        setMaxHeight(Double.MAX_VALUE);
+        this.setSpacing(5d);
+        this.setStyle("-fx-background-insets: 5;");
+        this.setMaxHeight(Double.MAX_VALUE);
 
-        tracesBox = new TableView<TraceLog>();
-        tracesBox.getStyleClass().add("trace-log-table");
-        tracesBox.setOnMouseClicked(this::onTraceClicked);
-        tracesBox.setMaxHeight(Double.MAX_VALUE);
-        VBox.setVgrow(tracesBox, Priority.ALWAYS);
+        this.tracesBox = new TableView<>();
+        this.tracesBox.getStyleClass().add("trace-log-table");
+        this.tracesBox.setOnMouseClicked(this::onTraceClicked);
+        this.tracesBox.setMaxHeight(Double.MAX_VALUE);
+        VBox.setVgrow(this.tracesBox, Priority.ALWAYS);
 
-        putTableColumns();
+        this.putTableColumns();
 
         // #47 double wrapping the filtered list in another sorted list, otherwise
         // the table cannot be sorted on columns. Binding the items will throw exceptions
         // when sorting on columns.
         // see http://code.makery.ch/blog/javafx-8-tableview-sorting-filtering/
-        SortedList<TraceLog> sortedData = new SortedList<>(filteredTraces);
-        sortedData.comparatorProperty().bind(tracesBox.comparatorProperty());
-        tracesBox.setItems(sortedData);
+        final SortedList<TraceLog> sortedData = new SortedList<>(this.filteredTraces);
+        sortedData.comparatorProperty().bind(this.tracesBox.comparatorProperty());
+        this.tracesBox.setItems(sortedData);
 
-        putTraceContextMenu();
+        this.putTraceContextMenu();
 
-        Parent p = traceLogFloatySearchControl();
+        final Parent p = this.traceLogFloatySearchControl();
 
-        getChildren().addAll(p, tracesBox);
+        this.getChildren().addAll(p, this.tracesBox);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     private void putTableColumns() {
-        TableColumn<TraceLog, Long> seqColumn;
-        seqColumn = new TableColumn<TraceLog, Long>("Seq.");
+        final TableColumn<TraceLog, Long> seqColumn;
+        seqColumn = new TableColumn<>("Seq.");
         seqColumn.setCellValueFactory(new PropertyValueFactory("instanceNum"));
-        configureColumnWidth("seqColumnWidth", seqColumn);
+        DbgTraceView.configureColumnWidth("seqColumnWidth", seqColumn);
 
-        TableColumn<TraceLog, String> pidColumn;
-        pidColumn = new TableColumn<TraceLog, String>("Pid");
+        final TableColumn<TraceLog, String> pidColumn;
+        pidColumn = new TableColumn<>("Pid");
         pidColumn.setCellValueFactory(new PropertyValueFactory("pidString"));
-        configureColumnWidth("pidColumnWidth", pidColumn);
+        DbgTraceView.configureColumnWidth("pidColumnWidth", pidColumn);
 
-        TableColumn<TraceLog, String> regNameColumn;
-        regNameColumn = new TableColumn<TraceLog, String>("Reg. Name");
+        final TableColumn<TraceLog, String> regNameColumn;
+        regNameColumn = new TableColumn<>("Reg. Name");
         regNameColumn.setCellValueFactory(new PropertyValueFactory("regName"));
-        configureColumnWidth("regNameColumnWidth", regNameColumn);
+        DbgTraceView.configureColumnWidth("regNameColumnWidth", regNameColumn);
 
-        TableColumn<TraceLog, String> durationNameColumn;
-        durationNameColumn = new TableColumn<TraceLog, String>("Duration (microseconds)");
+        final TableColumn<TraceLog, String> durationNameColumn;
+        durationNameColumn = new TableColumn<>("Duration (microseconds)");
         durationNameColumn.setCellValueFactory(new PropertyValueFactory("duration"));
-        configureColumnWidth("durationNameColumnWidth", durationNameColumn);
+        DbgTraceView.configureColumnWidth("durationNameColumnWidth", durationNameColumn);
 
-        TableColumn<TraceLog, String> functionNameColumn;
-        functionNameColumn = new TableColumn<TraceLog, String>("Function");
+        final TableColumn<TraceLog, String> functionNameColumn;
+        functionNameColumn = new TableColumn<>("Function");
         functionNameColumn.setCellValueFactory(new PropertyValueFactory("function"));
-        configureColumnWidth("functionNameColumnWidth", functionNameColumn);
+        DbgTraceView.configureColumnWidth("functionNameColumnWidth", functionNameColumn);
 
-        TableColumn<TraceLog, String> argsColumn;
-        argsColumn = new TableColumn<TraceLog, String>("Args");
+        final TableColumn<TraceLog, String> argsColumn;
+        argsColumn = new TableColumn<>("Args");
         argsColumn.setCellValueFactory(new PropertyValueFactory("args"));
-        configureColumnWidth("argsColumnWidth", argsColumn);
+        DbgTraceView.configureColumnWidth("argsColumnWidth", argsColumn);
 
-        TableColumn<TraceLog, String> resultColumn;
-        resultColumn = new TableColumn<TraceLog, String>("Result");
+        final TableColumn<TraceLog, String> resultColumn;
+        resultColumn = new TableColumn<>("Result");
         resultColumn.setCellValueFactory(new PropertyValueFactory("result"));
-        configureColumnWidth("resultColumnWidth", resultColumn);
+        DbgTraceView.configureColumnWidth("resultColumnWidth", resultColumn);
 
-        tracesBox.getColumns().setAll(seqColumn, pidColumn, regNameColumn, durationNameColumn, functionNameColumn, argsColumn, resultColumn);
+        this.tracesBox.getColumns().setAll(seqColumn, pidColumn, regNameColumn, durationNameColumn, functionNameColumn, argsColumn, resultColumn);
 
         // based on http://stackoverflow.com/questions/27015961/tableview-row-style
-        PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
-        PseudoClass notCompletedClass = PseudoClass.getPseudoClass("not-completed");
-        PseudoClass breakerRowClass = PseudoClass.getPseudoClass("breaker-row");
-        tracesBox.setRowFactory(tv -> {
-            TableRow<TraceLog> row = new TableRow<>();
-            ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
+        final PseudoClass exceptionClass = PseudoClass.getPseudoClass("exception");
+        final PseudoClass notCompletedClass = PseudoClass.getPseudoClass("not-completed");
+        final PseudoClass breakerRowClass = PseudoClass.getPseudoClass("breaker-row");
+        this.tracesBox.setRowFactory(tv -> {
+            final TableRow<TraceLog> row = new TableRow<>();
+            final ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
                 row.pseudoClassStateChanged(exceptionClass, row.getItem().isExceptionThrower());
                 row.pseudoClassStateChanged(notCompletedClass, row.getItem().isComplete());
             };
             row.itemProperty().addListener((obs, oldTl, tl) -> {
-                if (oldTl != null) {
+                if (null != oldTl) {
                     oldTl.isCompleteProperty().removeListener(completeListener);
                 }
-                if (tl != null) {
+                if (null != tl) {
 
                     row.pseudoClassStateChanged(notCompletedClass, row.getItem().isComplete());
                     if ("breaker-row".equals(tl.getCssClass())) {
@@ -160,34 +159,32 @@ public class DbgTraceView extends VBox {
         });
     }
 
-    private void configureColumnWidth(String widthProperty, TableColumn<TraceLog, ?> functionNameColumn) {
+    private static void configureColumnWidth(final String widthProperty, final TableColumn<TraceLog, ?> functionNameColumn) {
         functionNameColumn.setPrefWidth(PrefBind.getOrDefaultDouble(widthProperty, functionNameColumn.getPrefWidth()));
-        functionNameColumn.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set(widthProperty, nv);
-        });
+        functionNameColumn.widthProperty().addListener((o, ov, nv) -> PrefBind.set(widthProperty, nv));
     }
 
     private void putTraceContextMenu() {
-        TraceContextMenu traceContextMenu = new TraceContextMenu(dbgController);
-        traceContextMenu.setItems(dbgController.getTraceLogs());
-        traceContextMenu.setSelectedItems(tracesBox.getSelectionModel().getSelectedItems());
+        final TraceContextMenu traceContextMenu = new TraceContextMenu(this.dbgController);
+        traceContextMenu.setItems(this.dbgController.getTraceLogs());
+        traceContextMenu.setSelectedItems(this.tracesBox.getSelectionModel().getSelectedItems());
 
-        tracesBox.setContextMenu(traceContextMenu);
-        tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
+        this.tracesBox.setContextMenu(traceContextMenu);
+        this.tracesBox.selectionModelProperty().get().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
-    private void onTraceClicked(MouseEvent me) {
-        if (me.getButton().equals(MouseButton.PRIMARY) && me.getClickCount() == 2) {
-            TraceLog selectedItem = tracesBox.getSelectionModel().getSelectedItem();
+    private void onTraceClicked(final MouseEvent me) {
+        if (MouseButton.PRIMARY == me.getButton() && 2 == me.getClickCount()) {
+            final TraceLog selectedItem = this.tracesBox.getSelectionModel().getSelectedItem();
 
-            if (selectedItem != null && selectedItem != null) {
-                showTraceTermView(selectedItem);
+            if (null != selectedItem) {
+                DbgTraceView.showTraceTermView(selectedItem);
             }
         }
     }
 
-    private TermTreeView newTermTreeView() {
-        TermTreeView termTreeView;
+    private static TermTreeView newTermTreeView() {
+        final TermTreeView termTreeView;
 
         termTreeView = new TermTreeView();
         termTreeView.setMaxHeight(Integer.MAX_VALUE);
@@ -197,85 +194,80 @@ public class DbgTraceView extends VBox {
     }
 
 
-    private void showTraceTermView(final TraceLog traceLog) {
-        OtpErlangObject args = traceLog.getArgsList();
-        OtpErlangObject result = traceLog.getResultFromMap();
+    private static void showTraceTermView(final TraceLog traceLog) {
+        final OtpErlangList args = traceLog.getArgsList();
+        final OtpErlangObject result = traceLog.getResultFromMap();
 
-        TermTreeView resultTermsTreeView, argTermsTreeView;
+        final TermTreeView resultTermsTreeView;
+        final TermTreeView argTermsTreeView;
 
-        resultTermsTreeView = newTermTreeView();
+        resultTermsTreeView = DbgTraceView.newTermTreeView();
 
-        OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
+        final OtpErlangAtom moduleName = OtpUtil.atom(traceLog.getModFunc().getModuleName());
 
-        if (result != null) {
+        if (null != result) {
             resultTermsTreeView.populateFromTerm(moduleName, traceLog.getResultFromMap());
         } else {
-            WeakChangeListener<Boolean> listener = new WeakChangeListener<Boolean>((o, oldV, newV) -> {
-                if (newV) resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
+            final WeakChangeListener<Boolean> listener = new WeakChangeListener<>((o, oldV, newV) -> {
+                if (newV.booleanValue()) resultTermsTreeView.populateFromTerm(traceLog.getResultFromMap());
             });
 
             traceLog.isCompleteProperty().addListener(listener);
         }
 
-        argTermsTreeView = newTermTreeView();
-        argTermsTreeView.populateFromListContents(moduleName, (OtpErlangList) args);
+        argTermsTreeView = DbgTraceView.newTermTreeView();
+        argTermsTreeView.populateFromListContents(moduleName, args);
 
-        SplitPane splitPane, splitPaneH;
+        final SplitPane splitPane;
+        final SplitPane splitPaneH;
 
         splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(labelledTreeView("Function arguments", argTermsTreeView), labelledTreeView("Result", resultTermsTreeView));
+        splitPane.getItems().addAll(DbgTraceView.labelledTreeView("Function arguments", argTermsTreeView), DbgTraceView.labelledTreeView("Result", resultTermsTreeView));
 
-        StackTraceView stackTraceView;
+        final StackTraceView stackTraceView;
         stackTraceView = new StackTraceView();
         stackTraceView.populateFromMfaList(traceLog.getStackTrace());
-        String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
-        TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
+        final String stackTraceTitle = "Stack Trace (" + traceLog.getStackTrace().arity() + ")";
+        final TitledPane titledPane = new TitledPane(stackTraceTitle, stackTraceView);
         titledPane.setExpanded(!stackTraceView.isStackTracesEmpty());
         splitPaneH = new SplitPane();
         splitPaneH.setOrientation(Orientation.VERTICAL);
         splitPaneH.getItems().addAll(splitPane, titledPane);
 
-        StringBuilder sb = new StringBuilder(traceLog.getPidString());
+        final StringBuilder sb = new StringBuilder(traceLog.getPidString());
         sb.append(" ");
         traceLog.appendModFuncArity(sb);
 
         ErlyBerly.showPane(sb.toString(), ErlyBerly.wrapInPane(splitPaneH));
     }
 
-    private Node labelledTreeView(String label, TermTreeView node) {
+    private static Node labelledTreeView(final String label, final TermTreeView node) {
         return new VBox(new Label(label), node);
     }
 
-    private void onTraceFilterChange(String searchText) {
-        BasicSearch search = new BasicSearch(searchText);
-        filteredTraces.setPredicate((t) -> {
-            boolean matches = search.matches(t.getArgs()) || search.matches(t.getResult()) || search.matches(t.getPidString()) || search.matches(t.getRegName()) || search.matches(t.getFunction());
-            return matches;
-        });
+    private void onTraceFilterChange(final String searchText) {
+        final BasicSearch search = new BasicSearch(searchText);
+        this.filteredTraces.setPredicate((t) -> search.matches(t.getArgs()) || search.matches(t.getResult()) || search.matches(t.getPidString()) || search.matches(t.getRegName()) || search.matches(t.getFunction()));
     }
 
     private Region traceLogFloatySearchControl() {
-        FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+        final FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
 
         loader.load();
 
-        FloatyFieldView ffView;
+        final FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
         ffView.promptTextProperty().set("Filter trace logs");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
 
-        ffView.textProperty().addListener((o, ov, nv) -> {
-            onTraceFilterChange(nv);
-        });
+        ffView.textProperty().addListener((o, ov, nv) -> this.onTraceFilterChange(nv));
 
-        Region fxmlNode = (Region) loader.fxmlNode;
+        final Region fxmlNode = (Region) loader.fxmlNode;
         fxmlNode.setPadding(new Insets(5, 5, 0, 5));
-        Platform.runLater(() -> {
-            FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 2);
-        });
+        Platform.runLater(() -> FilterFocusManager.addFilter((Control) loader.fxmlNode.getChildrenUnmodifiable().get(1), 2));
 
         return fxmlNode;
     }

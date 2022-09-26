@@ -106,7 +106,7 @@ public class DbgView implements Initializable {
         addModulesFloatySearchControl();
 
         dbgController.initialize(url, r);
-        dbgController.setModuleLoadedCallback((tuple) -> {
+        DbgController.setModuleLoadedCallback((tuple) -> {
             createModuleTreeItem(tuple);
         });
         tabPane = new TabPane();
@@ -256,7 +256,7 @@ public class DbgView implements Initializable {
     private void refreshModules() {
         try {
             modulesTree.setShowRoot(false);
-            dbgController.requestModFuncs(this::buildObjectTreeRoot);
+            DbgController.requestModFuncs(this::buildObjectTreeRoot);
         } catch (Exception e) {
             throw new RuntimeException("failed to build module/function tree", e);
         }
