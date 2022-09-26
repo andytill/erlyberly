@@ -1,20 +1,11 @@
 package erlyberly.node;
 
-import static erlyberly.node.OtpUtil.atom;
-import static erlyberly.node.OtpUtil.tuple;
+import com.ericsson.otp.erlang.*;
 
 import java.io.IOException;
 
-import com.ericsson.otp.erlang.OtpConn;
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangExit;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.ericsson.otp.erlang.OtpMbox;
-import com.ericsson.otp.erlang.OtpSelfNode;
+import static erlyberly.node.OtpUtil.atom;
+import static erlyberly.node.OtpUtil.tuple;
 
 public class NodeRPC {
 

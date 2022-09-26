@@ -1,10 +1,10 @@
 package erlyberly.node;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
+
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
 
 public class RecordManager {
     private final ConcurrentHashMap<RecordKey, List<String>> records = new ConcurrentHashMap<>();
@@ -49,11 +49,8 @@ public class RecordManager {
             } else if (!module.equals(other.module))
                 return false;
             if (recordName == null) {
-                if (other.recordName != null)
-                    return false;
-            } else if (!recordName.equals(other.recordName))
-                return false;
-            return true;
+                return other.recordName == null;
+            } else return recordName.equals(other.recordName);
         }
     }
 

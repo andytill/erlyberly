@@ -17,16 +17,8 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.net.URL;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ResourceBundle;
-
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
-
 import erlyberly.node.AppProcs;
 import erlyberly.node.OtpUtil;
 import floatyfield.FloatyFieldControl;
@@ -51,17 +43,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Separator;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToolBar;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -69,6 +51,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
+
+import java.io.IOException;
+import java.net.URL;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.ResourceBundle;
 
 public class TopBarView implements Initializable {
     private static final KeyCodeCombination TOGGLE_HIDE_PROCESSES_SHORTCUT = new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN);
@@ -90,7 +79,7 @@ public class TopBarView implements Initializable {
     @FXML
     private Button erlangMemoryButton;
 
-    private MenuButton crashReportsButton = new MenuButton("Crash Reports");
+    private final MenuButton crashReportsButton = new MenuButton("Crash Reports");
     @FXML
     private Button xrefAnalysisButton;
     @FXML

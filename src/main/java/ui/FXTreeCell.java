@@ -24,7 +24,7 @@ public class FXTreeCell<T> extends TreeCell<T> {
 
     private final CellController<T> controller;
 
-    private Parent aControl;
+    private final Parent aControl;
 
     public FXTreeCell(CellController<T> aController, Parent aControl) {
         controller = aController;

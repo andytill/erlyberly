@@ -71,9 +71,7 @@ public class ProcSort {
                 return false;
         } else if (!sortField.equals(other.sortField))
             return false;
-        if (sortType != other.sortType)
-            return false;
-        return true;
+        return sortType == other.sortType;
     }
 
 

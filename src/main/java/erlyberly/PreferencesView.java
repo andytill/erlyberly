@@ -17,11 +17,8 @@
  */
 package erlyberly;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-import erlyberly.format.ErlangFormatter;
 import erlyberly.format.ElixirFormatter;
+import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
@@ -30,6 +27,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class PreferencesView implements Initializable {
 

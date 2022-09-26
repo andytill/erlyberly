@@ -8,8 +8,9 @@ import javafx.beans.property.StringProperty;
  * Originally from https://github.com/Velocity-/Hexstar
  */
 public class DataRow {
-    private StringProperty address, text;
-    private StringProperty[] data = new StringProperty[16];
+    private final StringProperty address;
+    private final StringProperty text;
+    private final StringProperty[] data = new StringProperty[16];
 
     public DataRow(int addr, byte[] b, int bytesRead) {
         address = new SimpleStringProperty(String.format("%08X", addr));

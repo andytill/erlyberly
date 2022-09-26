@@ -17,10 +17,10 @@
  */
 package erlyberly;
 
-import java.time.format.DateTimeFormatter;
-
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+
+import java.time.format.DateTimeFormatter;
 
 /**
  * A control summarising a {@link CrashReport} for button graphics.

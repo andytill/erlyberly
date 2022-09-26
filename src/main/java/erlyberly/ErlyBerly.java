@@ -17,13 +17,6 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import erlyberly.format.ElixirFormatter;
 import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
@@ -48,6 +41,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.util.concurrent.*;
 
 public class ErlyBerly extends Application {
 

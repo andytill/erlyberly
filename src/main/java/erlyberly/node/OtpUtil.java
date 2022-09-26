@@ -17,25 +17,10 @@
  */
 package erlyberly.node;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import com.ericsson.otp.erlang.*;
 
-import com.ericsson.otp.erlang.OtpConn;
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangExternalFun;
-import com.ericsson.otp.erlang.OtpErlangFun;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangMap;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.ericsson.otp.erlang.OtpMbox;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Sin bin for utils dealing with jinterface.

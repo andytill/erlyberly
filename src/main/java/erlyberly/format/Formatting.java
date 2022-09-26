@@ -96,7 +96,7 @@ class Formatting {
                 if (b < 0) {
                     b = 256 + b;
                 }
-                sb.append(Integer.toString(b));
+                sb.append(b);
             }
         }
 

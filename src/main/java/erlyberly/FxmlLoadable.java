@@ -17,11 +17,11 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+
+import java.io.IOException;
+import java.net.URL;
 
 class FxmlLoadable {
     final String resource;
@@ -40,7 +40,7 @@ class FxmlLoadable {
         FXMLLoader fxmlLoader = new FXMLLoader(location);
 
         try {
-            fxmlNode = (Parent) fxmlLoader.load();
+            fxmlNode = fxmlLoader.load();
             controller = fxmlLoader.getController();
         } catch (IOException e) {
             throw new RuntimeException("Cannot load FXML", e);

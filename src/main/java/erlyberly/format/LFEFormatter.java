@@ -17,17 +17,10 @@
  */
 package erlyberly.format;
 
-import java.util.ArrayList;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangBitstr;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.node.OtpUtil;
+
+import java.util.ArrayList;
 
 public class LFEFormatter implements TermFormatter {
 
@@ -74,7 +67,7 @@ public class LFEFormatter implements TermFormatter {
     @Override
     public StringBuilder appendToString(OtpErlangObject obj, StringBuilder sb) {
         if (obj instanceof OtpErlangAtom) {
-            sb.append("'").append(obj.toString());
+            sb.append("'").append(obj);
         } else if (obj instanceof OtpErlangBinary) {
 
             sb.append("#B(");

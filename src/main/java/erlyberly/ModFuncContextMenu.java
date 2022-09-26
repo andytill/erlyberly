@@ -17,24 +17,7 @@
  */
 package erlyberly;
 
-import java.awt.Desktop;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.node.NodeAPI;
 import erlyberly.node.OtpUtil;
 import javafx.application.Platform;
@@ -48,6 +31,14 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCombination;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModFuncContextMenu extends ContextMenu {
 
@@ -68,7 +59,7 @@ public class ModFuncContextMenu extends ContextMenu {
      */
     private final SimpleObjectProperty<TreeItem<ModFunc>> rootProperty;
 
-    private MenuItem moduleTraceMenuItem;
+    private final MenuItem moduleTraceMenuItem;
 
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
         return selectedTreeItem;

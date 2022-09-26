@@ -17,24 +17,18 @@
  */
 package erlyberly;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
-
 import erlyberly.ConnectionView.KnownNode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Load dot Properties files, bind them to JavaFX properties and auto-store
@@ -49,7 +43,7 @@ public class PrefBind {
     private static final long WRITE_TO_DISK_DELAY = 500L;
 
     private static final boolean IS_DAEMON = true;
-    private static Timer timer = new Timer(IS_DAEMON);
+    private static final Timer timer = new Timer(IS_DAEMON);
 
     static {
         timer.scheduleAtFixedRate(new TimerTask() {

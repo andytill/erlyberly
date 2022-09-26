@@ -17,13 +17,8 @@
  */
 package erlyberly;
 
-import java.text.DecimalFormat;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
-
 import floatyfield.FloatyFieldView;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -37,21 +32,17 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.PieChart.Data;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Control;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.controlsfx.glyphfont.FontAwesome;
+
+import java.net.URL;
+import java.text.DecimalFormat;
+import java.util.ResourceBundle;
 
 /**
  * Handles UI related tasks and delegates processing to {@link ProcController}.

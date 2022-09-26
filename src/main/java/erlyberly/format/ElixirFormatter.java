@@ -17,29 +17,20 @@
  */
 package erlyberly.format;
 
+import com.ericsson.otp.erlang.*;
+import erlyberly.node.OtpUtil;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangBitstr;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangMap;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangPid;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
-import erlyberly.node.OtpUtil;
 
 public class ElixirFormatter implements TermFormatter {
 
     private static final String STRUCT_KEY = "__struct__";
 
     private String stripElixirPrefix(String str) {
-        if (str.startsWith("\'Elixir.")) {
+        if (str.startsWith("'Elixir.")) {
             return stripQutes(str).substring(7);
         }
         if (str.startsWith("Elixir.")) {
@@ -106,10 +97,10 @@ public class ElixirFormatter implements TermFormatter {
 
             sb.append(brackets.charAt(1));
         } else if (obj instanceof OtpErlangString) {
-            Formatting.appendString((OtpErlangString) obj, this, "\'", sb);
+            Formatting.appendString((OtpErlangString) obj, this, "'", sb);
         } else if (obj instanceof OtpErlangAtom) {
             String str = obj.toString();
-            if (str.startsWith("\'") && str.endsWith("\'")) {
+            if (str.startsWith("'") && str.endsWith("'")) {
                 String innerStr = str.substring(1, str.length() - 1);
                 if (innerStr.startsWith("Elixir.")) {
                     // Treat modules differently
@@ -154,7 +145,7 @@ public class ElixirFormatter implements TermFormatter {
     @Override
     public String mapKeyToString(OtpErlangObject obj) {
         if (obj instanceof OtpErlangAtom) {
-            return obj.toString() + ": ";
+            return obj + ": ";
         } else {
             return appendToString(obj, new StringBuilder()).toString() + " => ";
         }

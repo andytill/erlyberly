@@ -17,18 +17,11 @@
  */
 package erlyberly.node;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangBitstr;
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangObject;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.format.ErlangFormatter;
 import erlyberly.format.LFEFormatter;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 public class OtpUtilTest {
@@ -130,46 +123,26 @@ public class OtpUtilTest {
 
     @Test
     public void improperListErlang() throws OtpErlangException {
-        OtpErlangList improper =
-                new OtpErlangList(
-                        new OtpErlangObject[]{
-                                new OtpErlangAtom("hello"),
-                                new OtpErlangBinary("x".getBytes()),
-                        },
-                        new OtpErlangAtom("world"));
-        Assert.assertEquals(
-                "[hello, <<\"x\">>|world]",
-                new ErlangFormatter().toString(improper));
+        OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes()),}, new OtpErlangAtom("world"));
+        Assert.assertEquals("[hello, <<\"x\">>|world]", new ErlangFormatter().toString(improper));
     }
 
     @Test
     public void improperListLFE() throws OtpErlangException {
-        OtpErlangList improper =
-                new OtpErlangList(
-                        new OtpErlangObject[]{
-                                new OtpErlangAtom("hello"),
-                                new OtpErlangBinary("x".getBytes()),
-                        },
-                        new OtpErlangAtom("world"));
-        Assert.assertEquals(
-                "('hello, #B(\"x\").'world)",
-                new LFEFormatter().toString(improper));
+        OtpErlangList improper = new OtpErlangList(new OtpErlangObject[]{new OtpErlangAtom("hello"), new OtpErlangBinary("x".getBytes()),}, new OtpErlangAtom("world"));
+        Assert.assertEquals("('hello, #B(\"x\").'world)", new LFEFormatter().toString(improper));
     }
 
     @Test
     public void bitstringErlang() throws OtpErlangException {
         OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
-        Assert.assertEquals(
-                "<<42, 156, 3:3>>",
-                new ErlangFormatter().toString(bitstr));
+        Assert.assertEquals("<<42, 156, 3:3>>", new ErlangFormatter().toString(bitstr));
     }
 
     @Test
     public void bitstringLFE() throws OtpErlangException {
         OtpErlangBitstr bitstr = new OtpErlangBitstr(new byte[]{42, -100, 3 << 5}, 5);
-        Assert.assertEquals(
-                "#B(42 156 (3 (size 3)))",
-                new LFEFormatter().toString(bitstr));
+        Assert.assertEquals("#B(42 156 (3 (size 3)))", new LFEFormatter().toString(bitstr));
     }
 
     private String bin() {

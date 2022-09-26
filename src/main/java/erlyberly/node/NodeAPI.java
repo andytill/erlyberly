@@ -17,46 +17,8 @@
  */
 package erlyberly.node;
 
-import static erlyberly.node.OtpUtil.atom;
-import static erlyberly.node.OtpUtil.isTupleTagged;
-import static erlyberly.node.OtpUtil.list;
-import static erlyberly.node.OtpUtil.tuple;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.ericsson.otp.erlang.OtpAuthException;
-import com.ericsson.otp.erlang.OtpConn;
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangExit;
-import com.ericsson.otp.erlang.OtpErlangFun;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangPid;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.ericsson.otp.erlang.OtpMbox;
-import com.ericsson.otp.erlang.OtpPeer;
-import com.ericsson.otp.erlang.OtpSelfNode;
-
-import erlyberly.ErlyBerly;
-import erlyberly.ModFunc;
-import erlyberly.PrefBind;
-import erlyberly.ProcInfo;
-import erlyberly.SeqTraceLog;
-import erlyberly.TraceLog;
+import com.ericsson.otp.erlang.*;
+import erlyberly.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -66,6 +28,14 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static erlyberly.node.OtpUtil.*;
 
 public class NodeAPI {
 
@@ -343,7 +313,7 @@ public class NodeAPI {
         }
 
         private OtpErlangObject receiveRPC(OtpErlangObject receive)
-                throws OtpErlangExit, OtpErlangDecodeException, IOException, OtpErlangException {
+                throws IOException, OtpErlangException {
             if (receive == null)
                 return null;
             if (!(receive instanceof OtpErlangTuple))

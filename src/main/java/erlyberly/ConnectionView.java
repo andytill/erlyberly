@@ -17,17 +17,9 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpEpmd;
 import com.ericsson.otp.erlang.OtpErlangException;
-
 import floatyfield.FloatyFieldControl;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -38,14 +30,7 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.Separator;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCombination;
@@ -55,6 +40,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Connection details control to connect to the remote node.
@@ -69,18 +57,18 @@ public class ConnectionView extends SplitPane {
      */
     private final SimpleBooleanProperty isNodeConnectable = new SimpleBooleanProperty();
 
-    private FloatyFieldControl nodeNameField;
-    private FloatyFieldControl cookieField;
-    private Label messageLabel;
+    private final FloatyFieldControl nodeNameField;
+    private final FloatyFieldControl cookieField;
+    private final Label messageLabel;
     private final TableView<KnownNode> knownNodesTable;
 
-    private FloatyFieldControl filterField;
+    private final FloatyFieldControl filterField;
 
-    private FilteredList<KnownNode> filteredRows;
+    private final FilteredList<KnownNode> filteredRows;
 
-    private Button connectButton;
+    private final Button connectButton;
 
-    private ObservableList<KnownNode> rows;
+    private final ObservableList<KnownNode> rows;
 
     public ConnectionView() {
         nodeNameField = new FloatyFieldControl();
@@ -355,7 +343,7 @@ public class ConnectionView extends SplitPane {
      */
     public static class KnownNode {
         private final String nodeName, cookie;
-        private SimpleBooleanProperty running = new SimpleBooleanProperty(false);
+        private final SimpleBooleanProperty running = new SimpleBooleanProperty(false);
 
         public KnownNode(String nodeName, String cookie) {
             assert nodeName != null;
@@ -408,11 +396,8 @@ public class ConnectionView extends SplitPane {
             } else if (!cookie.equals(other.cookie))
                 return false;
             if (nodeName == null) {
-                if (other.nodeName != null)
-                    return false;
-            } else if (!nodeName.equals(other.nodeName))
-                return false;
-            return true;
+                return other.nodeName == null;
+            } else return nodeName.equals(other.nodeName);
         }
     }
 }

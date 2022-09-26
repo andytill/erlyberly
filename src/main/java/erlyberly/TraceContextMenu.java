@@ -18,8 +18,6 @@
 package erlyberly;
 
 
-import java.util.ArrayList;
-
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -29,6 +27,8 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
+
+import java.util.ArrayList;
 
 public class TraceContextMenu extends ContextMenu {
 

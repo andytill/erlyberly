@@ -17,18 +17,17 @@
  */
 package erlyberly;
 
-import java.util.Map;
-import java.util.Objects;
-
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangString;
-
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Domain object for an erlang process.

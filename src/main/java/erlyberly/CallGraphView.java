@@ -17,19 +17,13 @@
  */
 package erlyberly;
 
-import java.util.Arrays;
-import java.util.List;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangRangeException;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.node.OtpUtil;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 public class CallGraphView extends TreeView<ModFunc> {
@@ -42,7 +36,7 @@ public class CallGraphView extends TreeView<ModFunc> {
     private static final List<String> UNEXPANDED_MODULES = Arrays.asList(
             "erlang", "gen_server", "io", "io_lib",  "lists", "rpc", "unicode");
 
-    private ModFuncContextMenu modFuncContextMenu;
+    private final ModFuncContextMenu modFuncContextMenu;
 
     public CallGraphView(DbgController aDbgController) {
         assert aDbgController != null;

@@ -27,7 +27,7 @@ public class BasicSearch {
         IsMatch isMatch(String source);
     }
 
-    enum IsMatch { MATCH, NO_MATCH, FILTERED };
+    enum IsMatch { MATCH, NO_MATCH, FILTERED }
 
     private final List<SearchMatcher> matchers = new ArrayList<BasicSearch.SearchMatcher>();
 

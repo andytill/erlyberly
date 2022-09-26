@@ -17,14 +17,8 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 import com.ericsson.otp.erlang.OtpErlangException;
 import com.ericsson.otp.erlang.OtpErlangObject;
-
 import erlyberly.node.RpcCallback;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,6 +31,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn.SortType;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
 /**
  * Logic and processing for the entop control.
  */
@@ -46,7 +45,7 @@ public class ProcController {
 
     private final SimpleObjectProperty<ProcSort> procSortProperty;
 
-    private ProcPollerThread procPollerThread;
+    private final ProcPollerThread procPollerThread;
 
     private final Object waiter;
 

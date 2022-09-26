@@ -17,33 +17,20 @@
  */
 package erlyberly;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangBinary;
-import com.ericsson.otp.erlang.OtpErlangException;
-import com.ericsson.otp.erlang.OtpErlangFun;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangMap;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.format.TermFormatter;
 import erlyberly.node.OtpUtil;
 import erlyberly.node.RecordManager;
 import hextstar.HexstarView;
 import javafx.event.ActionEvent;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class TermTreeView extends TreeView<TermTreeItem> {
@@ -268,7 +255,7 @@ public class TermTreeView extends TreeView<TermTreeItem> {
                 String keyStr = f.mapKeyToString(e.getKey());
                 String valStr = f.toString(e.getValue());
                 // Inline short values that are not maps
-                if (!((OtpErlangObject)e.getValue() instanceof OtpErlangMap) && (valStr.length() < 50 )) {
+                if (!(e.getValue() instanceof OtpErlangMap) && (valStr.length() < 50 )) {
                     TreeItem<TermTreeItem> key = new TreeItem<>(new TermTreeItem(e.getKey(), valStr));
                     key.setGraphic(recordLabel(keyStr));
                     mapNode.getChildren().add(key);

@@ -17,14 +17,14 @@
  */
 package erlyberly;
 
-import java.util.ArrayList;
-
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Control;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+
+import java.util.ArrayList;
 
 public class FilterFocusManager {
 

@@ -17,12 +17,11 @@
  */
 package erlyberly;
 
-import java.util.Map;
-
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangString;
-
 import erlyberly.node.OtpUtil;
+
+import java.util.Map;
 
 public class SeqTraceLog {
 

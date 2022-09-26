@@ -148,11 +148,8 @@ public class ModFunc implements Comparable<ModFunc> {
         } else if (!funcName.equals(other.funcName))
             return false;
         if (moduleName == null) {
-            if (other.moduleName != null)
-                return false;
-        } else if (!moduleName.equals(other.moduleName))
-            return false;
-        return true;
+            return other.moduleName == null;
+        } else return moduleName.equals(other.moduleName);
     }
 
     public boolean isModuleInfo() {

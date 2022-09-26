@@ -17,14 +17,7 @@
  */
 package erlyberly;
 
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangList;
-import com.ericsson.otp.erlang.OtpErlangLong;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangRangeException;
-import com.ericsson.otp.erlang.OtpErlangString;
-import com.ericsson.otp.erlang.OtpErlangTuple;
-
+import com.ericsson.otp.erlang.*;
 import erlyberly.StackTraceView.ErlyberlyStackTraceElement;
 import erlyberly.node.OtpUtil;
 import javafx.application.Platform;
@@ -36,7 +29,7 @@ import javafx.util.Callback;
 public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public StackTraceView() {
-        applyStackTraceCellFactory((ListView)this);
+        applyStackTraceCellFactory(this);
     }
 
     private void applyStackTraceCellFactory(ListView<ErlyberlyStackTraceElement> listview) {
@@ -86,10 +79,10 @@ public class StackTraceView extends ListView<ErlyberlyStackTraceElement> {
 
     public void populateFromCrashReport(CrashReport crashReport) {
         try {
-            getItems().addAll(crashReport.<ErlyberlyStackTraceElement>mapStackTraces((module, function, arity, file, line) -> {
+            getItems().addAll(crashReport.mapStackTraces((module, function, arity, file, line) -> {
                 try {
                     ModFunc modFunc = mfaToModFunc(module, function, arity);
-                    return new ErlyberlyStackTraceElement(modFunc, file.toString(), line.longValue());
+                    return new ErlyberlyStackTraceElement(modFunc, file, line.longValue());
                 }
                 catch (Exception e) {
                     throw new RuntimeException(e);
