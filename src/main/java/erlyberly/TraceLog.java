@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,11 +32,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TraceLog implements Comparable<TraceLog> {
 
     private static final OtpErlangAtom FN_ATOM = new OtpErlangAtom("fn");
-    public static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
-    public static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
+    private static final OtpErlangAtom EXCEPTION_FROM_ATOM = new OtpErlangAtom("exception_from");
+    private static final OtpErlangAtom RESULT_ATOM = new OtpErlangAtom("result");
     public static final OtpErlangAtom ATOM_PID = new OtpErlangAtom("pid");
-    public static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
-    public static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
+    private static final OtpErlangAtom ATOM_REG_NAME = new OtpErlangAtom("reg_name");
+    private static final OtpErlangAtom ATOM_UNDEFINED = new OtpErlangAtom("undefined");
     private static final Object TIMESTAMP_CALL_ATOM = new OtpErlangAtom("timetamp_call_us");
     private static final Object TIMESTAMP_RETURN_ATOM = new OtpErlangAtom("timetamp_return_us");
 
@@ -60,160 +60,149 @@ public class TraceLog implements Comparable<TraceLog> {
 
     private final String cssClass;
 
-    public TraceLog(Map<Object, Object> map) {
+    public TraceLog(final Map<Object, Object> map) {
+        super();
         this.map = map;
-        instanceNum = INSTANCE_COUNTER.incrementAndGet();
-        pid = getPidString();
-        registeredName = regNameString().intern();
-        function =  appendModFuncArity(new StringBuilder()).toString().intern();
-        argsString = appendArgsToString(new StringBuilder(), getArgsList().elements()).toString();
-        cssClass = null;
+        this.instanceNum = INSTANCE_COUNTER.incrementAndGet();
+        this.pid = this.getPidString();
+        this.registeredName = this.regNameString().intern();
+        this.function = this.appendModFuncArity(new StringBuilder()).toString().intern();
+        this.argsString = TraceLog.appendArgsToString(new StringBuilder(), this.getArgsList().elements()).toString();
+        this.cssClass = null;
     }
 
-    public TraceLog(String aCssClass, String text) {
-        function = text;
-        instanceNum = INSTANCE_COUNTER.incrementAndGet();
-        map = new HashMap<>(0);
-        cssClass = aCssClass;
-        pid = "";
-        registeredName = "";
-        argsString = "";
+    private TraceLog(final String aCssClass, final String text) {
+        super();
+        this.function = text;
+        this.instanceNum = INSTANCE_COUNTER.incrementAndGet();
+        this.map = new HashMap<>(0);
+        this.cssClass = aCssClass;
+        this.pid = "";
+        this.registeredName = "";
+        this.argsString = "";
     }
 
     public long getInstanceNum() {
-        return instanceNum;
+        return this.instanceNum;
     }
 
     private String regNameString() {
-        Object object = map.get(ATOM_REG_NAME);
-        if(ATOM_UNDEFINED.equals(object))
-            return "";
+        final Object object = this.map.get(ATOM_REG_NAME);
+        if (ATOM_UNDEFINED.equals(object)) return "";
         return object.toString();
     }
 
     public SimpleStringProperty summaryProperty() {
-        if(summary.get().isEmpty()) {
-            summary.set(toString());
+        if (this.summary.get().isEmpty()) {
+            this.summary.set(this.toString());
         }
-        return summary;
+        return this.summary;
     }
 
     @Override
     public String toString() {
-        if(tracePropsToString == null)
-            tracePropsToString = tracePropsToString();
-        return tracePropsToString;
+        if (null == this.tracePropsToString) this.tracePropsToString = this.tracePropsToString();
+        return this.tracePropsToString;
     }
 
     private String tracePropsToString() {
-        StringBuilder sb = new StringBuilder(1024);
+        final StringBuilder sb = new StringBuilder(1024);
 
-        boolean appendArity = false;
-        toCallString(sb, appendArity);
+        final boolean appendArity = false;
+        this.toCallString(sb, appendArity);
 
         sb.append(" => ");
 
-        if(map.containsKey(RESULT_ATOM)) {
-            ErlyBerly.getTermFormatter().appendToString((OtpErlangObject) map.get(RESULT_ATOM), sb);
-        }
-        else if(isExceptionThrower()) {
-            OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
-            ErlyBerly.getTermFormatter().exceptionToString(
-                (OtpErlangAtom) exception.elementAt(0), exception.elementAt(1)
-            );
+        if (this.map.containsKey(RESULT_ATOM)) {
+            ErlyBerly.getTermFormatter().appendToString((OtpErlangObject) this.map.get(RESULT_ATOM), sb);
+        } else if (this.isExceptionThrower()) {
+            final OtpErlangTuple exception = (OtpErlangTuple) this.map.get(EXCEPTION_FROM_ATOM);
+            ErlyBerly.getTermFormatter().exceptionToString((OtpErlangAtom) exception.elementAt(0), exception.elementAt(1));
         }
         return sb.toString();
     }
 
-    private StringBuilder toCallString(StringBuilder sb, boolean appendArity) {
-        OtpErlangAtom regName = (OtpErlangAtom) map.get(ATOM_REG_NAME);
+    private StringBuilder toCallString(final StringBuilder sb, final boolean appendArity) {
+        final OtpErlangAtom regName = (OtpErlangAtom) this.map.get(ATOM_REG_NAME);
 
-        if(regName != null && !ATOM_UNDEFINED.equals(regName)) {
+        if (null != regName && !ATOM_UNDEFINED.equals(regName)) {
             sb.append(regName.atomValue());
-        }
-        else {
-            OtpErlangString pidString = (OtpErlangString) map.get(ATOM_PID);
-            if(pidString == null)
-                sb.append("<NULL PID>");
-            else
-                sb.append(pidString.stringValue());
+        } else {
+            final OtpErlangString pidString = (OtpErlangString) this.map.get(ATOM_PID);
+            if (null == pidString) sb.append("<NULL PID>");
+            else sb.append(pidString.stringValue());
         }
         sb.append(" ");
 
-        sb.append("+").append(durationFromMap()).append("us");
+        sb.append("+").append(this.durationFromMap()).append("us");
 
-        appendModFuncArity(sb);
+        this.appendModFuncArity(sb);
 
         return sb;
     }
 
     private long durationFromMap() {
-        Object tsCall = map.get(TIMESTAMP_CALL_ATOM);
-        Object tsReturn = map.get(TIMESTAMP_RETURN_ATOM);
+        final Object tsCall = this.map.get(TIMESTAMP_CALL_ATOM);
+        final Object tsReturn = this.map.get(TIMESTAMP_RETURN_ATOM);
 
-        if(tsCall == null|| tsReturn == null)
-            return 0;
+        if (null == tsCall || null == tsReturn) return 0;
 
-        return ((OtpErlangLong)tsReturn).longValue() - ((OtpErlangLong)tsCall).longValue();
+        return ((OtpErlangLong) tsReturn).longValue() - ((OtpErlangLong) tsCall).longValue();
     }
 
     /**
      * Returns an MFA.
      */
     private OtpErlangTuple getFunctionFromMap() {
-        return (OtpErlangTuple)map.get(FN_ATOM);
+        return (OtpErlangTuple) this.map.get(FN_ATOM);
     }
 
-    public boolean isExceptionThrower() {
-        return map.containsKey(EXCEPTION_FROM_ATOM);
+    boolean isExceptionThrower() {
+        return this.map.containsKey(EXCEPTION_FROM_ATOM);
     }
 
-    public StringBuilder appendFunctionToString(StringBuilder sb) {
-        OtpErlangTuple tuple = getFunctionFromMap();
+    public StringBuilder appendFunctionToString(final StringBuilder sb) {
+        final OtpErlangTuple tuple = this.getFunctionFromMap();
 
         return sb.append(ErlyBerly.getTermFormatter().modFuncArgsToString(tuple));
     }
 
-    public StringBuilder appendModFuncArity(StringBuilder sb) {
-        OtpErlangTuple fn = getFunctionFromMap();
+    StringBuilder appendModFuncArity(final StringBuilder sb) {
+        final OtpErlangTuple fn = this.getFunctionFromMap();
         // there might be no function if this TraceLog is acting as a NODE DOWN
-        if(fn == null) {
+        if (null == fn) {
             return sb;
         }
         return sb.append(ErlyBerly.getTermFormatter().modFuncArityToString(fn));
     }
 
-    private StringBuilder appendArgsToString(StringBuilder sb, OtpErlangObject[] elements) {
-        if(elements.length > 0)
-            ErlyBerly.getTermFormatter().appendToString(elements[0], sb);
+    private static StringBuilder appendArgsToString(final StringBuilder sb, final OtpErlangObject[] elements) {
+        if (0 < elements.length) ErlyBerly.getTermFormatter().appendToString(elements[0], sb);
 
-        for(int i=1; i<elements.length; i++) {
+        for (int i = 1; i < elements.length; i++) {
             sb.append(", ");
             ErlyBerly.getTermFormatter().appendToString(elements[i], sb);
         }
         return sb;
     }
 
-    public OtpErlangList getArgsList() {
-        OtpErlangTuple tuple = getFunctionFromMap();
-        OtpErlangList args = OtpUtil.toOtpList(tuple.elementAt(2));
-        return args;
+    OtpErlangList getArgsList() {
+        final OtpErlangTuple tuple = this.getFunctionFromMap();
+        return OtpUtil.toOtpList(tuple.elementAt(2));
     }
 
     public String getPidString() {
-        OtpErlangString s = (OtpErlangString)map.get(ATOM_PID);
-        if(s == null)
-            return "";
-        else
-            return s.stringValue();
+        final OtpErlangString s = (OtpErlangString) this.map.get(ATOM_PID);
+        if (null == s) return "";
+        else return s.stringValue();
     }
 
-    public OtpErlangObject getResultFromMap() {
-        Object object = map.get(RESULT_ATOM);
-        if(object == null) {
-            OtpErlangTuple exception = (OtpErlangTuple) map.get(EXCEPTION_FROM_ATOM);
+    OtpErlangObject getResultFromMap() {
+        final Object object = this.map.get(RESULT_ATOM);
+        if (null == object) {
+            final OtpErlangTuple exception = (OtpErlangTuple) this.map.get(EXCEPTION_FROM_ATOM);
 
-            if(exception != null) {
+            if (null != exception) {
                 return exception.elementAt(1);
             }
         }
@@ -221,112 +210,113 @@ public class TraceLog implements Comparable<TraceLog> {
     }
 
     @Override
-    public int compareTo(TraceLog o) {
-        return Long.compare(instanceNum, o.instanceNum);
+    public int compareTo(final TraceLog o) {
+        return Long.compare(this.instanceNum, o.instanceNum);
     }
 
-    public void complete(Map<Object, Object> resultMap) {
-        tracePropsToString = null;
-        Object e = resultMap.get(EXCEPTION_FROM_ATOM);
-        Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
+    public void complete(final Map<Object, Object> resultMap) {
+        this.tracePropsToString = null;
+        final Object e = resultMap.get(EXCEPTION_FROM_ATOM);
+        final Object ts = resultMap.get(TIMESTAMP_RETURN_ATOM);
         Object r = resultMap.get(RESULT_ATOM);
-        if(e != null) {
-            map.put(EXCEPTION_FROM_ATOM, e);
-            if(r == null) {
+        if (null != e) {
+            this.map.put(EXCEPTION_FROM_ATOM, e);
+            if (null == r) {
                 r = e;
             }
         }
 
-        if(r != null) {
-            map.put(RESULT_ATOM, r);
-            String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
-            result.set(resultString);
+        if (null != r) {
+            this.map.put(RESULT_ATOM, r);
+            final String resultString = ErlyBerly.getTermFormatter().toString((OtpErlangObject) r);
+            this.result.set(resultString);
         }
-        if(ts != null)
-            map.put(TIMESTAMP_RETURN_ATOM, ts);
+        if (null != ts) this.map.put(TIMESTAMP_RETURN_ATOM, ts);
 
-        duration.set(durationFromMap());
+        this.duration.set(this.durationFromMap());
 
-        Platform.runLater(() -> { summary.set(toString()); complete.set(true); });
+        Platform.runLater(() -> {
+            this.summary.set(this.toString());
+            this.complete.set(true);
+        });
     }
 
-    public ReadOnlyBooleanProperty isCompleteProperty() {
-        return complete;
+    ReadOnlyBooleanProperty isCompleteProperty() {
+        return this.complete;
     }
 
-    public boolean isComplete() {
-        return complete.get();
+    boolean isComplete() {
+        return !this.complete.get();
     }
 
     /**
      * A call string is the pid and function with arity.
      */
-    public String toCallString() {
-        StringBuilder sb = new StringBuilder(255);
-        boolean appendArity = true;
-        return toCallString(sb, appendArity).toString();
+    String toCallString() {
+        final StringBuilder sb = new StringBuilder(255);
+        final boolean appendArity = true;
+        return this.toCallString(sb, appendArity).toString();
     }
 
     public String getPid() {
-        return pid;
+        return this.pid;
     }
 
-    public String getRegName() {
-        return registeredName;
+    String getRegName() {
+        return this.registeredName;
     }
 
     public long getDuration() {
-        return duration.get();
+        return this.duration.get();
     }
 
     public SimpleLongProperty durationProperty() {
-        return duration;
+        return this.duration;
     }
 
     public String getFunction() {
-        return function;
+        return this.function;
     }
 
     public String getArgs() {
-        return argsString;
+        return this.argsString;
     }
 
     public String getResult() {
-        return result.get();
+        return this.result.get();
     }
 
     public SimpleStringProperty resultProperty() {
-        return result;
+        return this.result;
     }
 
-    public String getCssClass() {
-        return cssClass;
+    String getCssClass() {
+        return this.cssClass;
     }
 
-    public static TraceLog newBreakLog() {
+    static TraceLog newBreakLog() {
         return new TraceLog("breaker-row", "BREAK");
     }
 
-    public static TraceLog newNodeDown() {
+    static TraceLog newNodeDown() {
         return new TraceLog("breaker-row", "NODE DOWN");
     }
 
-    public static TraceLog newLoadShedding() {
+    static TraceLog newLoadShedding() {
         return new TraceLog("breaker-row", "LOAD SHEDDING");
     }
 
-    public OtpErlangList getStackTrace() {
-        OtpErlangList stacktrace = (OtpErlangList) map.get(OtpUtil.atom("stack_trace"));
-        if(stacktrace == null)
-            stacktrace = new OtpErlangList();
+    OtpErlangList getStackTrace() {
+        OtpErlangList stacktrace = (OtpErlangList) this.map.get(OtpUtil.atom("stack_trace"));
+        if (null == stacktrace) stacktrace = new OtpErlangList();
         return stacktrace;
     }
 
-    public ModFunc getModFunc() {
-        OtpErlangTuple mfa = getFunctionFromMap();
-        OtpErlangAtom module = (OtpErlangAtom) mfa.elementAt(0);
-        OtpErlangAtom function = (OtpErlangAtom) mfa.elementAt(1);
-        int arity = ((OtpErlangList) mfa.elementAt(2)).arity();
+    ModFunc getModFunc() {
+        final OtpErlangTuple mfa = this.getFunctionFromMap();
+        final OtpErlangAtom module = (OtpErlangAtom) mfa.elementAt(0);
+        final OtpErlangAtom function = (OtpErlangAtom) mfa.elementAt(1);
+        final int arity = ((OtpErlangList) mfa.elementAt(2)).arity();
         return new ModFunc(module.atomValue(), function.atomValue(), arity, false, false);
     }
 }

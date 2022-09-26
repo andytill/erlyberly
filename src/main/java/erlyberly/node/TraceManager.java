@@ -58,8 +58,7 @@ class TraceManager {
 
             Stack<TraceLog> stack = this.unfinishedCalls.get(trace.getPidString());
 
-            if (null == stack)
-                stack = new Stack<>();
+            if (null == stack) stack = new Stack<>();
 
             stack.add(trace);
 
@@ -75,14 +74,12 @@ class TraceManager {
                 final OtpErlangString pidString = (OtpErlangString) object;
 
                 final Stack<TraceLog> stack = this.unfinishedCalls.get(pidString.stringValue());
-                if (null == stack)
-                    return;
+                if (null == stack) return;
 
                 final TraceLog traceLog = stack.pop();
                 traceLog.complete(map);
 
-                if (stack.isEmpty())
-                    this.unfinishedCalls.remove(pidString.stringValue());
+                if (stack.isEmpty()) this.unfinishedCalls.remove(pidString.stringValue());
             }
 
         }

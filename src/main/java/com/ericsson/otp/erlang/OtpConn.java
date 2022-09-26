@@ -23,8 +23,7 @@ public class OtpConn extends AbstractConnection {
 
     private final OtpSelfNode self2;
 
-    OtpConn(final OtpSelfNode self, final OtpPeer other)
-            throws IOException, OtpAuthException {
+    OtpConn(final OtpSelfNode self, final OtpPeer other) throws IOException, OtpAuthException {
         super(self, other);
 
         this.self2 = self;
@@ -43,14 +42,12 @@ public class OtpConn extends AbstractConnection {
         this.self2.deliver(msg);
     }
 
-    public void send(final OtpErlangPid pid, final OtpErlangPid dest, final OtpErlangObject msg)
-            throws IOException {
+    public void send(final OtpErlangPid pid, final OtpErlangPid dest, final OtpErlangObject msg) throws IOException {
         // encode and send the message
         this.sendBuf(pid, dest, new OtpOutputStream(msg));
     }
 
-    public void send(final OtpErlangPid pid, final String dest, final OtpErlangObject msg)
-            throws IOException {
+    public void send(final OtpErlangPid pid, final String dest, final OtpErlangObject msg) throws IOException {
         // encode and send the message
         this.sendBuf(pid, dest, new OtpOutputStream(msg));
     }

@@ -32,14 +32,10 @@ public enum OtpUtil {
 
     private static final OtpErlangAtom ERLYBERLY_RECORD_FIELD_ATOM = OtpUtil.atom("erlyberly_record_field");
 
-    private static final Set<Class<?>> CONTAINER_TERM_TYPES = new HashSet<>(
-            Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class, OtpErlangList.class)
-    );
+    private static final Set<Class<?>> CONTAINER_TERM_TYPES = new HashSet<>(Arrays.asList(OtpErlangTuple.class, OtpErlangMap.class, OtpErlangList.class));
 
 
-    private static final Set<Class<?>> LARGE_TERM_TYPES = new HashSet<>(
-            Arrays.asList(OtpErlangFun.class, OtpErlangExternalFun.class)
-    );
+    private static final Set<Class<?>> LARGE_TERM_TYPES = new HashSet<>(Arrays.asList(OtpErlangFun.class, OtpErlangExternalFun.class));
 
     private static final OtpErlangAtom TRUE_ATOM = new OtpErlangAtom(true);
     private static final OtpErlangAtom FALSE_ATOM = new OtpErlangAtom(false);
@@ -74,10 +70,8 @@ public enum OtpUtil {
             } else if (e instanceof String) {
                 tuple[i] = new OtpErlangString((String) e);
             } else if (e instanceof Boolean) {
-                if (Boolean.TRUE.equals(e))
-                    tuple[i] = TRUE_ATOM;
-                else
-                    tuple[i] = FALSE_ATOM;
+                if (Boolean.TRUE.equals(e)) tuple[i] = TRUE_ATOM;
+                else tuple[i] = FALSE_ATOM;
             } else {
                 throw new RuntimeException(e + " cannot be converted to an OtpErlangObject");
             }
@@ -107,12 +101,9 @@ public enum OtpUtil {
     public static OtpErlangObject[] elementsForTerm(final OtpErlangObject obj) {
         assert null != obj;
 
-        if (obj instanceof OtpErlangTuple)
-            return ((OtpErlangTuple) obj).elements();
-        else if (obj instanceof OtpErlangList)
-            return ((OtpErlangList) obj).elements();
-        else
-            throw new RuntimeException("No brackets for type " + obj.getClass());
+        if (obj instanceof OtpErlangTuple) return ((OtpErlangTuple) obj).elements();
+        else if (obj instanceof OtpErlangList) return ((OtpErlangList) obj).elements();
+        else throw new RuntimeException("No brackets for type " + obj.getClass());
     }
 
 
@@ -171,10 +162,8 @@ public enum OtpUtil {
     }
 
     public static OtpErlangObject[] iterableElements(final OtpErlangObject obj) {
-        if (obj instanceof OtpErlangTuple)
-            return ((OtpErlangTuple) obj).elements();
-        else if (obj instanceof OtpErlangList)
-            return ((OtpErlangList) obj).elements();
+        if (obj instanceof OtpErlangTuple) return ((OtpErlangTuple) obj).elements();
+        else if (obj instanceof OtpErlangList) return ((OtpErlangList) obj).elements();
         else if (obj instanceof OtpErlangString) {
             final OtpErlangString s = (OtpErlangString) obj;
             return new OtpErlangList(s.stringValue()).elements();
@@ -202,8 +191,7 @@ public enum OtpUtil {
             elements = iterableElements(obj);
             // short lists and tuples which do not contain other short lists or
             // tuples are ok
-            if (3 < elements.length)
-                return false;
+            if (3 < elements.length) return false;
         } else {
             return true;
         }
@@ -213,12 +201,10 @@ public enum OtpUtil {
                 return false;
             } else if (e instanceof OtpErlangString) {
                 final int stringLength = ((OtpErlangString) e).stringValue().length();
-                if (50 < stringLength)
-                    return true;
+                if (50 < stringLength) return true;
             } else if (e instanceof OtpErlangBinary) {
                 final int binaryLength = ((OtpErlangBitstr) e).size();
-                if (50 < binaryLength)
-                    return true;
+                if (50 < binaryLength) return true;
             }
 
         }

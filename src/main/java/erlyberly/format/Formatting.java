@@ -103,8 +103,7 @@ enum Formatting {
         }
     }
 
-    static void bitstringToString(final OtpErlangBitstr bits, final String sep,
-                                  final String bitsFormat, final StringBuilder sb) {
+    static void bitstringToString(final OtpErlangBitstr bits, final String sep, final String bitsFormat, final StringBuilder sb) {
         final byte[] binValue = bits.binaryValue();
         for (int i = 0; i < bits.size(); i++) {
             final int b = 0 <= binValue[i] ? binValue[i] : binValue[i] + 256;

@@ -42,8 +42,7 @@ class NodeRPC {
 
     private OtpErlangObject receiveResult(final OtpMbox mbox) throws OtpErlangExit, OtpErlangDecodeException {
         final OtpErlangObject message = mbox.receive(this.timeout);
-        if (null == message)
-            return null;
+        if (null == message) return null;
         if (!(message instanceof OtpErlangTuple))
             throw new RuntimeException("RPC response expected tuple but got " + message);
         final OtpErlangTuple tupleMessage = (OtpErlangTuple) message;

@@ -33,17 +33,13 @@ public class LFEFormatter implements TermFormatter {
     @Override
     public String modFuncArgsToString(final OtpErlangTuple mfa) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("(")
-                .append(mfa.elementAt(0))
-                .append(":")
-                .append(mfa.elementAt(1));
+        sb.append("(").append(mfa.elementAt(0)).append(":").append(mfa.elementAt(1));
         final OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
         final List<String> stringArgs = new ArrayList<>();
         for (final OtpErlangObject arg : args) {
             stringArgs.add(this.toString(arg));
         }
-        sb.append(String.join(", ", stringArgs))
-                .append(")");
+        sb.append(String.join(", ", stringArgs)).append(")");
         return sb.toString();
     }
 
@@ -51,12 +47,7 @@ public class LFEFormatter implements TermFormatter {
     public String modFuncArityToString(final OtpErlangTuple mfa) {
         final StringBuilder sb = new StringBuilder();
         final OtpErlangList argsList = (OtpErlangList) mfa.elementAt(2);
-        sb.append("(")
-                .append(mfa.elementAt(0))
-                .append(":")
-                .append(mfa.elementAt(1))
-                .append("/").append(argsList.arity())
-                .append(")");
+        sb.append("(").append(mfa.elementAt(0)).append(":").append(mfa.elementAt(1)).append("/").append(argsList.arity()).append(")");
         return sb.toString();
     }
 

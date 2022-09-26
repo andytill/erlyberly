@@ -133,7 +133,7 @@ public class DbgTraceView extends VBox {
             TableRow<TraceLog> row = new TableRow<>();
             ChangeListener<Boolean> completeListener = (obs, oldComplete, newComplete) -> {
                 row.pseudoClassStateChanged(exceptionClass, row.getItem().isExceptionThrower());
-                row.pseudoClassStateChanged(notCompletedClass, !row.getItem().isComplete());
+                row.pseudoClassStateChanged(notCompletedClass, row.getItem().isComplete());
             };
             row.itemProperty().addListener((obs, oldTl, tl) -> {
                 if (oldTl != null) {
@@ -141,7 +141,7 @@ public class DbgTraceView extends VBox {
                 }
                 if (tl != null) {
 
-                    row.pseudoClassStateChanged(notCompletedClass, !row.getItem().isComplete());
+                    row.pseudoClassStateChanged(notCompletedClass, row.getItem().isComplete());
                     if("breaker-row".equals(tl.getCssClass())) {
                         row.pseudoClassStateChanged(breakerRowClass, true);
 

@@ -144,34 +144,30 @@ public final class TabPaneDetacher {
                 }
             }
         });
-        tabPane.setOnDragDetected(
-                (MouseEvent event) -> {
-                    if (event.getSource() instanceof TabPane) {
-                        final Pane rootPane = (Pane) tabPane.getScene().getRoot();
-                        rootPane.setOnDragOver((DragEvent event1) -> {
-                            event1.acceptTransferModes(TransferMode.ANY);
-                            event1.consume();
-                        });
-                        this.currentTab = tabPane.getSelectionModel().getSelectedItem();
-                        final SnapshotParameters snapshotParams = new SnapshotParameters();
-                        snapshotParams.setTransform(Transform.scale(0.4, 0.4));
-                        final WritableImage snapshot = this.currentTab.getContent().snapshot(snapshotParams, null);
-                        final Dragboard db = tabPane.startDragAndDrop(TransferMode.MOVE);
-                        final ClipboardContent clipboardContent = new ClipboardContent();
-                        clipboardContent.put(DataFormat.PLAIN_TEXT, "detach");
-                        db.setDragView(snapshot, 40, 40);
-                        db.setContent(clipboardContent);
-                    }
-                    event.consume();
-                }
-        );
-        tabPane.setOnDragDone(
-                (DragEvent event) -> {
-                    this.openTabInStage(this.currentTab);
-                    tabPane.setCursor(Cursor.DEFAULT);
-                    event.consume();
-                }
-        );
+        tabPane.setOnDragDetected((MouseEvent event) -> {
+            if (event.getSource() instanceof TabPane) {
+                final Pane rootPane = (Pane) tabPane.getScene().getRoot();
+                rootPane.setOnDragOver((DragEvent event1) -> {
+                    event1.acceptTransferModes(TransferMode.ANY);
+                    event1.consume();
+                });
+                this.currentTab = tabPane.getSelectionModel().getSelectedItem();
+                final SnapshotParameters snapshotParams = new SnapshotParameters();
+                snapshotParams.setTransform(Transform.scale(0.4, 0.4));
+                final WritableImage snapshot = this.currentTab.getContent().snapshot(snapshotParams, null);
+                final Dragboard db = tabPane.startDragAndDrop(TransferMode.MOVE);
+                final ClipboardContent clipboardContent = new ClipboardContent();
+                clipboardContent.put(DataFormat.PLAIN_TEXT, "detach");
+                db.setDragView(snapshot, 40, 40);
+                db.setContent(clipboardContent);
+            }
+            event.consume();
+        });
+        tabPane.setOnDragDone((DragEvent event) -> {
+            this.openTabInStage(this.currentTab);
+            tabPane.setCursor(Cursor.DEFAULT);
+            event.consume();
+        });
     }
 
     /**

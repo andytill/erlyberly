@@ -20,15 +20,11 @@ public class DataRow {
         for (int i = 0; i < b.length; i++) {
             String stringByteValue = "";
             // display the byte as an unsigned number, like erlang binaries
-            if (i < bytesRead)
-                stringByteValue = Integer.toString((b[i] & 0xFF));
+            if (i < bytesRead) stringByteValue = Integer.toString((b[i] & 0xFF));
             this.data[i] = new SimpleStringProperty(stringByteValue);
-            if (10 == b[i])
-                sb.append("\\n");
-            else if (32 <= b[i] && 127 > b[i])
-                sb.append((char) b[i]);
-            else
-                sb.append(".");
+            if (10 == b[i]) sb.append("\\n");
+            else if (32 <= b[i] && 127 > b[i]) sb.append((char) b[i]);
+            else sb.append(".");
         }
         this.text.set(sb.toString());
     }

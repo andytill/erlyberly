@@ -37,18 +37,13 @@ public class RecordManager {
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (null == obj)
-                return false;
-            if (this.getClass() != obj.getClass())
-                return false;
+            if (this == obj) return true;
+            if (null == obj) return false;
+            if (this.getClass() != obj.getClass()) return false;
             final RecordKey other = (RecordKey) obj;
             if (null == this.module) {
-                if (null != other.module)
-                    return false;
-            } else if (!this.module.equals(other.module))
-                return false;
+                if (null != other.module) return false;
+            } else if (!this.module.equals(other.module)) return false;
             if (null == this.recordName) {
                 return null == other.recordName;
             } else return this.recordName.equals(other.recordName);
@@ -57,8 +52,7 @@ public class RecordManager {
 
     boolean isModuleManaged(final OtpErlangAtom moduleName) {
         for (final Map.Entry<RecordKey, List<String>> entry : this.records.entrySet()) {
-            if (moduleName.equals(entry.getKey().module))
-                return true;
+            if (moduleName.equals(entry.getKey().module)) return true;
         }
         return false;
     }

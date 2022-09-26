@@ -1,17 +1,17 @@
 /**
  * erlyberly, erlang trace debugger
  * Copyright (C) 2016 Andy Till
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,57 +29,58 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCombination;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
-public class TraceContextMenu extends ContextMenu {
+class TraceContextMenu extends ContextMenu {
 
     private final DbgController dbgController;
 
     private ObservableList<TraceLog> items, selectedItems;
 
-    public TraceContextMenu(DbgController aDbgContoller) {
-        dbgController = aDbgContoller;
-        getItems().add(menuItem("Copy All", "shortcut+c", this::onCopy));
-        getItems().add(menuItem("Copy Function Call", null, this::onCopyCalls));
-        getItems().add(new SeparatorMenuItem());
-        getItems().add(menuItem("Delete", "delete", this::onDelete));
-        getItems().add(menuItem("Delete All", "shortcut+n", this::onDeleteAll));
-        getItems().add(menuItem("Add Breaker", "shortcut+b", this::onAddBreaker));
-        getItems().add(menuItem("Toggle Trace", null, this::onTraceToggle));
+    TraceContextMenu(final DbgController aDbgContoller) {
+        super();
+        this.dbgController = aDbgContoller;
+        this.getItems().add(TraceContextMenu.menuItem("Copy All", "shortcut+c", this::onCopy));
+        this.getItems().add(TraceContextMenu.menuItem("Copy Function Call", null, this::onCopyCalls));
+        this.getItems().add(new SeparatorMenuItem());
+        this.getItems().add(TraceContextMenu.menuItem("Delete", "delete", this::onDelete));
+        this.getItems().add(TraceContextMenu.menuItem("Delete All", "shortcut+n", this::onDeleteAll));
+        this.getItems().add(TraceContextMenu.menuItem("Add Breaker", "shortcut+b", this::onAddBreaker));
+        this.getItems().add(TraceContextMenu.menuItem("Toggle Trace", null, this::onTraceToggle));
     }
 
-    private MenuItem menuItem(String text, String accelerator, EventHandler<ActionEvent> e) {
-        MenuItem menuItem;
+    private static MenuItem menuItem(final String text, final String accelerator, final EventHandler<ActionEvent> e) {
+        final MenuItem menuItem;
 
         menuItem = new MenuItem(text);
         menuItem.setOnAction(e);
 
-        if(accelerator != null)
-            menuItem.setAccelerator(KeyCombination.keyCombination(accelerator));
+        if (null != accelerator) menuItem.setAccelerator(KeyCombination.keyCombination(accelerator));
 
         return menuItem;
     }
 
-    private void onCopy(ActionEvent e) {
-        StringBuilder sbuilder = new StringBuilder();
+    private void onCopy(final ActionEvent e) {
+        final StringBuilder sbuilder = new StringBuilder();
 
-        for (TraceLog traceLog : selectedItems) {
+        for (final TraceLog traceLog : this.selectedItems) {
             sbuilder.append(traceLog.toString()).append("\n");
         }
 
-        copyToClipboard(sbuilder);
+        TraceContextMenu.copyToClipboard(sbuilder);
     }
 
-    private void onCopyCalls(ActionEvent e) {
-        StringBuilder sbuilder = new StringBuilder();
+    private void onCopyCalls(final ActionEvent e) {
+        final StringBuilder sbuilder = new StringBuilder();
 
-        for (TraceLog traceLog : selectedItems) {
+        for (final TraceLog traceLog : this.selectedItems) {
             sbuilder.append(traceLog.toCallString()).append("\n");
         }
 
-        copyToClipboard(sbuilder);
+        TraceContextMenu.copyToClipboard(sbuilder);
     }
 
-    private void copyToClipboard(StringBuilder sbuilder) {
+    private static void copyToClipboard(final StringBuilder sbuilder) {
         final Clipboard clipboard = Clipboard.getSystemClipboard();
         final ClipboardContent content = new ClipboardContent();
 
@@ -87,30 +88,30 @@ public class TraceContextMenu extends ContextMenu {
         clipboard.setContent(content);
     }
 
-    private void onTraceToggle(ActionEvent e) {
-        for (TraceLog log : selectedItems) {
-            dbgController.toggleTraceModFunc(log.getModFunc());
+    private void onTraceToggle(final ActionEvent e) {
+        for (final TraceLog log : this.selectedItems) {
+            this.dbgController.toggleTraceModFunc(log.getModFunc());
         }
     }
 
-    private void onDelete(ActionEvent e) {
-        ArrayList<TraceLog> arrayList = new ArrayList<TraceLog>(selectedItems);
-        items.removeAll(arrayList);
+    private void onDelete(final ActionEvent e) {
+        final Collection<TraceLog> arrayList = new ArrayList<>(this.selectedItems);
+        this.items.removeAll(arrayList);
     }
 
-    private void onDeleteAll(ActionEvent e) {
-        items.clear();
+    private void onDeleteAll(final ActionEvent e) {
+        this.items.clear();
     }
 
-    public void setSelectedItems(ObservableList<TraceLog> selectedItems2) {
-        selectedItems = selectedItems2;
+    void setSelectedItems(final ObservableList<TraceLog> selectedItems2) {
+        this.selectedItems = selectedItems2;
     }
 
-    public void setItems(ObservableList<TraceLog> items2) {
-        items = items2;
+    void setItems(final ObservableList<TraceLog> items2) {
+        this.items = items2;
     }
 
-    private void onAddBreaker(ActionEvent e) {
-        items.add(TraceLog.newBreakLog());
+    private void onAddBreaker(final ActionEvent e) {
+        this.items.add(TraceLog.newBreakLog());
     }
 }

@@ -86,12 +86,9 @@ public class ErlangFormatter implements TermFormatter {
     private static String bracketsForTerm(final OtpErlangObject obj) {
         assert null != obj;
 
-        if (obj instanceof OtpErlangTuple)
-            return "{}";
-        else if (obj instanceof OtpErlangList)
-            return "[]";
-        else
-            throw new RuntimeException("No brackets for type " + obj.getClass());
+        if (obj instanceof OtpErlangTuple) return "{}";
+        else if (obj instanceof OtpErlangList) return "[]";
+        else throw new RuntimeException("No brackets for type " + obj.getClass());
     }
 
     /**
@@ -102,10 +99,7 @@ public class ErlangFormatter implements TermFormatter {
     @Override
     public String modFuncArgsToString(final OtpErlangTuple mfa) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
-                .append(":")
-                .append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
-                .append("(");
+        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0))).append(":").append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1))).append("(");
         final OtpErlangList args = (OtpErlangList) mfa.elementAt(2);
         final List<String> stringArgs = new ArrayList<>();
         for (final OtpErlangObject arg : args) {
@@ -124,10 +118,7 @@ public class ErlangFormatter implements TermFormatter {
     public String modFuncArityToString(final OtpErlangTuple mfa) {
         final StringBuilder sb = new StringBuilder();
         final OtpErlangList argsList = OtpUtil.toErlangList(mfa.elementAt(2));
-        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0)))
-                .append(":")
-                .append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1)))
-                .append("/").append(argsList.arity());
+        sb.append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(0))).append(":").append(ErlangFormatter.atomToStringNoQuotes((OtpErlangAtom) mfa.elementAt(1))).append("/").append(argsList.arity());
         return sb.toString();
     }
 
