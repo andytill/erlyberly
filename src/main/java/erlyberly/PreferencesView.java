@@ -53,48 +53,46 @@ public class PreferencesView implements Initializable {
     private RadioButton lfeTermsButton;
 
     @Override
-    public void initialize(URL url, ResourceBundle r) {
-        selectFormattingButton();
+    public void initialize(final URL url, final ResourceBundle r) {
+        this.selectFormattingButton();
 
         final ToggleGroup group;
         group = new ToggleGroup();
-        group.selectedToggleProperty().addListener((Observable o) -> {
-            storeFormattingPreferenceChange();
-        });
-        erlangTermsButton.setToggleGroup(group);
-        elixirTermsButton.setToggleGroup(group);
-        lfeTermsButton.setToggleGroup(group);
+        group.selectedToggleProperty().addListener((Observable o) -> this.storeFormattingPreferenceChange());
+        this.erlangTermsButton.setToggleGroup(group);
+        this.elixirTermsButton.setToggleGroup(group);
+        this.lfeTermsButton.setToggleGroup(group);
 
-        PrefBind.bind("targetNodeName", nodeNameField.textProperty());
-        PrefBind.bind("cookieName", cookieField.textProperty());
-        PrefBind.bindBoolean("autoConnect", autoConnectField.selectedProperty());
-        PrefBind.bindBoolean("hideProcesses", hideProcesses.selectedProperty());
-        PrefBind.bindBoolean("hideModules", hideModules.selectedProperty());
-        PrefBind.bindBoolean("showSourceInSystemEditor", showSourceInSystemEditorBox.selectedProperty());
+        PrefBind.bind("targetNodeName", this.nodeNameField.textProperty());
+        PrefBind.bind("cookieName", this.cookieField.textProperty());
+        PrefBind.bindBoolean("autoConnect", this.autoConnectField.selectedProperty());
+        PrefBind.bindBoolean("hideProcesses", this.hideProcesses.selectedProperty());
+        PrefBind.bindBoolean("hideModules", this.hideModules.selectedProperty());
+        PrefBind.bindBoolean("showSourceInSystemEditor", this.showSourceInSystemEditorBox.selectedProperty());
     }
 
     private void storeFormattingPreferenceChange() {
-        if (erlangTermsButton.isSelected()) {
+        if (this.erlangTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "erlang");
             ErlyBerly.setTermFormatter(new ErlangFormatter());
-        } else if (elixirTermsButton.isSelected()) {
+        } else if (this.elixirTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "elixir");
             ErlyBerly.setTermFormatter(new ElixirFormatter());
-        } else if (lfeTermsButton.isSelected()) {
+        } else if (this.lfeTermsButton.isSelected()) {
             PrefBind.set("termFormatting", "lfe");
             ErlyBerly.setTermFormatter(new LFEFormatter());
         }
-        selectFormattingButton();
+        this.selectFormattingButton();
     }
 
     private void selectFormattingButton() {
-        String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
+        final String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
         if ("erlang".equals(formattingPref)) {
-            erlangTermsButton.setSelected(true);
+            this.erlangTermsButton.setSelected(true);
         } else if ("elixir".equals(formattingPref)) {
-            elixirTermsButton.setSelected(true);
+            this.elixirTermsButton.setSelected(true);
         } else if ("lfe".equals(formattingPref)) {
-            lfeTermsButton.setSelected(true);
+            this.lfeTermsButton.setSelected(true);
         } else
             throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);
     }

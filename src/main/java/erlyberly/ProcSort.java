@@ -17,7 +17,7 @@
  */
 package erlyberly;
 
-import javafx.scene.control.TableColumn.SortType;
+import javafx.scene.control.TableColumn;
 
 /**
  * Description of how to sort {@link ProcInfo} objects.
@@ -25,45 +25,46 @@ import javafx.scene.control.TableColumn.SortType;
 public class ProcSort {
     private final String sortField;
 
-    private final SortType sortType;
+    private final TableColumn.SortType sortType;
 
-    public ProcSort(String sortField, SortType sortType) {
+    public ProcSort(final String sortField, final TableColumn.SortType sortType) {
+        super();
         this.sortField = sortField;
         this.sortType = sortType;
     }
 
     public String getSortField() {
-        return sortField;
+        return this.sortField;
     }
 
-    public SortType getSortType() {
-        return sortType;
+    public TableColumn.SortType getSortType() {
+        return this.sortType;
     }
 
     @Override
     public String toString() {
-        return "ProcSort [sortField=" + sortField + ", sortType=" + sortType + "]";
+        return "ProcSort [sortField=" + this.sortField + ", sortType=" + this.sortType + "]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((sortField == null) ? 0 : sortField.hashCode());
-        result = prime * result + ((sortType == null) ? 0 : sortType.hashCode());
+        result = prime * result + ((null == this.sortField) ? 0 : this.sortField.hashCode());
+        result = prime * result + ((null == this.sortType) ? 0 : this.sortType.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        ProcSort other = (ProcSort) obj;
-        if (sortField == null) {
-            if (other.sortField != null) return false;
-        } else if (!sortField.equals(other.sortField)) return false;
-        return sortType == other.sortType;
+        if (null == obj) return false;
+        if (this.getClass() != obj.getClass()) return false;
+        final ProcSort other = (ProcSort) obj;
+        if (null == this.sortField) {
+            if (null != other.sortField) return false;
+        } else if (!this.sortField.equals(other.sortField)) return false;
+        return this.sortType == other.sortType;
     }
 
 

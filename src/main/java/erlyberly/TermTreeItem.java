@@ -29,21 +29,22 @@ class TermTreeItem {
     private final String toString;
     private final OtpErlangObject object;
 
-    public TermTreeItem(OtpErlangObject object, String toString) {
+    TermTreeItem(final OtpErlangObject object, final String toString) {
+        super();
         this.object = object;
         this.toString = toString;
     }
 
     public String getToString() {
-        return toString;
+        return this.toString;
     }
 
     public OtpErlangObject getObject() {
-        return object;
+        return this.object;
     }
 
     @Override
     public String toString() {
-        return toString;
+        return this.toString;
     }
 }

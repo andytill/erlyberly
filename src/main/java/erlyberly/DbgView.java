@@ -34,7 +34,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -59,15 +58,15 @@ public class DbgView implements Initializable {
 
     private final ObservableList<TreeItem<ModFunc>> treeModules = FXCollections.observableArrayList();
 
-    private final SortedList<TreeItem<ModFunc>> sortedTreeModules = new SortedList<TreeItem<ModFunc>>(treeModules);
+    private final SortedList<TreeItem<ModFunc>> sortedTreeModules = new SortedList<>(this.treeModules);
 
-    private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<TreeItem<ModFunc>>(sortedTreeModules);
+    private final FilteredList<TreeItem<ModFunc>> filteredTreeModules = new FilteredList<>(this.sortedTreeModules);
 
     /**
      * A list of all the filtered lists for functions, so a predicate can be set on them.  Binding
      * the predicate property does not seem to work.
      */
-    private final HashMap<ModFunc, FilteredList<TreeItem<ModFunc>>> functionLists = new HashMap<>();
+    private final Map<ModFunc, FilteredList<TreeItem<ModFunc>>> functionLists = new HashMap<>();
 
     @FXML
     private TreeView<ModFunc> modulesTree;
@@ -85,46 +84,44 @@ public class DbgView implements Initializable {
     private ModFuncContextMenu modFuncContextMenu;
 
     @Override
-    public void initialize(URL url, ResourceBundle r) {
-        modFuncContextMenu = new ModFuncContextMenu(dbgController);
-        modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
-        modFuncContextMenu.rootProperty().bind(modulesTree.rootProperty());
-        modulesTree.getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
-            modFuncContextMenu.selectedTreeItemProperty().set(newItem);
-            if (newItem != null) modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
+    public void initialize(final URL url, final ResourceBundle r) {
+        this.modFuncContextMenu = new ModFuncContextMenu(this.dbgController);
+        this.modFuncContextMenu.setModuleTraceMenuText("Trace All Functions in Module");
+        this.modFuncContextMenu.rootProperty().bind(this.modulesTree.rootProperty());
+        this.modulesTree.getSelectionModel().selectedItemProperty().addListener((o, old, newItem) -> {
+            this.modFuncContextMenu.selectedTreeItemProperty().set(newItem);
+            if (null != newItem) this.modFuncContextMenu.selectedItemProperty().set(newItem.getValue());
         });
 
-        sortedTreeModules.setComparator(treeItemModFuncComparator());
+        this.sortedTreeModules.setComparator(DbgView.treeItemModFuncComparator());
 
-        SplitPane.setResizableWithParent(modulesBox, Boolean.TRUE);
+        SplitPane.setResizableWithParent(this.modulesBox, Boolean.TRUE);
 
         ErlyBerly.nodeAPI().connectedProperty().addListener(this::onConnected);
 
-        modulesTree.setCellFactory(new ModFuncTreeCellFactory(dbgController));
-        modulesTree.setContextMenu(modFuncContextMenu);
+        this.modulesTree.setCellFactory(new ModFuncTreeCellFactory(this.dbgController));
+        this.modulesTree.setContextMenu(this.modFuncContextMenu);
 
-        addModulesFloatySearchControl();
+        this.addModulesFloatySearchControl();
 
-        dbgController.initialize(url, r);
-        DbgController.setModuleLoadedCallback((tuple) -> {
-            createModuleTreeItem(tuple);
-        });
-        tabPane = new TabPane();
-        TabPaneDetacher.create().stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css").makeTabsDetachable(tabPane);
-        Tab traceViewTab;
+        this.dbgController.initialize(url, r);
+        DbgController.setModuleLoadedCallback(this::createModuleTreeItem);
+        this.tabPane = new TabPane();
+        TabPaneDetacher.create().stylesheets("/floatyfield/floaty-field.css", "/erlyberly/erlyberly.css").makeTabsDetachable(this.tabPane);
+        final Tab traceViewTab;
         traceViewTab = new Tab("Traces");
-        traceViewTab.setContent(new DbgTraceView(dbgController));
+        traceViewTab.setContent(new DbgTraceView(this.dbgController));
         traceViewTab.setClosable(false);
-        getTabPane().getTabs().add(traceViewTab);
-        dbgSplitPane.getItems().add(getTabPane());
+        this.tabPane.getTabs().add(traceViewTab);
+        this.dbgSplitPane.getItems().add(this.tabPane);
     }
 
-    private FxmlLoadable addModulesFloatySearchControl() {
-        FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
+    private void addModulesFloatySearchControl() {
+        final FxmlLoadable loader = new FxmlLoadable("/floatyfield/floaty-field.fxml");
 
         loader.load();
 
-        FloatyFieldView ffView;
+        final FloatyFieldView ffView;
 
         ffView = (FloatyFieldView) loader.controller;
         ffView.promptTextProperty().set("Filter functions i.e. gen_s:call or #t for all traces");
@@ -132,19 +129,16 @@ public class DbgView implements Initializable {
         loader.fxmlNode.setStyle("-fx-padding: 5 5 0 5;");
 
         HBox.setHgrow(loader.fxmlNode, Priority.ALWAYS);
-        modulesBox.getChildren().add(0, loader.fxmlNode);
+        this.modulesBox.getChildren().add(0, loader.fxmlNode);
 
-        filterTextProperty = ffView.textProperty();
-        filterTextProperty.addListener(this::onFunctionSearchChange);
+        this.filterTextProperty = ffView.textProperty();
+        this.filterTextProperty.addListener(this::onFunctionSearchChange);
 
-        TextField filterTextView;
-        filterTextView = floatyFieldTextField(loader);
+        final TextField filterTextView;
+        filterTextView = DbgView.floatyFieldTextField(loader);
 
-        Platform.runLater(() -> {
-            FilterFocusManager.addFilter(filterTextView, 1);
-        });
+        Platform.runLater(() -> FilterFocusManager.addFilter(filterTextView, 1));
 
-        return loader;
     }
 
     /**
@@ -152,7 +146,7 @@ public class DbgView implements Initializable {
      * is pressed down, used for only executing it once per press, not once per
      * event which can be many.
      */
-    static boolean toggleAllTracesDown = false;
+    static boolean toggleAllTracesDown;
 
     private StringProperty filterTextProperty;
 
@@ -166,120 +160,107 @@ public class DbgView implements Initializable {
      */
     private ScheduledFuture<?> scheduledModuleLoadFuture;
 
-    private TextField floatyFieldTextField(FxmlLoadable loader) {
+    private static TextField floatyFieldTextField(final FxmlLoadable loader) {
         // FIXME floaty field should allow access to the text field
         return (TextField) loader.fxmlNode.getChildrenUnmodifiable().get(1);
     }
 
 
-    public void onRefreshModules(ActionEvent e) {
-        treeModules.clear();
+    public void onRefreshModules(final ActionEvent e) {
+        this.treeModules.clear();
 
-        refreshModules();
+        this.refreshModules();
     }
 
-    public void onFunctionSearchChange(Observable o, String oldValue, String search) {
-        if (isSpecialTraceFilter(search)) filterForTracedFunctions();
-        else filterForFunctionTextMatch(search);
+    public void onFunctionSearchChange(final Observable o, final String oldValue, final String search) {
+        if (DbgView.isSpecialTraceFilter(search)) this.filterForTracedFunctions();
+        else this.filterForFunctionTextMatch(search);
     }
 
-    private boolean isSpecialTraceFilter(String search) {
+    private static boolean isSpecialTraceFilter(final String search) {
         return "#t".equals(search.trim());
     }
 
-    private void filterForFunctionTextMatch(String search) {
-        String[] split = search.split(":");
+    private void filterForFunctionTextMatch(final String search) {
+        final String[] split = search.split(":");
 
-        if (split.length == 0) return;
+        if (0 == split.length) return;
 
         final String moduleName = split[0];
-        final String funcName = (split.length > 1) ? split[1] : "";
+        final String funcName = (1 < split.length) ? split[1] : "";
 
         if (search.contains(":")) {
-            for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
+            for (final TreeItem<ModFunc> treeItem : this.filteredTreeModules) {
                 treeItem.setExpanded(true);
             }
         }
 
-        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
-            funcItemList.setPredicate((t) -> {
-                return isMatchingModFunc(funcName, t);
-            });
+        for (final FilteredList<TreeItem<ModFunc>> funcItemList : this.functionLists.values()) {
+            funcItemList.setPredicate((t) -> DbgView.isMatchingModFunc(funcName, t));
         }
 
-        filteredTreeModules.setPredicate((t) -> {
-            return isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty();
-        });
+        this.filteredTreeModules.setPredicate((t) -> DbgView.isMatchingModFunc(moduleName, t) && !t.getChildren().isEmpty());
     }
 
     private void filterForTracedFunctions() {
-        for (FilteredList<TreeItem<ModFunc>> funcItemList : functionLists.values()) {
-            funcItemList.setPredicate((t) -> {
-                return dbgController.isTraced(t.getValue());
-            });
+        for (final FilteredList<TreeItem<ModFunc>> funcItemList : this.functionLists.values()) {
+            funcItemList.setPredicate((t) -> this.dbgController.isTraced(t.getValue()));
         }
 
-        filteredTreeModules.setPredicate((t) -> {
-            return !t.getChildren().isEmpty();
-        });
+        this.filteredTreeModules.setPredicate((t) -> !t.getChildren().isEmpty());
     }
 
-    private Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
-        return new Comparator<TreeItem<ModFunc>>() {
-            @Override
-            public int compare(TreeItem<ModFunc> o1, TreeItem<ModFunc> o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        };
+    private static Comparator<TreeItem<ModFunc>> treeItemModFuncComparator() {
+        return Comparator.comparing(TreeItem::getValue);
     }
 
-    private boolean isMatchingModFunc(String searchText, TreeItem<ModFunc> t) {
+    private static boolean isMatchingModFunc(final String searchText, final TreeItem<ModFunc> t) {
         if (searchText.isEmpty()) return true;
         return t.getValue().toString().contains(searchText);
     }
 
-    private void onConnected(Observable o) {
-        boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
+    private void onConnected(final Observable o) {
+        final boolean connected = ErlyBerly.nodeAPI().connectedProperty().get();
 
         // disable buttons when not connected
         /*seqTraceMenuItem.setDisable(!connected);*/
 
         if (connected) {
-            refreshModules();
-            dbgController.reapplyTraces();
+            this.refreshModules();
+            this.dbgController.reapplyTraces();
         } else {
             // Don't clear the Traces, keep it, an re-apply once connected again.
-            treeModules.clear();
+            this.treeModules.clear();
         }
     }
 
     private void refreshModules() {
         try {
-            modulesTree.setShowRoot(false);
+            this.modulesTree.setShowRoot(false);
             DbgController.requestModFuncs(this::buildObjectTreeRoot);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("failed to build module/function tree", e);
         }
     }
 
-    private void buildObjectTreeRoot(OtpErlangList requestFunctions) {
-        for (OtpErlangObject e : requestFunctions) {
-            OtpErlangTuple tuple = (OtpErlangTuple) e;
+    private void buildObjectTreeRoot(final OtpErlangList requestFunctions) {
+        for (final OtpErlangObject e : requestFunctions) {
+            final OtpErlangTuple tuple = (OtpErlangTuple) e;
 
-            createModuleTreeItem(tuple);
+            this.createModuleTreeItem(tuple);
         }
 
-        TreeItem<ModFunc> root;
+        final TreeItem<ModFunc> root;
 
-        root = new TreeItem<ModFunc>();
+        root = new TreeItem<>();
         root.setExpanded(true);
 
-        Bindings.bindContentBidirectional(root.getChildren(), filteredTreeModules);
+        Bindings.bindContentBidirectional(root.getChildren(), this.filteredTreeModules);
 
-        modulesTree.setRoot(root);
+        this.modulesTree.setRoot(root);
 
         // set predicates on the function tree items so that they filter correctly
-        filterForFunctionTextMatch(filterTextProperty.get());
+        this.filterForFunctionTextMatch(this.filterTextProperty.get());
 
         // this listener tries to load a module typed into the filter
         // so that the user does not have to load it into the vm first
@@ -289,133 +270,129 @@ public class DbgView implements Initializable {
         // TODO if there is a "production" mode then this feature should
         //      disabled, alternatively we can check if the application is
         //      embedded, if it is then all modules should be loaded anyway
-        filterTextProperty.addListener((o, oldString, newString) -> {
-            if (scheduledModuleLoadFuture != null) {
-                scheduledModuleLoadFuture.cancel(true);
+        this.filterTextProperty.addListener((o, oldString, newString) -> {
+            if (null != this.scheduledModuleLoadFuture) {
+                this.scheduledModuleLoadFuture.cancel(true);
             }
-            String[] split = newString.trim().split(":");
-            if (newString == null || "".equals(newString) || split.length == 0) return;
-            String moduleName = split[0];
-            if (moduleName == null || "".equals(moduleName)) {
+            final String[] split = newString.trim().split(":");
+            if (newString.isEmpty() || 0 == split.length) return;
+            final String moduleName = split[0];
+            if (null == moduleName || moduleName.isEmpty()) {
                 return;
             }
-            long delayMillis = 1000;
-            scheduledModuleLoadFuture = ErlyBerly.scheduledIO(delayMillis, () -> {
+            final long delayMillis = 1000;
+            this.scheduledModuleLoadFuture = ErlyBerly.scheduledIO(delayMillis, () -> {
                 try {
                     ErlyBerly.nodeAPI().tryLoadModule(moduleName);
-                } catch (Exception e1) {
+                } catch (final Exception e1) {
                     e1.printStackTrace();
                 }
             });
         });
     }
 
-    private void createModuleTreeItem(OtpErlangTuple tuple) {
-        boolean isExported;
-        OtpErlangAtom moduleNameAtom = (OtpErlangAtom) tuple.elementAt(0);
-        OtpErlangList exportedFuncs = (OtpErlangList) tuple.elementAt(1);
-        OtpErlangList localFuncs = (OtpErlangList) tuple.elementAt(2);
+    private void createModuleTreeItem(final OtpErlangTuple tuple) {
+        final boolean isExported;
+        final OtpErlangAtom moduleNameAtom = (OtpErlangAtom) tuple.elementAt(0);
+        final OtpErlangList exportedFuncs = (OtpErlangList) tuple.elementAt(1);
+        final OtpErlangList localFuncs = (OtpErlangList) tuple.elementAt(2);
 
-        TreeItem<ModFunc> moduleItem;
+        final TreeItem<ModFunc> moduleItem;
 
-        ModFunc module = ModFunc.toModule(moduleNameAtom);
-        moduleItem = new TreeItem<ModFunc>(module);
-        moduleItem.setGraphic(treeIcon(FontAwesome.Glyph.CUBE));
+        final ModFunc module = ModFunc.toModule(moduleNameAtom);
+        moduleItem = new TreeItem<>(module);
+        moduleItem.setGraphic(DbgView.treeIcon(FontAwesome.Glyph.CUBE));
 
-        ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
+        final ObservableList<TreeItem<ModFunc>> modFuncs = FXCollections.observableArrayList();
 
-        SortedList<TreeItem<ModFunc>> sortedFuncs = new SortedList<TreeItem<ModFunc>>(modFuncs);
+        final SortedList<TreeItem<ModFunc>> sortedFuncs = new SortedList<>(modFuncs);
 
-        FilteredList<TreeItem<ModFunc>> filteredFuncs = new FilteredList<TreeItem<ModFunc>>(sortedFuncs);
+        final FilteredList<TreeItem<ModFunc>> filteredFuncs = new FilteredList<>(sortedFuncs);
 
-        sortedFuncs.setComparator(treeItemModFuncComparator());
+        sortedFuncs.setComparator(DbgView.treeItemModFuncComparator());
 
-        isExported = true;
-        addTreeItems(toModFuncs(moduleNameAtom, exportedFuncs, isExported), modFuncs);
+        DbgView.addTreeItems(DbgView.toModFuncs(moduleNameAtom, exportedFuncs, true), modFuncs);
 
-        isExported = false;
-        addTreeItems(toModFuncs(moduleNameAtom, localFuncs, isExported), modFuncs);
-        functionLists.put(module, filteredFuncs);
+        DbgView.addTreeItems(DbgView.toModFuncs(moduleNameAtom, localFuncs, false), modFuncs);
+        this.functionLists.put(module, filteredFuncs);
 
         Bindings.bindContentBidirectional(moduleItem.getChildren(), filteredFuncs);
 
-        ArrayList<TreeItem<ModFunc>> treeModulesCopy = new ArrayList<>(treeModules);
-        for (TreeItem<ModFunc> treeItem : treeModulesCopy) {
+        final Iterable<TreeItem<ModFunc>> treeModulesCopy = new ArrayList<>(this.treeModules);
+        for (final TreeItem<ModFunc> treeItem : treeModulesCopy) {
             if (treeItem.getValue().equals(module)) {
-                treeModules.remove(treeItem);
+                this.treeModules.remove(treeItem);
             }
         }
-        treeModules.add(moduleItem);
+        this.treeModules.add(moduleItem);
     }
 
-    private void addTreeItems(List<ModFunc> modFuncs, ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
-        for (ModFunc modFunc : modFuncs) {
+    private static void addTreeItems(final List<ModFunc> modFuncs, final ObservableList<TreeItem<ModFunc>> modFuncTreeItems) {
+        for (final ModFunc modFunc : modFuncs) {
             if (!modFunc.isSynthetic()) {
-                TreeItem<ModFunc> item = newFuncTreeItem(modFunc);
+                final TreeItem<ModFunc> item = DbgView.newFuncTreeItem(modFunc);
 
                 modFuncTreeItems.add(item);
             }
         }
     }
 
-    private TreeItem<ModFunc> newFuncTreeItem(ModFunc modFunc) {
-        return new TreeItem<ModFunc>(modFunc);
+    private static TreeItem<ModFunc> newFuncTreeItem(final ModFunc modFunc) {
+        return new TreeItem<>(modFunc);
     }
 
 
-    private Glyph treeIcon(FontAwesome.Glyph treeIcon) {
-        Glyph icon = new FontAwesome().create(treeIcon);
+    private static Glyph treeIcon(final FontAwesome.Glyph treeIcon) {
+        final Glyph icon = new FontAwesome().create(treeIcon);
         icon.setStyle(ICON_STYLE);
         return icon;
     }
 
-    private ArrayList<ModFunc> toModFuncs(OtpErlangAtom moduleNameAtom, OtpErlangList exportedFuncs, boolean isExported) {
-        ArrayList<ModFunc> mfs = new ArrayList<>();
-        for (OtpErlangObject exported : exportedFuncs) {
-            ModFunc modFunc = ModFunc.toFunc(moduleNameAtom, exported, isExported);
+    private static List<ModFunc> toModFuncs(final OtpErlangAtom moduleNameAtom, final OtpErlangList exportedFuncs, final boolean isExported) {
+        final List<ModFunc> mfs = new ArrayList<>();
+        for (final OtpErlangObject exported : exportedFuncs) {
+            final ModFunc modFunc = ModFunc.toFunc(moduleNameAtom, exported, isExported);
             mfs.add(modFunc);
         }
         return mfs;
     }
 
-    public void setFunctionsVisibility(Boolean hidden) {
-        if (!hidden) {
-            dbgSplitPane.getItems().add(0, modulesBox);
+    public void setFunctionsVisibility(final Boolean hidden) {
+        if (hidden.booleanValue()) {
+            final SplitPane.Divider div = this.dbgSplitPane.getDividers().get(0);
 
-            Divider div = dbgSplitPane.getDividers().get(0);
-            div.setPosition(functionsDivPosition);
-        } else {
-            Divider div = dbgSplitPane.getDividers().get(0);
-
-            functionsDivPosition = div.getPosition();
+            this.functionsDivPosition = div.getPosition();
 
             div.setPosition(0d);
-            dbgSplitPane.getItems().remove(0);
+            this.dbgSplitPane.getItems().remove(0);
+        } else {
+            this.dbgSplitPane.getItems().add(0, this.modulesBox);
+
+            final SplitPane.Divider div = this.dbgSplitPane.getDividers().get(0);
+            div.setPosition(this.functionsDivPosition);
         }
     }
 
     public TabPane getTabPane() {
-        return tabPane;
+        return this.tabPane;
     }
 
     public void sizeSplitPanes() {
-        assert dbgSplitPane.getScene() != null;
-        assert dbgSplitPane.getScene().getWidth() > 0.0d;
+        assert null != this.dbgSplitPane.getScene();
+        assert 0.0d < this.dbgSplitPane.getScene().getWidth();
         try {
-            double percent = (configuredModulesWidth() / dbgSplitPane.getScene().getWidth());
+            final double percent = (DbgView.configuredModulesWidth() / this.dbgSplitPane.getScene().getWidth());
             // the split pane divider position can only be set as a percentage of the split pane
-            dbgSplitPane.setDividerPosition(0, percent);
-        } catch (NumberFormatException e) {
+            this.dbgSplitPane.setDividerPosition(0, percent);
+        } catch (final NumberFormatException e) {
             e.printStackTrace();
         }
         // whenever the width of the pane changes, write it to configuration
         // this is buffered so rapid writes do not cause rapid writes to disk
-        modulesBox.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, nv);
-        });
+        this.modulesBox.widthProperty().addListener((o, ov, nv) -> PrefBind.set(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, nv));
     }
 
-    private double configuredModulesWidth() {
+    private static double configuredModulesWidth() {
         return PrefBind.getOrDefaultDouble(MODULES_TREE_PREF_WIDTH_CONFIG_KEY, MODULES_TREE_PREF_WIDTH_CONFIG_KEY_DEFAULT);
     }
 }

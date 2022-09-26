@@ -19,15 +19,13 @@ package erlyberly;
 
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
-import erlyberly.ConnectionView.KnownNode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -38,7 +36,8 @@ import java.util.*;
  * <p>
  * <b>All methods must be called on the JavaFX thread.</b>
  */
-public class PrefBind {
+public enum PrefBind {
+    ;
 
     private static final long WRITE_TO_DISK_DELAY = 500L;
 
@@ -65,50 +64,43 @@ public class PrefBind {
     private static final Object AWAIT_STORE_LOCK = new Object();
     private static boolean awaitingStore;
 
-    private PrefBind() {
-    }
-
-    public static void bind(final String propName, StringProperty stringProp) {
-        if (props == null) {
+    public static void bind(final String propName, final StringProperty stringProp) {
+        if (null == props) {
             return;
         }
-        String storedValue = (String) props.get(propName);
-        if (storedValue != null) {
+        final String storedValue = (String) props.get(propName);
+        if (null != storedValue) {
             stringProp.set(storedValue);
         }
-        stringProp.addListener((ObservableValue<? extends String> o, String oldValue, String newValue) -> {
-            set(propName, newValue);
-        });
+        stringProp.addListener((ObservableValue<? extends String> o, String oldValue, String newValue) -> set(propName, newValue));
     }
 
-    public static void bindBoolean(final String propName, BooleanProperty boolProp) {
-        if (props == null) {
+    public static void bindBoolean(final String propName, final BooleanProperty boolProp) {
+        if (null == props) {
             return;
         }
-        Boolean storedValue = (Boolean) props.get(propName);
-        if (storedValue != null) {
-            boolProp.set(storedValue);
+        final Boolean storedValue = (Boolean) props.get(propName);
+        if (null != storedValue) {
+            boolProp.set(storedValue.booleanValue());
         }
-        boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-            set(propName, newValue);
-        });
+        boolProp.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> set(propName, newValue));
     }
 
     static void store() {
         try {
             //props.store(new FileOutputStream(erlyberlyConfig), " erlyberly at https://github.com/andytill/erlyberly");
-            new TomlWriter().write(props, new FileOutputStream(erlyberlyConfig));
-        } catch (IOException | NoClassDefFoundError e) {
+            new TomlWriter().write(props, Files.newOutputStream(erlyberlyConfig.toPath()));
+        } catch (final IOException | NoClassDefFoundError e) {
             e.printStackTrace();
         }
     }
 
     public static void setup() throws IOException {
-        String home = System.getProperty("user.home");
+        final String home = System.getProperty("user.home");
 
         File homeDir = new File(home);
 
-        File dotConfigDir = new File(homeDir, ".config");
+        final File dotConfigDir = new File(homeDir, ".config");
 
         if (dotConfigDir.exists()) {
             homeDir = dotConfigDir;
@@ -117,50 +109,49 @@ public class PrefBind {
         erlyberlyConfig = new File(homeDir, ".erlyberly2");
         erlyberlyConfig.createNewFile();
 
-        Toml toml;
+        final Toml toml;
         toml = new Toml();
-        toml.read(new FileInputStream(erlyberlyConfig));
+        toml.read(Files.newInputStream(erlyberlyConfig.toPath()));
         props = toml.getKeyValues();
     }
 
-    public static Object get(Object key) {
+    public static Object get(final Object key) {
         return props.get(key);
     }
 
-    public static Object getOrDefault(String key, Object theDefault) {
+    public static Object getOrDefault(final String key, final Object theDefault) {
         return props.getOrDefault(key, theDefault);
     }
 
-    public static double getOrDefaultDouble(String key, Double theDefault) {
+    public static double getOrDefaultDouble(final String key, final Double theDefault) {
         return Double.parseDouble(PrefBind.getOrDefault(key, theDefault).toString());
     }
 
-    public static boolean getOrDefaultBoolean(String key, boolean theDefault) {
+    public static boolean getOrDefaultBoolean(final String key, final boolean theDefault) {
         return Boolean.parseBoolean(PrefBind.getOrDefault(key, theDefault).toString());
     }
 
-    public static void set(String propName, Object newValue) {
+    public static void set(final String propName, final Object newValue) {
         props.put(propName, newValue);
         synchronized (AWAIT_STORE_LOCK) {
             awaitingStore = true;
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static List<List<String>> getKnownNodes() {
         return (List<List<String>>) props.getOrDefault("knownNodes", new ArrayList<>());
     }
 
-    public static void storeKnownNode(KnownNode knownNode) {
-        List<List<String>> knownNodes = getKnownNodes();
+    public static void storeKnownNode(final ConnectionView.KnownNode knownNode) {
+        final List<List<String>> knownNodes = getKnownNodes();
         knownNodes.add(Arrays.asList(knownNode.getNodeName(), knownNode.getCookie()));
         props.put("knownNodes", knownNodes);
         store();
     }
 
-    public static void removeKnownNode(KnownNode knownNode) {
-        List<String> nodeAsList = Arrays.asList(knownNode.getNodeName(), knownNode.getCookie());
-        List<List<String>> knownNodes = getKnownNodes();
+    public static void removeKnownNode(final ConnectionView.KnownNode knownNode) {
+        final List<String> nodeAsList = Arrays.asList(knownNode.getNodeName(), knownNode.getCookie());
+        final List<List<String>> knownNodes = getKnownNodes();
         knownNodes.remove(nodeAsList);
         props.put("knownNodes", knownNodes);
         store();
@@ -171,7 +162,7 @@ public class PrefBind {
      * proccesses queue before tracing is suspended on the node.
      */
     public static int getMaxTraceQueueLengthConfig() {
-        Number maxTraceQueueLength = (Number) getOrDefault("maxTraceQueueLength", 1000);
+        final Number maxTraceQueueLength = (Number) getOrDefault("maxTraceQueueLength", 1000);
         return maxTraceQueueLength.intValue();
     }
 }

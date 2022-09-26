@@ -29,12 +29,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.TableColumn.SortType;
+import javafx.scene.control.TableColumn;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Logic and processing for the entop control.
@@ -55,107 +56,101 @@ public class ProcController {
 
     private final ObservableList<ProcInfo> processes = FXCollections.observableArrayList();
 
-    private final FilteredList<ProcInfo> filteredProcesses = new FilteredList<ProcInfo>(processes);
+    private final FilteredList<ProcInfo> filteredProcesses = new FilteredList<>(this.processes);
 
-    private final SortedList<ProcInfo> sortedProcesses = new SortedList<ProcInfo>(filteredProcesses);
+    private final SortedList<ProcInfo> sortedProcesses = new SortedList<>(this.filteredProcesses);
 
     private volatile boolean temporarilySuspendPolling;
 
     public ProcController() {
-        polling = new SimpleBooleanProperty();
+        super();
+        this.polling = new SimpleBooleanProperty();
 
-        procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", SortType.DESCENDING));
+        this.procSortProperty = new SimpleObjectProperty<>(new ProcSort("reduc", TableColumn.SortType.DESCENDING));
 
-        procPollerThread = new ProcPollerThread();
+        this.procPollerThread = new ProcPollerThread();
 
-        waiter = new Object();
+        this.waiter = new Object();
 
-        Platform.runLater(() -> {
-            ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> {
-                startPollingThread();
-            });
-        });
+        Platform.runLater(() -> ErlyBerly.nodeAPI().connectedProperty().addListener((o) -> this.startPollingThread()));
 
-        filter.addListener((o, ov, nv) -> {
-            updateProcFilter(nv);
-        });
+        this.filter.addListener((o, ov, nv) -> this.updateProcFilter(nv));
     }
 
-    public void setListComparator(ObservableValue<? extends Comparator<? super ProcInfo>> tableComparator) {
-        sortedProcesses.comparatorProperty().bind(tableComparator);
+    public void setListComparator(final ObservableValue<? extends Comparator<? super ProcInfo>> tableComparator) {
+        this.sortedProcesses.comparatorProperty().bind(tableComparator);
     }
 
-    private void updateProcFilter(String filterText) {
-        BasicSearch basicSearch = new BasicSearch(filterText);
-        filteredProcesses.setPredicate((proc) -> {
-            return isMatchingProcess(basicSearch, proc);
-        });
+    private void updateProcFilter(final String filterText) {
+        final BasicSearch basicSearch = new BasicSearch(filterText);
+        this.filteredProcesses.setPredicate((proc) -> ProcController.isMatchingProcess(basicSearch, proc));
     }
 
-    private boolean isMatchingProcess(BasicSearch basicSearch, ProcInfo proc) {
+    private static boolean isMatchingProcess(final BasicSearch basicSearch, final ProcInfo proc) {
         return basicSearch.matches(proc.getPid(), proc.getProcessName());
     }
 
     private void startPollingThread() {
-        if (ErlyBerly.nodeAPI().connectedProperty().get() && !procPollerThread.isAlive()) {
-            procPollerThread.start();
+        if (ErlyBerly.nodeAPI().connectedProperty().get() && !this.procPollerThread.isAlive()) {
+            this.procPollerThread.start();
         }
     }
 
     public SimpleStringProperty filterProperty() {
-        return filter;
+        return this.filter;
     }
 
     public void refreshOnce() {
-        synchronized (waiter) {
-            waiter.notify();
+        synchronized (this.waiter) {
+            this.waiter.notifyAll();
         }
     }
 
     public void togglePolling() {
-        if (timeout == -1) {
-            timeout = 1000;
+        if (-1 == this.timeout) {
+            this.timeout = 1000;
 
-            refreshOnce();
+            this.refreshOnce();
         } else {
-            timeout = -1;
+            this.timeout = -1;
         }
-        polling.set(timeout > 0);
+        this.polling.set(0 < this.timeout);
     }
 
     public void clearProcesses() {
-        processes.clear();
+        this.processes.clear();
     }
 
     public ObservableList<ProcInfo> getProcs() {
-        return sortedProcesses;
+        return this.sortedProcesses;
     }
 
     public SimpleBooleanProperty pollingProperty() {
-        return polling;
+        return this.polling;
     }
 
     public SimpleObjectProperty<ProcSort> procSortProperty() {
-        return procSortProperty;
+        return this.procSortProperty;
     }
 
-    public SimpleBooleanProperty connectedProperty() {
+    public static SimpleBooleanProperty connectedProperty() {
         return ErlyBerly.nodeAPI().connectedProperty();
     }
 
     public boolean isTemporarilySuspendPolling() {
-        return temporarilySuspendPolling;
+        return this.temporarilySuspendPolling;
     }
 
-    public void setTemporarilySuspendPolling(boolean temporarilySuspendPolling) {
+    public void setTemporarilySuspendPolling(final boolean temporarilySuspendPolling) {
         this.temporarilySuspendPolling = temporarilySuspendPolling;
     }
 
     private final class ProcPollerThread extends Thread {
-        public ProcPollerThread() {
+        private ProcPollerThread() {
+            super();
             // make sure we don't hang the VM on close because of this thread
-            setDaemon(true);
-            setName("Process Info Poller");
+            this.setDaemon(true);
+            this.setName("Process Info Poller");
         }
 
         @Override
@@ -163,96 +158,83 @@ public class ProcController {
 
             while (true) {
 
-                boolean connected = ErlyBerly.nodeAPI().isConnected();
+                final boolean connected = ErlyBerly.nodeAPI().isConnected();
                 if (!connected) continue;
 
-                final ArrayList<ProcInfo> processList = new ArrayList<>();
+                final List<ProcInfo> processList = new ArrayList<>();
 
-                if (!temporarilySuspendPolling) {
+                if (!ProcController.this.temporarilySuspendPolling) {
                     try {
                         ErlyBerly.nodeAPI().retrieveProcessInfo(processList);
 
-                        updateProcessList(processList);
-                    } catch (Exception e) {
+                        this.updateProcessList(processList);
+                    } catch (final Exception e) {
                         e.printStackTrace();
                     }
                 }
 
                 try {
-                    synchronized (waiter) {
-                        if (timeout > 0) waiter.wait(timeout);
-                        else waiter.wait();
+                    synchronized (ProcController.this.waiter) {
+                        if (0 < ProcController.this.timeout)
+                            ProcController.this.waiter.wait(ProcController.this.timeout);
+                        else ProcController.this.waiter.wait();
                     }
-                } catch (InterruptedException e1) {
+                } catch (final InterruptedException e1) {
                     e1.printStackTrace();
                 }
             }
         }
 
-        private void updateProcessList(final ArrayList<ProcInfo> processList) {
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    ProcSort procSort = procSortProperty.get();
-                    if (procSort != null) {
-                        Comparator<ProcInfo> comparator = null;
+        private void updateProcessList(final List<ProcInfo> processList) {
+            Platform.runLater(() -> {
+                final ProcSort procSort = ProcController.this.procSortProperty.get();
+                if (null != procSort) {
+                    Comparator<ProcInfo> comparator = null;
 
-                        if ("proc".equals(procSort.getSortField())) {
-                            comparator = new Comparator<ProcInfo>() {
-                                @Override
-                                public int compare(ProcInfo o1, ProcInfo o2) {
-                                    return o1.getProcessName().compareTo(o2.getProcessName());
-                                }
-                            };
-                        } else if ("reduc".equals(procSort.getSortField())) {
-                            comparator = new Comparator<ProcInfo>() {
-                                @Override
-                                public int compare(ProcInfo o1, ProcInfo o2) {
-                                    return Long.compare(o1.getReductions(), o2.getReductions());
-                                }
-                            };
-                        }
-
-                        if (comparator != null) {
-                            if (procSort.getSortType() == SortType.DESCENDING) {
-                                comparator = Collections.reverseOrder(comparator);
-                            }
-                            Collections.sort(processList, comparator);
-                        }
+                    if ("proc".equals(procSort.getSortField())) {
+                        comparator = Comparator.comparing(ProcInfo::getProcessName);
+                    } else if ("reduc".equals(procSort.getSortField())) {
+                        comparator = Comparator.comparingLong(ProcInfo::getReductions);
                     }
-                    processes.clear();
-                    processes.addAll(processList);
+
+                    if (null != comparator) {
+                        if (TableColumn.SortType.DESCENDING == procSort.getSortType()) {
+                            comparator = Collections.reverseOrder(comparator);
+                        }
+                        processList.sort(comparator);
+                    }
                 }
+                ProcController.this.processes.clear();
+                ProcController.this.processes.addAll(processList);
             });
         }
     }
 
-    public void processState(ProcInfo proc, RpcCallback<OtpErlangObject> callback) {
+    public static void processState(final ProcInfo proc, final RpcCallback<OtpErlangObject> callback) {
         new ProcessStateThread(proc.getPid(), callback).start();
     }
 
-    class ProcessStateThread extends Thread {
+    static class ProcessStateThread extends Thread {
 
         private final String pidString;
         private final RpcCallback<OtpErlangObject> callback;
 
-        public ProcessStateThread(String aPidString, RpcCallback<OtpErlangObject> aCallback) {
-            pidString = aPidString;
-            callback = aCallback;
+        ProcessStateThread(final String aPidString, final RpcCallback<OtpErlangObject> aCallback) {
+            super();
+            this.pidString = aPidString;
+            this.callback = aCallback;
 
-            setDaemon(true);
-            setName("Erlyberly Get Process State");
+            this.setDaemon(true);
+            this.setName("Erlyberly Get Process State");
         }
 
         @Override
         public void run() {
             try {
-                OtpErlangObject processState = ErlyBerly.nodeAPI().getProcessState(pidString);
+                final OtpErlangObject processState = ErlyBerly.nodeAPI().getProcessState(this.pidString);
 
-                Platform.runLater(() -> {
-                    callback.callback(processState);
-                });
-            } catch (OtpErlangException | IOException e) {
+                Platform.runLater(() -> this.callback.callback(processState));
+            } catch (final OtpErlangException | IOException e) {
                 e.printStackTrace();
             }
         }

@@ -34,106 +34,107 @@ public class ModFunc implements Comparable<ModFunc> {
 
     private final boolean synthetic;
 
-    public ModFunc(String moduleName, String funcName, int arity, boolean exported, boolean synthetic) {
-        this.moduleName = (moduleName != null) ? moduleName.replace("'", "") : null;
-        this.funcName = (funcName != null) ? funcName.replace("'", "") : null;
+    public ModFunc(final String moduleName, final String funcName, final int arity, final boolean exported, final boolean synthetic) {
+        super();
+        this.moduleName = (null != moduleName) ? moduleName.replace("'", "") : null;
+        this.funcName = (null != funcName) ? funcName.replace("'", "") : null;
         this.arity = arity;
         this.exported = exported;
         this.synthetic = synthetic;
     }
 
     public String getModuleName() {
-        return moduleName;
+        return this.moduleName;
     }
 
     public String getFuncName() {
-        return funcName;
+        return this.funcName;
     }
 
     public int getArity() {
-        return arity;
+        return this.arity;
     }
 
     public boolean isExported() {
-        return exported;
+        return this.exported;
     }
 
     public boolean isSynthetic() {
-        return synthetic;
+        return this.synthetic;
     }
 
     @Override
     public String toString() {
-        if (funcName == null) {
-            return ErlyBerly.getTermFormatter().moduleNameToString(moduleName);
+        if (null == this.funcName) {
+            return ErlyBerly.getTermFormatter().moduleNameToString(this.moduleName);
         }
-        return funcName + "/" + arity;
+        return this.funcName + "/" + this.arity;
     }
 
     public String toFullString() {
-        if (funcName == null) {
-            return ErlyBerly.getTermFormatter().moduleNameToString(moduleName);
+        if (null == this.funcName) {
+            return ErlyBerly.getTermFormatter().moduleNameToString(this.moduleName);
         }
-        return ErlyBerly.getTermFormatter().modFuncArityToString(moduleName, funcName, arity);
+        return ErlyBerly.getTermFormatter().modFuncArityToString(this.moduleName, this.funcName, this.arity);
     }
 
-    public static ModFunc toFunc(OtpErlangAtom moduleName, OtpErlangObject e, boolean exported) {
-        OtpErlangAtom funcNameAtom = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);
-        OtpErlangLong arity = (OtpErlangLong) ((OtpErlangTuple) e).elementAt(1);
+    public static ModFunc toFunc(final OtpErlangAtom moduleName, final OtpErlangObject e, final boolean exported) {
+        final OtpErlangAtom funcNameAtom = (OtpErlangAtom) ((OtpErlangTuple) e).elementAt(0);
+        final OtpErlangLong arity = (OtpErlangLong) ((OtpErlangTuple) e).elementAt(1);
 
-        String funcName = funcNameAtom.atomValue();
+        final String funcName = funcNameAtom.atomValue();
 
-        return new ModFunc(moduleName.atomValue(), funcName, (int) arity.longValue(), exported, funcName.startsWith("-"));
+        return new ModFunc(moduleName.atomValue(), funcName, (int) arity.longValue(), exported, !funcName.isEmpty() && '-' == funcName.charAt(0));
     }
 
-    public static ModFunc toModule(OtpErlangAtom moduleName) {
+    public static ModFunc toModule(final OtpErlangAtom moduleName) {
         return new ModFunc(moduleName.atomValue(), null, 0, false, false);
     }
 
     @Override
-    public int compareTo(ModFunc o) {
-        if (funcName == null) {
-            return moduleName.compareTo(o.moduleName);
+    public int compareTo(final ModFunc o) {
+        if (null == this.funcName) {
+            return this.moduleName.compareTo(o.moduleName);
         }
 
-        int comp = funcName.compareTo(o.funcName);
-        if (comp == 0) {
-            comp = Integer.compare(arity, o.arity);
+        int comp = this.funcName.compareTo(o.funcName);
+        if (0 == comp) {
+            comp = Integer.compare(this.arity, o.arity);
         }
         return comp;
     }
 
     public boolean isModule() {
-        return (funcName == null);
+        return (null == this.funcName);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + arity;
-        result = prime * result + ((funcName == null) ? 0 : funcName.hashCode());
-        result = prime * result + ((moduleName == null) ? 0 : moduleName.hashCode());
+        result = prime * result + this.arity;
+        result = prime * result + ((null == this.funcName) ? 0 : this.funcName.hashCode());
+        result = prime * result + ((null == this.moduleName) ? 0 : this.moduleName.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        ModFunc other = (ModFunc) obj;
-        if (arity != other.arity) return false;
-        if (funcName == null) {
-            if (other.funcName != null) return false;
-        } else if (!funcName.equals(other.funcName)) return false;
-        if (moduleName == null) {
-            return other.moduleName == null;
-        } else return moduleName.equals(other.moduleName);
+        if (null == obj) return false;
+        if (this.getClass() != obj.getClass()) return false;
+        final ModFunc other = (ModFunc) obj;
+        if (this.arity != other.arity) return false;
+        if (null == this.funcName) {
+            if (null != other.funcName) return false;
+        } else if (!this.funcName.equals(other.funcName)) return false;
+        if (null == this.moduleName) {
+            return null == other.moduleName;
+        } else return this.moduleName.equals(other.moduleName);
     }
 
     public boolean isModuleInfo() {
-        return "module_info".equals(funcName) && (arity == 0 || arity == 1);
+        return !"module_info".equals(this.funcName) || (0 != this.arity && 1 != this.arity);
     }
 
 

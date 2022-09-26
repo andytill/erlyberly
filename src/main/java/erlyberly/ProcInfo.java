@@ -66,111 +66,111 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
     private LongProperty totalHeapSize;
 
-    public void setTotalHeapSize(long value) {
-        totalHeapSizeProperty().set(value);
+    public void setTotalHeapSize(final long value) {
+        this.totalHeapSizeProperty().set(value);
     }
 
     public long getTotalHeapSize() {
-        return totalHeapSizeProperty().get();
+        return this.totalHeapSizeProperty().get();
     }
 
     public LongProperty totalHeapSizeProperty() {
-        if (totalHeapSize == null) totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
-        return totalHeapSize;
+        if (null == this.totalHeapSize) this.totalHeapSize = new SimpleLongProperty(this, "totalHeapSize");
+        return this.totalHeapSize;
     }
 
-    public void setStackSize(long value) {
-        stackSizeProperty().set(value);
+    public void setStackSize(final long value) {
+        this.stackSizeProperty().set(value);
     }
 
     public long getStackSize() {
-        return stackSizeProperty().get();
+        return this.stackSizeProperty().get();
     }
 
     public LongProperty stackSizeProperty() {
-        if (stackSize == null) stackSize = new SimpleLongProperty(this, "stackSize");
-        return stackSize;
+        if (null == this.stackSize) this.stackSize = new SimpleLongProperty(this, "stackSize");
+        return this.stackSize;
     }
 
-    public void setHeapSize(long value) {
-        heapSizeProperty().set(value);
+    public void setHeapSize(final long value) {
+        this.heapSizeProperty().set(value);
     }
 
     public long getHeapSize() {
-        return heapSizeProperty().get();
+        return this.heapSizeProperty().get();
     }
 
     public LongProperty heapSizeProperty() {
-        if (heapSize == null) heapSize = new SimpleLongProperty(this, "msgQueueLen");
-        return heapSize;
+        if (null == this.heapSize) this.heapSize = new SimpleLongProperty(this, "msgQueueLen");
+        return this.heapSize;
     }
 
-    public void setMsgQueueLen(long value) {
-        msgQueueLenProperty().set(value);
+    public void setMsgQueueLen(final long value) {
+        this.msgQueueLenProperty().set(value);
     }
 
     public long getMsgQueueLen() {
-        return msgQueueLenProperty().get();
+        return this.msgQueueLenProperty().get();
     }
 
     public LongProperty msgQueueLenProperty() {
-        if (msgQueueLen == null) msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
-        return msgQueueLen;
+        if (null == this.msgQueueLen) this.msgQueueLen = new SimpleLongProperty(this, "msgQueueLen");
+        return this.msgQueueLen;
     }
 
-    public void setPid(String value) {
-        pidProperty().set(value);
+    public void setPid(final String value) {
+        this.pidProperty().set(value);
     }
 
     public String getPid() {
-        return pidProperty().get();
+        return this.pidProperty().get();
     }
 
     public StringProperty pidProperty() {
-        if (pid == null) pid = new SimpleStringProperty(this, "pid");
-        return pid;
+        if (null == this.pid) this.pid = new SimpleStringProperty(this, "pid");
+        return this.pid;
     }
 
-    public void setProcessName(String value) {
-        processNameProperty().set(value);
+    public void setProcessName(final String value) {
+        this.processNameProperty().set(value);
     }
 
     public String getProcessName() {
-        return processNameProperty().get();
+        return this.processNameProperty().get();
     }
 
     public StringProperty processNameProperty() {
-        if (processName == null) processName = new SimpleStringProperty(this, "processName");
-        return processName;
+        if (null == this.processName) this.processName = new SimpleStringProperty(this, "processName");
+        return this.processName;
     }
 
-    public void setReductions(long value) {
-        reductionsProperty().set(value);
+    public void setReductions(final long value) {
+        this.reductionsProperty().set(value);
     }
 
     public long getReductions() {
-        return reductionsProperty().get();
+        return this.reductionsProperty().get();
     }
 
     public LongProperty reductionsProperty() {
-        if (reductions == null) reductions = new SimpleLongProperty(this, "reductions");
-        return reductions;
+        if (null == this.reductions) this.reductions = new SimpleLongProperty(this, "reductions");
+        return this.reductions;
     }
 
-    public static ProcInfo toProcessInfo(Map<Object, Object> propList) {
+    public static ProcInfo toProcessInfo(final Map<Object, Object> propList) {
         Object processName = propList.get(REGISTERED_NAME_ATOM);
-        Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
+        final Object pid = ((OtpErlangString) propList.get(PID_ATOM)).stringValue();
 
         if (EMPTY_LIST.equals(processName)) {
             processName = "";
         }
 
-        ProcInfo processInfo;
+        final ProcInfo processInfo;
 
         processInfo = new ProcInfo();
-        String localName = Objects.toString(processName, "");
-        String globalName = Objects.toString(propList.get(GLOBAL_NAME_ATOM), "");
-        processInfo.setProcessName(localName + ("".equals(localName) ? "" : " ") + ("".equals(globalName) ? "" : "(" + globalName + ")"));
+        final String localName = Objects.toString(processName, "");
+        final String globalName = Objects.toString(propList.get(GLOBAL_NAME_ATOM), "");
+        processInfo.setProcessName(localName + (null != localName && localName.isEmpty() ? "" : " ") + (null != globalName && globalName.isEmpty() ? "" : "(" + globalName + ")"));
         processInfo.setPid(Objects.toString(pid, ""));
         processInfo.setReductions(toLong(propList.get(REDUCTIONS_ATOM)));
         processInfo.setMsgQueueLen(toLong(propList.get(MSG_QUEUE_LEN_ATOM)));
@@ -181,7 +181,7 @@ public class ProcInfo implements Comparable<ProcInfo> {
         return processInfo;
     }
 
-    private static long toLong(Object object) {
+    private static long toLong(final Object object) {
         if (object instanceof OtpErlangLong) {
             return ((OtpErlangLong) object).longValue();
         }
@@ -190,20 +190,20 @@ public class ProcInfo implements Comparable<ProcInfo> {
 
     /**
      * We shouldn't need to implement this but sometimes {@link TableView}
-     * attempts to sort the {@link ProcInfo} objects itself and tries to cast
-     * {@link ProcInfo} to {@link Comparable}.
+     * attempts to sort the  objects itself and tries to cast
+     * to {@link Comparable}.
      * <p>
      * To avoid this exception we're just implementing comparable even if it
      * gives the wrong sort to what the user expected.
      */
     @Override
-    public int compareTo(ProcInfo o) {
-        return getProcessName().compareTo(o.getProcessName());
+    public int compareTo(final ProcInfo o) {
+        return this.getProcessName().compareTo(o.getProcessName());
     }
 
     public String getShortName() {
-        String processName2 = getProcessName();
-        if (processName2 != null && !"".equals(getProcessName())) return getProcessName();
-        return getPid();
+        final String processName2 = this.getProcessName();
+        if (null != processName2 && !"".equals(this.getProcessName())) return this.getProcessName();
+        return this.getPid();
     }
 }

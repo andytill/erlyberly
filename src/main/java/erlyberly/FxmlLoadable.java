@@ -28,22 +28,23 @@ class FxmlLoadable {
     Parent fxmlNode;
     Object controller;
 
-    public FxmlLoadable(String aResource) {
-        resource = aResource;
+    FxmlLoadable(final String aResource) {
+        super();
+        this.resource = aResource;
     }
 
     public Parent load() {
-        if (fxmlNode != null) return fxmlNode;
+        if (null != this.fxmlNode) return this.fxmlNode;
 
-        URL location = getClass().getResource(resource);
-        FXMLLoader fxmlLoader = new FXMLLoader(location);
+        final URL location = this.getClass().getResource(this.resource);
+        final FXMLLoader fxmlLoader = new FXMLLoader(location);
 
         try {
-            fxmlNode = fxmlLoader.load();
-            controller = fxmlLoader.getController();
-        } catch (IOException e) {
+            this.fxmlNode = fxmlLoader.load();
+            this.controller = fxmlLoader.getController();
+        } catch (final IOException e) {
             throw new RuntimeException("Cannot load FXML", e);
         }
-        return fxmlNode;
+        return this.fxmlNode;
     }
 }

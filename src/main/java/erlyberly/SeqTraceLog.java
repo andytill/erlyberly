@@ -32,56 +32,57 @@ public class SeqTraceLog {
     private final Object message;
     private final Object timestamp;
 
-    public SeqTraceLog(Object msgType, Object serial, Object from, Object to, Object message, Object timestamp) {
+    public SeqTraceLog(final Object msgType, final Object serial, final Object from, final Object to, final Object message, final Object timestamp) {
+        super();
         this.msgType = msgType;
         this.serial = serial;
-        this.from = stringValue(from);
-        this.to = stringValue(to);
+        this.from = SeqTraceLog.stringValue(from);
+        this.to = SeqTraceLog.stringValue(to);
         this.message = message;
         this.timestamp = timestamp;
     }
 
-    public static SeqTraceLog build(Map<Object, Object> props) {
-        Object msgType = props.get(OtpUtil.atom("msg_type"));
-        Object serial = props.get(OtpUtil.atom("serial"));
-        Object from = props.get(OtpUtil.atom("from"));
-        Object to = props.get(OtpUtil.atom("to"));
-        Object message = props.get(OtpUtil.atom("message"));
-        Object timestamp = props.get(OtpUtil.atom("timestamp"));
+    public static SeqTraceLog build(final Map<Object, Object> props) {
+        final Object msgType = props.get(OtpUtil.atom("msg_type"));
+        final Object serial = props.get(OtpUtil.atom("serial"));
+        final Object from = props.get(OtpUtil.atom("from"));
+        final Object to = props.get(OtpUtil.atom("to"));
+        final Object message = props.get(OtpUtil.atom("message"));
+        final Object timestamp = props.get(OtpUtil.atom("timestamp"));
         return new SeqTraceLog(msgType, serial, from, to, message, timestamp);
     }
 
-    private String stringValue(Object obj) {
+    private static String stringValue(final Object obj) {
         if (obj instanceof OtpErlangString) return ((OtpErlangString) obj).stringValue();
         return obj.toString();
     }
 
     @Override
     public String toString() {
-        return "SeqTraceLog [msg_type=" + msgType + ", serial=" + serial + ", from=" + from + ", to=" + to + ", message=" + message + "]";
+        return "SeqTraceLog [msg_type=" + this.msgType + ", serial=" + this.serial + ", from=" + this.from + ", to=" + this.to + ", message=" + this.message + "]";
     }
 
     public OtpErlangObject getMessage() {
-        return (OtpErlangObject) message;
+        return (OtpErlangObject) this.message;
     }
 
     public Object getMsgType() {
-        return msgType;
+        return this.msgType;
     }
 
     public Object getSerial() {
-        return serial;
+        return this.serial;
     }
 
     public Object getFrom() {
-        return from;
+        return this.from;
     }
 
     public Object getTo() {
-        return to;
+        return this.to;
     }
 
     public Object getTimestamp() {
-        return timestamp;
+        return this.timestamp;
     }
 }

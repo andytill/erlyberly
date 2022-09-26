@@ -36,6 +36,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,63 +63,68 @@ public class ModFuncContextMenu extends ContextMenu {
     private final MenuItem moduleTraceMenuItem;
 
     public SimpleObjectProperty<TreeItem<ModFunc>> selectedTreeItemProperty() {
-        return selectedTreeItem;
+        return this.selectedTreeItem;
     }
 
     public SimpleObjectProperty<ModFunc> selectedItemProperty() {
-        return selectedItem;
+        return this.selectedItem;
     }
 
     public SimpleObjectProperty<TreeItem<ModFunc>> rootProperty() {
-        return rootProperty;
+        return this.rootProperty;
     }
 
-    public ModFuncContextMenu(DbgController aDbgController) {
-        isSelectionModule = new SimpleBooleanProperty();
-        isSelectionFunction = new SimpleBooleanProperty();
-        rootProperty = new SimpleObjectProperty<>();
+    public ModFuncContextMenu(final DbgController aDbgController) {
+        super();
+        this.isSelectionModule = new SimpleBooleanProperty();
+        this.isSelectionFunction = new SimpleBooleanProperty();
+        this.rootProperty = new SimpleObjectProperty<>();
 
-        dbgController = aDbgController;
-        selectedItem = new SimpleObjectProperty<>();
-        selectedTreeItem = new SimpleObjectProperty<>();
+        this.dbgController = aDbgController;
+        this.selectedItem = new SimpleObjectProperty<>();
+        this.selectedTreeItem = new SimpleObjectProperty<>();
 
-        selectedItem.addListener((o, oldv, newv) -> {
-            if (newv == null) {
-                isSelectionModule.set(false);
-                isSelectionFunction.set(false);
+        this.selectedItem.addListener((o, oldv, newv) -> {
+            if (null == newv) {
+                this.isSelectionModule.set(false);
+                this.isSelectionFunction.set(false);
             } else {
-                boolean module = newv.isModule();
-                isSelectionModule.set(module);
-                isSelectionFunction.set(!module);
+                final boolean module = newv.isModule();
+                this.isSelectionModule.set(module);
+                this.isSelectionFunction.set(!module);
             }
         });
 
-        MenuItem functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, seqTraceMenuItem, callGraphMenuItem, moduleSourceCodeItem, moduleAbstCodeItem;
+        final MenuItem functionTraceMenuItem;
+        final MenuItem exportsTraceMenuItem;
+        final MenuItem traceAllMenuItem;
+        final MenuItem seqTraceMenuItem;
+        final MenuItem callGraphMenuItem;
+        final MenuItem moduleSourceCodeItem;
+        final MenuItem moduleAbstCodeItem;
 
         functionTraceMenuItem = new MenuItem("Function Trace");
         functionTraceMenuItem.setOnAction(this::onFunctionTrace);
         functionTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+t"));
-        functionTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
+        functionTraceMenuItem.disableProperty().bind(this.isSelectionFunction.not());
 
         exportsTraceMenuItem = new MenuItem("Exported Function Trace");
         exportsTraceMenuItem.setOnAction(this::onExportedFunctionTrace);
         exportsTraceMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+e"));
 
         traceAllMenuItem = new MenuItem("Trace All");
-        traceAllMenuItem.setOnAction((e) -> {
-            toggleTracesToAllFunctions();
-        });
-        traceAllMenuItem.disableProperty().bind(rootProperty.isNull());
+        traceAllMenuItem.setOnAction((e) -> this.toggleTracesToAllFunctions());
+        traceAllMenuItem.disableProperty().bind(this.rootProperty.isNull());
         traceAllMenuItem.setAccelerator(KeyCombination.keyCombination("shortcut+shift+t"));
 
-        moduleTraceMenuItem = new MenuItem("Recursive Trace");
-        moduleTraceMenuItem.setOnAction(this::onModuleTrace);
+        this.moduleTraceMenuItem = new MenuItem("Recursive Trace");
+        this.moduleTraceMenuItem.setOnAction(this::onModuleTrace);
 
         seqTraceMenuItem = new MenuItem("Seq Trace (experimental)");
         seqTraceMenuItem.setOnAction(this::onSeqTrace);
-        seqTraceMenuItem.disableProperty().bind(isSelectionFunction.not());
+        seqTraceMenuItem.disableProperty().bind(this.isSelectionFunction.not());
 
-        BooleanBinding any = isSelectionFunction.or(isSelectionModule);
+        final BooleanBinding any = this.isSelectionFunction.or(this.isSelectionModule);
 
         moduleSourceCodeItem = new MenuItem(VIEW_SOURCE_CODE);
         moduleSourceCodeItem.setOnAction(this::onViewCode);
@@ -128,144 +134,140 @@ public class ModFuncContextMenu extends ContextMenu {
         moduleAbstCodeItem.setOnAction(this::onViewCode);
         moduleAbstCodeItem.disableProperty().bind(any.not());
 
-        NodeAPI nodeAPI = ErlyBerly.nodeAPI();
-        SimpleBooleanProperty connectedProperty = nodeAPI.connectedProperty();
+        final NodeAPI nodeAPI = ErlyBerly.nodeAPI();
+        final SimpleBooleanProperty connectedProperty = nodeAPI.connectedProperty();
 
         callGraphMenuItem = new MenuItem("View Call Graph");
         callGraphMenuItem.setOnAction(this::onViewCallGraph);
-        callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(isSelectionFunction.not()));
-        getItems().addAll(functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, moduleTraceMenuItem, seqTraceMenuItem, new SeparatorMenuItem(), callGraphMenuItem, new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
+        callGraphMenuItem.disableProperty().bind(connectedProperty.not().or(nodeAPI.xrefStartedProperty().not()).or(this.isSelectionFunction.not()));
+        this.getItems().addAll(functionTraceMenuItem, exportsTraceMenuItem, traceAllMenuItem, this.moduleTraceMenuItem, seqTraceMenuItem, new SeparatorMenuItem(), callGraphMenuItem, new SeparatorMenuItem(), moduleSourceCodeItem, moduleAbstCodeItem);
     }
 
-    private void onSeqTrace(ActionEvent ae) {
-        ModFunc func = selectedItem.get();
-        if (func == null) return;
+    private void onSeqTrace(final ActionEvent ae) {
+        final ModFunc func = this.selectedItem.get();
+        if (null == func) return;
 
-        dbgController.seqTrace(func);
+        this.dbgController.seqTrace(func);
 
-        ErlyBerly.showPane("Seq Trace", new SeqTraceView(dbgController.getSeqTraceLogs()));
+        ErlyBerly.showPane("Seq Trace", new SeqTraceView(this.dbgController.getSeqTraceLogs()));
     }
 
-    private void onViewCallGraph(ActionEvent ae) {
-        ModFunc func = selectedItem.get();
-        if (func == null) return;
+    private void onViewCallGraph(final ActionEvent ae) {
+        final ModFunc func = this.selectedItem.get();
+        if (null == func) return;
         if (func.isModule()) return;
 
-        List<String> defaultSkippedModules = Arrays.asList("app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer");
-        List<String> skippedModules = getConfiguredSkippedModuleNames(defaultSkippedModules);
-        List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
+        final List<String> defaultSkippedModules = Arrays.asList("app_helper", "application", "binary", "code", "compile", "crypto", "dets", "dict", "erl_pp", "erl_syntax", "erlang", "ets", "exometer", "exometer_admin", "file", "gb_sets", "gen", "gen_event", "gen_fsm", "gen_server", "httpc", "httpd_util", "inet", "inet_parse", "inets", "io", "io_lib", "io_lib_pretty", "lager", "lager_config", "lists", "mnesia", "msgpack", "orddict", "proplists", "sets", "string", "timer");
+        final List<String> skippedModules = ModFuncContextMenu.getConfiguredSkippedModuleNames(defaultSkippedModules);
+        final List<OtpErlangAtom> skippedModuleAtoms = skippedModules.stream().map(OtpUtil::atom).collect(Collectors.toList());
         ErlyBerly.runIO(() -> {
             try {
-                OtpErlangObject rpcResult = ErlyBerly.nodeAPI().callGraph(new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})), OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
+                final OtpErlangObject rpcResult = ErlyBerly.nodeAPI().callGraph(new OtpErlangList(skippedModuleAtoms.toArray(new OtpErlangAtom[]{})), OtpUtil.atom(func.getModuleName()), OtpUtil.atom(func.getFuncName()), new OtpErlangLong(func.getArity()));
                 if (!OtpUtil.isTupleTagged(NodeAPI.OK_ATOM, rpcResult)) {
                     throw new RuntimeException(rpcResult.toString());
                 }
-                OtpErlangTuple rpcResultTuple = (OtpErlangTuple) rpcResult;
-                OtpErlangObject callGraph = rpcResultTuple.elementAt(1);
+                final OtpErlangTuple rpcResultTuple = (OtpErlangTuple) rpcResult;
+                final OtpErlangObject callGraph = rpcResultTuple.elementAt(1);
                 Platform.runLater(() -> {
-                    CallGraphView callGraphView = new CallGraphView(dbgController);
+                    final CallGraphView callGraphView = new CallGraphView(this.dbgController);
                     callGraphView.callGraph((OtpErlangTuple) callGraph);
                     ErlyBerly.showPane(func.toFullString() + " call graph", ErlyBerly.wrapInPane(callGraphView));
                 });
-            } catch (OtpErlangException | IOException e) {
+            } catch (final OtpErlangException | IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> getConfiguredSkippedModuleNames(List<String> defaultSkippedModules) {
+    private static List<String> getConfiguredSkippedModuleNames(final List<String> defaultSkippedModules) {
         return (List<String>) PrefBind.getOrDefault("xrefSkippedModules", defaultSkippedModules);
     }
 
-    private void onFunctionTrace(ActionEvent e) {
-        ModFunc mf = selectedItem.get();
+    private void onFunctionTrace(final ActionEvent e) {
+        final ModFunc mf = this.selectedItem.get();
 
-        if (selectedItem == null) return;
-        dbgController.toggleTraceModFunc(mf);
+        this.dbgController.toggleTraceModFunc(mf);
     }
 
-    private void onModuleTrace(ActionEvent e) {
-        TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
+    private void onModuleTrace(final ActionEvent e) {
+        TreeItem<ModFunc> selectedItem = this.selectedTreeItemProperty().get();
 
-        if (selectedItem == null) return;
-        if (selectedItem.getValue() == null) return;
+        if (null == selectedItem) return;
+        if (null == selectedItem.getValue()) return;
         if (!selectedItem.getValue().isModule()) selectedItem = selectedItem.getParent();
 
-        HashSet<ModFunc> funcs = new HashSet<ModFunc>();
-        recurseModFuncItems(selectedItem, funcs);
+        final HashSet<ModFunc> funcs = new HashSet<>();
+        this.recurseModFuncItems(selectedItem, funcs);
 
-        toggleTraceMod(funcs);
+        this.toggleTraceMod(funcs);
     }
 
-    private void onExportedFunctionTrace(ActionEvent e) {
-        TreeItem<ModFunc> selectedItem = selectedTreeItemProperty().get();
+    private void onExportedFunctionTrace(final ActionEvent e) {
+        TreeItem<ModFunc> selectedItem = this.selectedTreeItemProperty().get();
 
-        if (selectedItem == null) return;
-        if (selectedItem.getValue() == null) return;
+        if (null == selectedItem) return;
+        if (null == selectedItem.getValue()) return;
         if (!selectedItem.getValue().isModule()) selectedItem = selectedItem.getParent();
 
         // get all the functions we may trace
-        HashSet<ModFunc> funcs = new HashSet<ModFunc>();
-        recurseModFuncItems(selectedItem, funcs);
+        final HashSet<ModFunc> funcs = new HashSet<>();
+        this.recurseModFuncItems(selectedItem, funcs);
 
         // filter the exported ones
-        HashSet<ModFunc> exported = new HashSet<ModFunc>();
-        for (ModFunc modFunc : funcs) {
+        final Set<ModFunc> exported = new HashSet<>();
+        for (final ModFunc modFunc : funcs) {
             if (modFunc.isExported()) {
                 exported.add(modFunc);
             }
         }
 
         // trace 'em
-        toggleTraceMod(exported);
+        this.toggleTraceMod(exported);
     }
 
-    private void recurseModFuncItems(TreeItem<ModFunc> item, HashSet<ModFunc> funcs) {
-        if (item == null) return;
-        if (item.getValue() == null || (!item.getValue().isModule() && !item.getValue().isModuleInfo()))
+    private void recurseModFuncItems(final TreeItem<ModFunc> item, final HashSet<ModFunc> funcs) {
+        if (null == item) return;
+        if (null == item.getValue() || (!item.getValue().isModule() && item.getValue().isModuleInfo()))
             funcs.add(item.getValue());
 
-        for (TreeItem<ModFunc> childItem : item.getChildren()) {
-            recurseModFuncItems(childItem, funcs);
+        for (final TreeItem<ModFunc> childItem : item.getChildren()) {
+            this.recurseModFuncItems(childItem, funcs);
         }
     }
 
-    private void toggleTraceMod(Collection<ModFunc> functions) {
-        for (ModFunc func : functions) {
-            dbgController.toggleTraceModFunc(func);
+    private void toggleTraceMod(final Collection<ModFunc> functions) {
+        for (final ModFunc func : functions) {
+            this.dbgController.toggleTraceModFunc(func);
         }
     }
 
-    private void onViewCode(ActionEvent ae) {
-        MenuItem mi = (MenuItem) ae.getSource();
-        String menuItemClicked = mi.getText();
-        ModFunc mf = selectedItem.get();
-        if (mf == null) return;
-        String moduleName = mf.getModuleName();
+    private void onViewCode(final ActionEvent ae) {
+        final MenuItem mi = (MenuItem) ae.getSource();
+        final String menuItemClicked = mi.getText();
+        final ModFunc mf = this.selectedItem.get();
+        if (null == mf) return;
+        final String moduleName = mf.getModuleName();
         ErlyBerly.runIO(() -> {
             try {
                 final String title;
-                String modSrc;
+                final String modSrc;
                 if (mf.isModule()) {
-                    modSrc = fetchModuleCode(menuItemClicked, moduleName);
+                    modSrc = ModFuncContextMenu.fetchModuleCode(menuItemClicked, moduleName);
                     title = moduleName + " Source code";
                 } else {
-                    String functionName = mf.getFuncName();
-                    Integer arity = mf.getArity();
-                    modSrc = fetchFunctionCode(menuItemClicked, moduleName, functionName, arity);
+                    final String functionName = mf.getFuncName();
+                    final Integer arity = mf.getArity();
+                    modSrc = ModFuncContextMenu.fetchFunctionCode(menuItemClicked, moduleName, functionName, arity);
                     title = moduleName;
                 }
-                Platform.runLater(() -> {
-                    showModuleSourceCode(title, modSrc);
-                });
-            } catch (Exception e) {
+                Platform.runLater(() -> ModFuncContextMenu.showModuleSourceCode(title, modSrc));
+            } catch (final Exception e) {
                 throw new RuntimeException("failed to load the source code.", e);
             }
         });
     }
 
-    private String fetchModuleCode(String menuItemClicked, String moduleName) throws IOException, OtpErlangException {
+    private static String fetchModuleCode(final String menuItemClicked, final String moduleName) throws IOException, OtpErlangException {
         switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
                 return DbgController.moduleFunctionSourceCode(moduleName);
@@ -276,7 +278,7 @@ public class ModFuncContextMenu extends ContextMenu {
         }
     }
 
-    private String fetchFunctionCode(String menuItemClicked, String moduleName, String function, Integer arity) throws IOException, OtpErlangException {
+    private static String fetchFunctionCode(final String menuItemClicked, final String moduleName, final String function, final Integer arity) throws IOException, OtpErlangException {
         switch (menuItemClicked) {
             case VIEW_SOURCE_CODE:
                 return DbgController.moduleFunctionSourceCode(moduleName, function, arity);
@@ -287,16 +289,16 @@ public class ModFuncContextMenu extends ContextMenu {
         }
     }
 
-    private void showModuleSourceCode(String title, String moduleSourceCode) {
-        Boolean showSourceInSystemEditor = PrefBind.getOrDefaultBoolean("showSourceInSystemEditor", false);
+    private static void showModuleSourceCode(final String title, final String moduleSourceCode) {
+        final boolean showSourceInSystemEditor = PrefBind.getOrDefaultBoolean("showSourceInSystemEditor", false);
         if (showSourceInSystemEditor) {
             try {
-                File tmpSourceFile = File.createTempFile(title, ".erl");
-                FileOutputStream out = new FileOutputStream(tmpSourceFile);
-                out.write(moduleSourceCode.getBytes());
+                final File tmpSourceFile = File.createTempFile(title, ".erl");
+                final FileOutputStream out = new FileOutputStream(tmpSourceFile);
+                out.write(moduleSourceCode.getBytes(StandardCharsets.UTF_8));
                 out.close();
                 Desktop.getDesktop().edit(tmpSourceFile);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 e.printStackTrace();
                 ErlyBerly.showPane(title, ErlyBerly.wrapInPane(new CodeView(moduleSourceCode)));
             }
@@ -309,18 +311,18 @@ public class ModFuncContextMenu extends ContextMenu {
      * Toggle tracing on all unfiltered (visible, even unexpanded) functions.
      */
     public void toggleTracesToAllFunctions() {
-        ArrayList<ModFunc> funs = findUnfilteredFunctions();
-        for (ModFunc func : funs) {
-            dbgController.toggleTraceModFunc(func);
+        final Iterable<ModFunc> funs = this.findUnfilteredFunctions();
+        for (final ModFunc func : funs) {
+            this.dbgController.toggleTraceModFunc(func);
         }
     }
 
-    private ArrayList<ModFunc> findUnfilteredFunctions() {
-        ObservableList<TreeItem<ModFunc>> filteredTreeModules = rootProperty.get().getChildren();
-        ArrayList<ModFunc> funs = new ArrayList<>();
-        for (TreeItem<ModFunc> treeItem : filteredTreeModules) {
-            for (TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
-                if (!modFunc.getValue().isModuleInfo()) {
+    private Iterable<ModFunc> findUnfilteredFunctions() {
+        final ObservableList<TreeItem<ModFunc>> filteredTreeModules = this.rootProperty.get().getChildren();
+        final List<ModFunc> funs = new ArrayList<>();
+        for (final TreeItem<ModFunc> treeItem : filteredTreeModules) {
+            for (final TreeItem<ModFunc> modFunc : treeItem.getChildren()) {
+                if (modFunc.getValue().isModuleInfo()) {
                     funs.add(modFunc.getValue());
                 }
             }
@@ -328,7 +330,7 @@ public class ModFuncContextMenu extends ContextMenu {
         return funs;
     }
 
-    public void setModuleTraceMenuText(String menuText) {
-        moduleTraceMenuItem.setText(menuText);
+    public void setModuleTraceMenuText(final String menuText) {
+        this.moduleTraceMenuItem.setText(menuText);
     }
 }

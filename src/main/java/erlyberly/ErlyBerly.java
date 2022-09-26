@@ -25,12 +25,10 @@ import erlyberly.node.NodeAPI;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.SplitPane.Divider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -43,6 +41,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 public class ErlyBerly extends Application {
@@ -74,70 +73,67 @@ public class ErlyBerly extends Application {
 
     private static Stage primaryStage;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) {
         launch(args);
     }
 
-    public static void runIO(Runnable runnable) {
+    public static void runIO(final Runnable runnable) {
         IO_EXECUTOR.execute(runnable);
     }
 
-    public static void runIOAndWait(Runnable runnable) {
-        Future<?> future = IO_EXECUTOR.submit(runnable);
+    public static void runIOAndWait(final Runnable runnable) {
+        final Future<?> future = IO_EXECUTOR.submit(runnable);
         try {
             future.get();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static ScheduledFuture<?> scheduledIO(long delayMillis, Runnable runnable) {
+    public static ScheduledFuture<?> scheduledIO(final long delayMillis, final Runnable runnable) {
         return IO_EXECUTOR.schedule(runnable, delayMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public void start(Stage aPrimaryStage) {
+    public void start(final Stage aPrimaryStage) {
         primaryStage = aPrimaryStage;
         try {
             PrefBind.setup();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         }
         termFormatter = formatterFromConfig();
 
-        FxmlLoadable topBarFxml;
+        final FxmlLoadable topBarFxml;
         topBarFxml = new FxmlLoadable("/erlyberly/topbar.fxml");
         topBarFxml.load();
 
-        FxmlLoadable dbgFxml;
+        final FxmlLoadable dbgFxml;
         dbgFxml = new FxmlLoadable("/erlyberly/dbg.fxml");
         dbgFxml.load();
-        DbgView dbgView = (DbgView) dbgFxml.controller;
+        final DbgView dbgView = (DbgView) dbgFxml.controller;
         tabPane = dbgView.getTabPane();
 
-        splitPane = new SplitPane();
-        entopPane = (Region) loadEntopPane();
-        splitPane.getItems().add(entopPane);
-        splitPane.getItems().add(dbgFxml.load());
+        this.splitPane = new SplitPane();
+        this.entopPane = (Region) ErlyBerly.loadEntopPane();
+        this.splitPane.getItems().add(this.entopPane);
+        this.splitPane.getItems().add(dbgFxml.load());
 
-        setupProcPaneHiding(topBarFxml, dbgFxml);
+        this.setupProcPaneHiding(topBarFxml, dbgFxml);
 
-        VBox rootView;
-        rootView = new VBox(topBarFxml.fxmlNode, splitPane);
+        final VBox rootView;
+        rootView = new VBox(topBarFxml.fxmlNode, this.splitPane);
         rootView.setMaxWidth(Double.MAX_VALUE);
-        VBox.setVgrow(splitPane, Priority.ALWAYS);
+        VBox.setVgrow(this.splitPane, Priority.ALWAYS);
 
-        Scene scene;
+        final Scene scene;
         scene = new Scene(rootView);
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent t) {
-                if (KeyCode.W.equals(t.getCode()) && t.isShortcutDown()) {
-                    Tab selectedItem = tabPane.getSelectionModel().getSelectedItem();
-                    if (selectedItem != null && selectedItem.isClosable()) {
-                        tabPane.getTabs().remove(selectedItem);
-                        t.consume();
-                    }
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, t -> {
+            if (KeyCode.W == t.getCode() && t.isShortcutDown()) {
+                final Tab selectedItem = tabPane.getSelectionModel().getSelectedItem();
+                if (null != selectedItem && selectedItem.isClosable()) {
+                    tabPane.getTabs().remove(selectedItem);
+                    t.consume();
                 }
             }
         });
@@ -146,14 +142,10 @@ public class ErlyBerly extends Application {
         // counts as a window resize and that also resizes the split panes
         final double windowWidth = PrefBind.getOrDefaultDouble("windowWidth", 800D);
         primaryStage.setWidth(windowWidth);
-        primaryStage.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowWidth", nv);
-        });
+        primaryStage.widthProperty().addListener((o, ov, nv) -> PrefBind.set("windowWidth", nv));
         final double windowHeight = PrefBind.getOrDefaultDouble("windowHeight", 600D);
         primaryStage.setHeight(windowHeight);
-        primaryStage.heightProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("windowHeight", nv);
-        });
+        primaryStage.heightProperty().addListener((o, ov, nv) -> PrefBind.set("windowHeight", nv));
 
 
         applyCssToWIndow(scene);
@@ -170,7 +162,7 @@ public class ErlyBerly extends Application {
             ErlyBerly.runIOAndWait(() -> {
                 try {
                     nodeAPI().manuallyDisconnect();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     System.out.println(e);
                 }
             });
@@ -180,13 +172,13 @@ public class ErlyBerly extends Application {
         // run this later because it requires the control's scene to be set, which
         // may not have happened yet.
         Platform.runLater(() -> {
-            sizeSplitPanes(splitPane);
+            this.sizeSplitPanes(this.splitPane);
             dbgView.sizeSplitPanes();
         });
     }
 
     private static TermFormatter formatterFromConfig() {
-        String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
+        final String formattingPref = PrefBind.getOrDefault("termFormatting", "erlang").toString();
         if ("erlang".equals(formattingPref)) return new ErlangFormatter();
         else if ("elixir".equals(formattingPref)) return new ElixirFormatter();
         else if ("lfe".equals(formattingPref)) return new LFEFormatter();
@@ -194,84 +186,80 @@ public class ErlyBerly extends Application {
             throw new RuntimeException("Invalid configuration for property 'termFormatting' it must be 'erlang' or 'lfe' but was " + formattingPref);
     }
 
-    public static void applyCssToWIndow(Scene scene) {
-        scene.getStylesheets().add(ErlyBerly.class.getResource("/floatyfield/floaty-field.css").toExternalForm());
-        scene.getStylesheets().add(ErlyBerly.class.getResource("/erlyberly/erlyberly.css").toString());
+    public static void applyCssToWIndow(final Scene scene) {
+        scene.getStylesheets().add(Objects.requireNonNull(ErlyBerly.class.getResource("/floatyfield/floaty-field.css")).toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(ErlyBerly.class.getResource("/erlyberly/erlyberly.css")).toString());
     }
 
-    private void setupProcPaneHiding(FxmlLoadable topBarFxml, FxmlLoadable dbgFxml) {
+    private void setupProcPaneHiding(final FxmlLoadable topBarFxml, final FxmlLoadable dbgFxml) {
 
-        TopBarView topView;
-        DbgView dbgView;
+        final TopBarView topView;
+        final DbgView dbgView;
 
         topView = (TopBarView) topBarFxml.controller;
         dbgView = (DbgView) dbgFxml.controller;
 
         topView.hideProcsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
-            if (!nb) {
-                showProcsPane();
+            if (nb.booleanValue()) {
+                this.hideProcsPane();
             } else {
-                hideProcsPane();
+                this.showProcsPane();
             }
         });
 
-        topView.hideFunctionsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> {
-            dbgView.setFunctionsVisibility(nb);
-        });
+        topView.hideFunctionsProperty().addListener((ObservableValue<? extends Boolean> o, Boolean ob, Boolean nb) -> dbgView.setFunctionsVisibility(nb));
 
-        boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
+        final boolean hideProcs = PrefBind.getOrDefaultBoolean("hideProcesses", false);
         if (hideProcs) {
-            hideProcsPane();
+            this.hideProcsPane();
         }
-        boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
+        final boolean hideMods = PrefBind.getOrDefaultBoolean("hideModules", false);
         if (hideMods) {
             dbgView.setFunctionsVisibility(true);
         }
 
         topView.setOnRefreshModules(dbgView::onRefreshModules);
 
-        Platform.runLater(() -> {
-            topView.addAccelerators();
-        });
+        Platform.runLater(topView::addAccelerators);
     }
 
     private void showProcsPane() {
-        splitPane.getItems().add(0, entopPane);
+        this.splitPane.getItems().add(0, this.entopPane);
 
-        Divider div = splitPane.getDividers().get(0);
-        div.setPosition(entopDivPosition);
+        final SplitPane.Divider div = this.splitPane.getDividers().get(0);
+        div.setPosition(this.entopDivPosition);
     }
 
     private void hideProcsPane() {
-        Divider div = splitPane.getDividers().get(0);
+        final SplitPane.Divider div = this.splitPane.getDividers().get(0);
 
-        entopDivPosition = div.getPosition();
+        this.entopDivPosition = div.getPosition();
 
         div.setPosition(0d);
-        splitPane.getItems().remove(0);
+        this.splitPane.getItems().remove(0);
     }
 
-    private Parent loadEntopPane() {
-        Parent entopPane = new FxmlLoadable("/erlyberly/entop.fxml").load();
+    private static Parent loadEntopPane() {
+        final Parent entopPane = new FxmlLoadable("/erlyberly/entop.fxml").load();
         SplitPane.setResizableWithParent(entopPane, Boolean.FALSE);
 
         return entopPane;
     }
 
     public static void displayConnectionPopup() {
-        Scene scene = new Scene(new ConnectionView());
+        final Scene scene = new Scene(new ConnectionView());
 
         // close the app when escape is pressed on the connection window
         scene.setOnKeyPressed((e) -> {
-            if (e.getCode() == KeyCode.ESCAPE) {
-                Stage aStage = (Stage) scene.getWindow();
+            if (KeyCode.ESCAPE == e.getCode()) {
+                final Stage aStage = (Stage) scene.getWindow();
                 aStage.close();
                 primaryStage.close();
             }
         });
         applyCssToWIndow(scene);
 
-        Stage connectStage;
+        final Stage connectStage;
         connectStage = new Stage();
         connectStage.initModality(Modality.WINDOW_MODAL);
         connectStage.setScene(scene);
@@ -287,9 +275,7 @@ public class ErlyBerly extends Application {
             if (!NODE_API.connectedProperty().get()) {
                 Platform.exit();
             }
-            Platform.runLater(() -> {
-                primaryStage.setResizable(true);
-            });
+            Platform.runLater(() -> primaryStage.setResizable(true));
         });
         connectStage.show();
     }
@@ -301,25 +287,25 @@ public class ErlyBerly extends Application {
     /**
      * Show a new control in the tab pane. The tab is closable.
      */
-    public static void showPane(String title, Pane parentControl) {
+    public static void showPane(final String title, final Pane parentControl) {
         assert Platform.isFxApplicationThread();
-        Tab newTab;
+        final Tab newTab;
         newTab = new Tab(title);
         newTab.setContent(parentControl);
         addAndSelectTab(newTab);
     }
 
-    private static void addAndSelectTab(Tab newTab) {
+    private static void addAndSelectTab(final Tab newTab) {
         tabPane.getTabs().add(newTab);
         tabPane.getSelectionModel().select(newTab);
     }
 
 
     public static void showPreferencesPane() {
-        if (prefstab == null) {
-            FxmlLoadable fxmlLoadable = new FxmlLoadable("/erlyberly/preferences.fxml");
-            Parent parent = fxmlLoadable.load();
-            Pane tabPane = ErlyBerly.wrapInPane(parent);
+        if (null == prefstab) {
+            final FxmlLoadable fxmlLoadable = new FxmlLoadable("/erlyberly/preferences.fxml");
+            final Parent parent = fxmlLoadable.load();
+            final Pane tabPane = ErlyBerly.wrapInPane(parent);
             prefstab = new Tab("Preferences");
             prefstab.setContent(tabPane);
         }
@@ -334,54 +320,50 @@ public class ErlyBerly extends Application {
     /**
      * All I know is pane.
      */
-    public static Pane wrapInPane(Node node) {
+    public static Pane wrapInPane(final Node node) {
         if (node instanceof Pane) return (Pane) node;
         VBox.setVgrow(node, Priority.ALWAYS);
-        VBox vBox = new VBox(node);
-        return vBox;
+        return new VBox(node);
     }
 
     public static TermFormatter getTermFormatter() {
         return termFormatter;
     }
 
-    public static void setTermFormatter(TermFormatter aTermFormatter) {
+    public static void setTermFormatter(final TermFormatter aTermFormatter) {
         termFormatter = aTermFormatter;
     }
 
-    public void sizeSplitPanes(SplitPane splitpane) {
-        assert splitpane.getScene() != null;
-        assert splitpane.getScene().getWidth() > 0.0d;
+    public void sizeSplitPanes(final SplitPane splitpane) {
+        assert null != splitpane.getScene();
+        assert 0.0d < splitpane.getScene().getWidth();
         try {
-            double configuredProcessesWidth = configuredProcessesWidth();
-            double sceneWidth = splitpane.getScene().getWidth();
-            double percent = (configuredProcessesWidth / sceneWidth);
+            final double configuredProcessesWidth = ErlyBerly.configuredProcessesWidth();
+            final double sceneWidth = splitpane.getScene().getWidth();
+            final double percent = (configuredProcessesWidth / sceneWidth);
             // the split pane divider position can only be set as a percentage of the split pane
             splitpane.setDividerPosition(0, percent);
             splitpane.setDividerPosition(1, 1D - percent);
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             e.printStackTrace();
         }
         // whenever the width of the pane changes, write it to configuration
         // this is buffered so rapid writes do not cause rapid writes to disk
-        entopPane.widthProperty().addListener((o, ov, nv) -> {
-            PrefBind.set("processesWidth", nv);
-        });
+        this.entopPane.widthProperty().addListener((o, ov, nv) -> PrefBind.set("processesWidth", nv));
     }
 
-    private double configuredProcessesWidth() {
-        double w = PrefBind.getOrDefaultDouble("processesWidth", 300D);
-        return w;
+    private static double configuredProcessesWidth() {
+        return PrefBind.getOrDefaultDouble("processesWidth", 300D);
     }
 
     private static void startEpmd() {
         try {
-            Process epmd = Runtime.getRuntime().exec("epmd -daemon");
-            int exitV = epmd.waitFor();
-            if (exitV != 0) {
+            final Process epmd = Runtime.getRuntime().exec(new String[]{"epmd", "-daemon"});
+            final int exitV = epmd.waitFor();
+            if (0 != exitV) {
                 System.err.println("Epmd process finished with exit value: " + exitV);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             System.err.println("Failed to start epmd: " + e);
         }
     }

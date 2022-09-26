@@ -29,29 +29,28 @@ class ModFuncTreeCellFactory implements Callback<TreeView<ModFunc>, TreeCell<Mod
 
     private boolean showModuleName;
 
-    public ModFuncTreeCellFactory(DbgController aDbgController) {
-        dbgController = aDbgController;
+    ModFuncTreeCellFactory(final DbgController aDbgController) {
+        super();
+        this.dbgController = aDbgController;
     }
 
     @Override
-    public TreeCell<ModFunc> call(TreeView<ModFunc> tree) {
-        ModFuncGraphic mfg;
+    public TreeCell<ModFunc> call(final TreeView<ModFunc> tree) {
+        final ModFuncGraphic mfg;
 
-        mfg = new ModFuncGraphic(dbgController::toggleTraceModFunc, dbgController::isTraced);
-        mfg.setShowModuleName(isShowModuleName());
+        mfg = new ModFuncGraphic(this.dbgController::toggleTraceModFunc, this.dbgController::isTraced);
+        mfg.setShowModuleName(this.showModuleName);
 
-        dbgController.addTraceListener((Observable o) -> {
-            mfg.onTracesChange();
-        });
+        this.dbgController.addTraceListener((Observable o) -> mfg.onTracesChange());
 
-        return new FXTreeCell<ModFunc>(mfg, mfg);
+        return new FXTreeCell<>(mfg, mfg);
     }
 
     public boolean isShowModuleName() {
-        return showModuleName;
+        return this.showModuleName;
     }
 
-    public void setShowModuleName(boolean showModuleName) {
+    public void setShowModuleName(final boolean showModuleName) {
         this.showModuleName = showModuleName;
     }
 }

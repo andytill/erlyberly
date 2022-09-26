@@ -28,10 +28,12 @@ import ui.CellController;
 
 class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
+    @FunctionalInterface
     public interface TraceFn {
         void trace(ModFunc modFunc);
     }
 
+    @FunctionalInterface
     public interface IsTracedFn {
         boolean isTraced(ModFunc mf);
     }
@@ -56,79 +58,80 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
 
     private ModFunc modFunc;
 
-    public ModFuncGraphic(TraceFn aTraceFn, IsTracedFn isTracedFn) {
-        traceFn = aTraceFn;
+    ModFuncGraphic(final TraceFn aTraceFn, final IsTracedFn isTracedFn) {
+        super();
+        this.traceFn = aTraceFn;
         this.isTracedFn = isTracedFn;
 
-        getStyleClass().add("mod-func-graphic");
+        this.getStyleClass().add("mod-func-graphic");
 
-        getChildren().addAll(exportIconGraphic(), traceIcon(), functionLabel());
+        this.getChildren().addAll(this.exportIconGraphic(), this.traceIcon(), this.functionLabel());
     }
 
     private Glyph exportIconGraphic() {
-        Tooltip tooltip;
+        final Tooltip tooltip;
 
         tooltip = new Tooltip();
-        tooltip.textProperty().bind(exportToolTipText);
+        tooltip.textProperty().bind(this.exportToolTipText);
 
-        Glyph treeIcon;
+        final Glyph treeIcon;
 
-        treeIcon = treeIcon(FontAwesome.Glyph.SQUARE);
-        treeIcon.textProperty().bind(exportIconText);
+        treeIcon = ModFuncGraphic.treeIcon(FontAwesome.Glyph.SQUARE);
+        treeIcon.textProperty().bind(this.exportIconText);
         treeIcon.setTooltip(tooltip);
         return treeIcon;
     }
 
     private Glyph traceIcon() {
-        Glyph traceIcon;
+        final Glyph traceIcon;
 
         traceIcon = new FontAwesome().create(ICON_STYLE);
-        traceIcon.textProperty().bind(tracedIconText);
-        traceIcon.visibleProperty().bind(tracable);
+        traceIcon.textProperty().bind(this.tracedIconText);
+        traceIcon.visibleProperty().bind(this.tracable);
         traceIcon.setTooltip(new Tooltip("Toggle tracing, double click on this star or ctrl+t when selected"));
         traceIcon.getStyleClass().add("erlyberly-icon-button");
         traceIcon.setOnMouseClicked((e) -> {
-            if (e.getClickCount() == 2) traceFn.trace(modFunc);
+            if (2 == e.getClickCount()) this.traceFn.trace(this.modFunc);
         });
         return traceIcon;
     }
 
     private Label functionLabel() {
-        Label label;
+        final Label label;
 
         label = new Label();
-        label.textProperty().bind(text);
+        label.textProperty().bind(this.text);
 
         return label;
     }
 
-    private Glyph treeIcon(FontAwesome.Glyph treeIcon) {
-        Glyph icon = new FontAwesome().create(treeIcon);
+    private static Glyph treeIcon(final FontAwesome.Glyph treeIcon) {
+        final Glyph icon = new FontAwesome().create(treeIcon);
         icon.setStyle(ICON_STYLE);
         return icon;
     }
 
     @Override
-    public void updateItem(ModFunc item, boolean empty) {
-        if (item == null || empty) {
-            text.set(null);
+    public void updateItem(final ModFunc item, final boolean empty) {
+        if (null == item || empty) {
+            this.text.set(null);
         } else {
-            if (isShowModuleName()) text.set(item.toFullString());
-            else text.set(item.toString());
+            if (this.showModuleName) this.text.set(item.toFullString());
+            else this.text.set(item.toString());
 
-            updateExportIcon(item);
+            this.updateExportIcon(item);
 
             // no tracing of the whole module for now!
-            tracable.set(!item.isModule());
+            this.tracable.set(!item.isModule());
         }
-        modFunc = item;
+        this.modFunc = item;
 
-        onTracesChange();
+        this.onTracesChange();
     }
 
-    private void updateExportIcon(ModFunc item) {
-        FontAwesome.Glyph icon;
-        String tooltipText;
+    private void updateExportIcon(final ModFunc item) {
+        final FontAwesome.Glyph icon;
+        final String tooltipText;
 
         if (item.isModule()) {
             tooltipText = "Module";
@@ -141,21 +144,21 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
             icon = FontAwesome.Glyph.LOCK;
         }
 
-        exportToolTipText.set(tooltipText);
-        exportIconText.set(icon.toString());
+        this.exportToolTipText.set(tooltipText);
+        this.exportIconText.set(icon.toString());
     }
 
     public void onTracesChange() {
-        if (modFunc != null && isTracedFn.isTraced(modFunc))
-            tracedIconText.set(FontAwesome.Glyph.CHECK_SQUARE_ALT.toString());
-        else tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
+        if (null != this.modFunc && this.isTracedFn.isTraced(this.modFunc))
+            this.tracedIconText.set(FontAwesome.Glyph.CHECK_SQUARE_ALT.toString());
+        else this.tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
     }
 
     public boolean isShowModuleName() {
-        return showModuleName;
+        return this.showModuleName;
     }
 
-    public void setShowModuleName(boolean showModuleName) {
+    public void setShowModuleName(final boolean showModuleName) {
         this.showModuleName = showModuleName;
     }
 }
