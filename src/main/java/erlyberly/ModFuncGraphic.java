@@ -72,12 +72,12 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
         final Tooltip tooltip;
 
         tooltip = new Tooltip();
-        tooltip.textProperty().bind(this.exportToolTipText);
+        tooltip.textProperty().bindBidirectional(this.exportToolTipText);
 
         final Glyph treeIcon;
 
         treeIcon = ModFuncGraphic.treeIcon(FontAwesome.Glyph.SQUARE);
-        treeIcon.textProperty().bind(this.exportIconText);
+        treeIcon.textProperty().bindBidirectional(this.exportIconText);
         treeIcon.setTooltip(tooltip);
         return treeIcon;
     }
@@ -130,28 +130,28 @@ class ModFuncGraphic extends HBox implements CellController<ModFunc> {
     }
 
     private void updateExportIcon(final ModFunc item) {
-        final FontAwesome.Glyph icon;
+        final Glyph icon;
         final String tooltipText;
 
         if (item.isModule()) {
             tooltipText = "Module";
-            icon = FontAwesome.Glyph.CUBE;
+            icon = new FontAwesome().create(FontAwesome.Glyph.CUBE);
         } else if (item.isExported()) {
             tooltipText = "Exported function";
-            icon = FontAwesome.Glyph.UNLOCK_ALT;
+            icon = new FontAwesome().create(FontAwesome.Glyph.UNLOCK_ALT);
         } else {
             tooltipText = "Unexported function";
-            icon = FontAwesome.Glyph.LOCK;
+            icon = new FontAwesome().create(FontAwesome.Glyph.LOCK);
         }
 
         this.exportToolTipText.set(tooltipText);
-        this.exportIconText.set(icon.toString());
+        this.exportIconText.set(icon.getText());
     }
 
     public void onTracesChange() {
         if (null != this.modFunc && this.isTracedFn.isTraced(this.modFunc))
-            this.tracedIconText.set(FontAwesome.Glyph.CHECK_SQUARE_ALT.toString());
-        else this.tracedIconText.set(FontAwesome.Glyph.SQUARE_ALT.toString());
+            this.tracedIconText.set(new FontAwesome().create(FontAwesome.Glyph.CHECK_SQUARE_ALT).getText());
+        else this.tracedIconText.set(new FontAwesome().create(FontAwesome.Glyph.SQUARE_ALT).getText());
     }
 
     public boolean isShowModuleName() {
